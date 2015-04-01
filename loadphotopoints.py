@@ -8,20 +8,20 @@
     @copyright: Esri, 2015
 
 """
-
 # Import modules
 
 import arcpy
 import math
+import os
 
 # Script arguments (set in the GP tool)
 
 PassengerPhotos =       arcpy.GetParameterAsText(0)
 DriverPhotos =          arcpy.GetParameterAsText(1)
-##AngleField =            arcpy.GetParameterAsText(2)
-Geodatabase =           arcpy.GetParameterAsText(2)
-Parcels =               arcpy.GetParameterAsText(3)
-ParcelPIN =             arcpy.GetParameterAsText(4)
+AngleField =            arcpy.GetParameterAsText(2)
+Geodatabase =           arcpy.GetParameterAsText(3)
+Parcels =               arcpy.GetParameterAsText(4)
+ParcelPIN =             arcpy.GetParameterAsText(5)
 
 arcpy.AddMessage("Step 1: Loading input parameters")
 
@@ -51,6 +51,26 @@ arcpy.CopyFeatures_management(Parcels, ParcelsFeatureClass)
 arcpy.AddMessage("Step 3: Copying Parcels to staging geodatabase")
 
 # Snap Passenger Photos to nearest parcel edge (30ft. default)
+
+##shape = arcpy.Describe(PhotoFeatureClass2).ShapeFieldName
+##fields = ['SHAPE@XY', AngleField]
+##
+##def shift_photopoints(in_features, x_shift = None, y_shift = None) :
+##    with arcpy.da.UpdateCursor (in_features, fields) as cursor:
+##        for row in cursor:
+##            x = row[0][0] + x_shift * math.cos(math.degrees(int(row[1])))
+##            y = row[0][1] + y_shift * math.sin(math.degrees(int(row[1])))
+##            row[0] = (x, y)
+##            cursor.updateRow(row)
+##    return
+##
+##if AngleField =="":
+##
+##    shift_photopoints (PhotoFeatureClass2, 15,15)
+##
+##else:
+##
+##    pass
 
 SnapHelper = """{} EDGE '30 Unknown'""".format(ParcelsFeatureClass)
 arcpy.Snap_edit(PhotoFeatureClass2, SnapHelper)
@@ -106,7 +126,27 @@ arcpy.SelectLayerByLocation_management("PARCELSFL", "INTERSECT",
 PhotoFeatureClass2, "", "NEW_SELECTION", "INVERT")
 arcpy.MakeFeatureLayer_management("PARCELSFL", "PARCELSFL2")
 
-# Snap Passenger Photos to nearest parcel edge (100 ft. default)
+# Snap Driver Photos to nearest parcel edge (100 ft. default)
+
+##shape = arcpy.Describe(PhotoFeatureClass3).ShapeFieldName
+##fields = ['SHAPE@XY', AngleField]
+##
+##def shift_photopoints(in_features, x_shift = None, y_shift = None) :
+##    with arcpy.da.UpdateCursor (in_features, fields) as cursor:
+##        for row in cursor:
+##            x = row[0][0] + x_shift * math.cos(math.degrees(int(row[1])))
+##            y = row[0][1] + y_shift * math.sin(math.degrees(int(row[1])))
+##            row[0] = (x, y)
+##            cursor.updateRow(row)
+##    return
+##
+##if AngleField =="":
+##
+##    shift_photopoints (PhotoFeatureClass3, 15,15)
+##
+##else:
+##
+##    pass
 
 SnapHelper = """{} EDGE '100 Unknown'""".format("PARCELSFL2")
 arcpy.Snap_edit(PhotoFeatureClass3, SnapHelper)
@@ -141,6 +181,22 @@ with arcpy.da.UpdateCursor(PhotoFeatureClass3, "PIN", whereclause) as cursor:
 arcpy.DeleteField_management(PhotoFeatureClass3, "IN_FID;NEAR_FID;NEAR_DIST")
 arcpy.Delete_management(NEAR)
 
+
+arcpy.AddField_management(PhotoFeatureClass2, "Path2", "TEXT", "", "", "150",
+"", "NULLABLE", "NON_REQUIRED", "")
+
+arcpy.CalculateField_management(PhotoFeatureClass2, "Path2", "!Path!", "PYTHON",
+"")
+
+arcpy.AddField_management(PhotoFeatureClass3, "Path2", "TEXT", "", "", "150",
+"", "NULLABLE", "NON_REQUIRED", "")
+
+arcpy.CalculateField_management(PhotoFeatureClass3, "Path2", "!Path!", "PYTHON",
+"")
+
+arcpy.DeleteField_management(PhotoFeatureClass2, "Path")
+arcpy.DeleteField_management(PhotoFeatureClass3, "Path")
+
 arcpy.Append_management(PhotoFeatureClass2, PhotoFeatureClass3, "TEST", "", "")
 
 #Create Photo Attachments
@@ -149,7 +205,7 @@ ParcelPointHelper = """{}\\ParcelPoints""".format(Geodatabase)
 arcpy.FeatureToPoint_management(ParcelsFeatureClass, ParcelPointHelper,"INSIDE")
 arcpy.EnableAttachments_management(ParcelPointHelper)
 arcpy.AddAttachments_management(ParcelPointHelper, "PIN", PhotoFeatureClass3,
-"PIN", "Path", "")
+"PIN", "Path2", "")
 
 arcpy.AddMessage ("Step 8: Creating photo attachments")
 
