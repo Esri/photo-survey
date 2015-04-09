@@ -52,25 +52,25 @@ arcpy.AddMessage("Step 3: Copying Parcels to staging geodatabase")
 
 # Snap Passenger Photos to nearest parcel edge (30ft. default)
 
-##shape = arcpy.Describe(PhotoFeatureClass2).ShapeFieldName
-##fields = ['SHAPE@XY', AngleField]
-##
-##def shift_photopoints(in_features, x_shift = None, y_shift = None) :
-##    with arcpy.da.UpdateCursor (in_features, fields) as cursor:
-##        for row in cursor:
-##            x = row[0][0] + x_shift * math.cos(math.degrees(int(row[1])))
-##            y = row[0][1] + y_shift * math.sin(math.degrees(int(row[1])))
-##            row[0] = (x, y)
-##            cursor.updateRow(row)
-##    return
-##
-##if AngleField =="":
-##
-##    shift_photopoints (PhotoFeatureClass2, 15,15)
-##
-##else:
-##
-##    pass
+shape = arcpy.Describe(PhotoFeatureClass2).ShapeFieldName
+fields = ['SHAPE@XY', AngleField]
+
+def shift_photopoints(in_features, x_shift = None, y_shift = None) :
+    with arcpy.da.UpdateCursor (in_features, fields) as cursor:
+        for row in cursor:
+            x = row[0][0] + x_shift * math.cos(math.degrees(int(row[1])))
+            y = row[0][1] + y_shift * math.sin(math.degrees(int(row[1])))
+            row[0] = (x, y)
+            cursor.updateRow(row)
+    return
+
+if AngleField:
+
+    shift_photopoints (PhotoFeatureClass2, 15,15)
+
+else:
+
+    pass
 
 SnapHelper = """{} EDGE '30 Unknown'""".format(ParcelsFeatureClass)
 arcpy.Snap_edit(PhotoFeatureClass2, SnapHelper)
@@ -128,25 +128,25 @@ arcpy.MakeFeatureLayer_management("PARCELSFL", "PARCELSFL2")
 
 # Snap Driver Photos to nearest parcel edge (100 ft. default)
 
-##shape = arcpy.Describe(PhotoFeatureClass3).ShapeFieldName
-##fields = ['SHAPE@XY', AngleField]
-##
-##def shift_photopoints(in_features, x_shift = None, y_shift = None) :
-##    with arcpy.da.UpdateCursor (in_features, fields) as cursor:
-##        for row in cursor:
-##            x = row[0][0] + x_shift * math.cos(math.degrees(int(row[1])))
-##            y = row[0][1] + y_shift * math.sin(math.degrees(int(row[1])))
-##            row[0] = (x, y)
-##            cursor.updateRow(row)
-##    return
-##
-##if AngleField =="":
-##
-##    shift_photopoints (PhotoFeatureClass3, 15,15)
-##
-##else:
-##
-##    pass
+shape = arcpy.Describe(PhotoFeatureClass3).ShapeFieldName
+fields = ['SHAPE@XY', AngleField]
+
+def shift_photopoints(in_features, x_shift = None, y_shift = None) :
+    with arcpy.da.UpdateCursor (in_features, fields) as cursor:
+        for row in cursor:
+            x = row[0][0] + x_shift * math.cos(math.degrees(int(row[1])))
+            y = row[0][1] + y_shift * math.sin(math.degrees(int(row[1])))
+            row[0] = (x, y)
+            cursor.updateRow(row)
+    return
+
+if AngleField:
+
+    shift_photopoints (PhotoFeatureClass3, 15,15)
+
+else:
+
+    pass
 
 SnapHelper = """{} EDGE '100 Unknown'""".format("PARCELSFL2")
 arcpy.Snap_edit(PhotoFeatureClass3, SnapHelper)
