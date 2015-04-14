@@ -1,4 +1,4 @@
-# photo-survey-python
+# photo-survey
 
 Photo Survey is a configurable JavaScript application designed to crowdsource property damage assessments, inventory blighted properties, target reappraisal efforts, and identify structures that could pose safety concerns.
 
