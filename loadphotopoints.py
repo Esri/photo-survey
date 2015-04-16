@@ -1,11 +1,11 @@
 """
-    @author: bus
-    @contact: cbuscaglia@esri.com
-    @company: Esri
-    @version: 1.0.0
-    @description: Photo Survey Tool to load photos
-    @requirements: Python 2.7.x, ArcGIS 10.2, 10.3, 10.3.1
-    @copyright: Esri, 2015
+	@author: bus
+	@contact: cbuscaglia@esri.com
+	@company: Esri
+	@version: 1.0.0
+	@description: Photo Survey Tool to load photos
+	@requirements: Python 2.7.x, ArcGIS 10.2, 10.3, 10.3.1
+	@copyright: Esri, 2015
 
 """
 # Import modules
@@ -54,22 +54,22 @@ shape = arcpy.Describe(PhotoFeatureClass2).ShapeFieldName
 fields = ['SHAPE@XY', AngleField]
 
 def shift_photopoints(in_features, x_shift=None, y_shift=None):
-    with arcpy.da.UpdateCursor(in_features, fields) as cursor:
-        for row in cursor:
-            x = row[0][0] + x_shift * math.cos(math.degrees(int(row[1])))
-            y = row[0][1] + y_shift * math.sin(math.degrees(int(row[1])))
-            row[0] = (x, y)
-            cursor.updateRow(row)
-    return
+	with arcpy.da.UpdateCursor(in_features, fields) as cursor:
+		for row in cursor:
+			x = row[0][0] + x_shift * math.cos(math.degrees(int(row[1])))
+			y = row[0][1] + y_shift * math.sin(math.degrees(int(row[1])))
+			row[0] = (x, y)
+			cursor.updateRow(row)
+	return
 
 
 if AngleField:
 
-    shift_photopoints(PhotoFeatureClass2, 15, 15)
+	shift_photopoints(PhotoFeatureClass2, 15, 15)
 
 else:
 
-    pass
+	pass
 
 SnapHelper = """{} EDGE '30 Unknown'""".format(ParcelsFeatureClass)
 arcpy.Snap_edit(PhotoFeatureClass2, SnapHelper)
@@ -77,7 +77,7 @@ arcpy.Snap_edit(PhotoFeatureClass2, SnapHelper)
 Nearhelper = """{}\\NEAR""".format(Geodatabase)
 NEAR = Nearhelper
 arcpy.GenerateNearTable_analysis(PhotoFeatureClass2, ParcelsFeatureClass, NEAR,
-                                 "5 Feet", "NO_LOCATION", "NO_ANGLE", "CLOSEST", "0", "GEODESIC")
+								 "5 Feet", "NO_LOCATION", "NO_ANGLE", "CLOSEST", "0", "GEODESIC")
 
 arcpy.AddMessage("Step 4: Associating passenger photo points to nearest parcel")
 
@@ -93,8 +93,8 @@ arcpy.AddMessage("Step 5: Reporting non-matched passenger photos to table")
 
 whereclause = "PIN is Null"
 with arcpy.da.UpdateCursor(PhotoFeatureClass2, "PIN", whereclause) as cursor:
-    for row in cursor:
-        cursor.deleteRow()
+	for row in cursor:
+		cursor.deleteRow()
 
 # Cleanup matched Photos (intermediate data)
 
@@ -126,22 +126,22 @@ fields = ['SHAPE@XY', AngleField]
 
 
 def shift_photopoints(in_features, x_shift=None, y_shift=None):
-    with arcpy.da.UpdateCursor(in_features, fields) as cursor:
-        for row in cursor:
-            x = row[0][0] + x_shift * math.cos(math.degrees(int(row[1])))
-            y = row[0][1] + y_shift * math.sin(math.degrees(int(row[1])))
-            row[0] = (x, y)
-            cursor.updateRow(row)
-    return
+	with arcpy.da.UpdateCursor(in_features, fields) as cursor:
+		for row in cursor:
+			x = row[0][0] + x_shift * math.cos(math.degrees(int(row[1])))
+			y = row[0][1] + y_shift * math.sin(math.degrees(int(row[1])))
+			row[0] = (x, y)
+			cursor.updateRow(row)
+	return
 
 
 if AngleField:
 
-    shift_photopoints(PhotoFeatureClass3, 15, 15)
+	shift_photopoints(PhotoFeatureClass3, 15, 15)
 
 else:
 
-    pass
+	pass
 
 SnapHelper = """{} EDGE '100 Unknown'""".format("PARCELSFL2")
 arcpy.Snap_edit(PhotoFeatureClass3, SnapHelper)
@@ -149,7 +149,7 @@ arcpy.Snap_edit(PhotoFeatureClass3, SnapHelper)
 Nearhelper = """{}\\NEAR""".format(Geodatabase)
 NEAR = Nearhelper
 arcpy.GenerateNearTable_analysis(PhotoFeatureClass3, ParcelsFeatureClass, NEAR,
-                                 "5 Feet", "NO_LOCATION", "NO_ANGLE", "CLOSEST", "0", "GEODESIC")
+								 "5 Feet", "NO_LOCATION", "NO_ANGLE", "CLOSEST", "0", "GEODESIC")
 arcpy.AddMessage("Step 6: Associating driver photo points to nearest parcel")
 arcpy.JoinField_management(NEAR, "NEAR_FID", ParcelsFeatureClass, "OBJECTID", ParcelPIN)
 
@@ -163,8 +163,8 @@ arcpy.AddMessage("Step 7: Reporting non-matched driver photos to table")
 
 whereclause = "PIN is Null"
 with arcpy.da.UpdateCursor(PhotoFeatureClass3, "PIN", whereclause) as cursor:
-    for row in cursor:
-        cursor.deleteRow()
+	for row in cursor:
+		cursor.deleteRow()
 
 # Cleanup matched Photos (intermediate data)
 
@@ -196,7 +196,43 @@ arcpy.Delete_management(PhotoFeatureClass2)
 arcpy.Delete_management(PhotoFeatureClass3)
 arcpy.Delete_management(ParcelsFeatureClass)
 arcpy.AddMessage("Step 9: Cleaning up staging geodatabase")
-arcpy.AddMessage("Step 10: Finalizing photo survey feature class")
+arcpy.AddMessage("Step 10: Adding survey questions")
+arcpy.CreateDomain_management(Geodatabase, "YesNoMaybe", "YesNoMaybe", "TEXT", "CODED")
+DomainDict1 = {"Yes": "Yes", "No": "No", "Maybe": "Maybe"}
+for code in DomainDict1:
+	arcpy.AddCodedValueToDomain_management(Geodatabase, "YesNoMaybe", code, DomainDict1[code])
+
+arcpy.CreateDomain_management(Geodatabase, "FoundationType", "FoundationType", "TEXT", "CODED")
+DomainDict2 = {"Crawlspace": "Crawlspace", "Raised": "Raised", "Elevated": "Elevated", "Slab on Grade": "Slab on Grade"}
+for codex in DomainDict2:
+	arcpy.AddCodedValueToDomain_management(Geodatabase, "FoundationType", codex, DomainDict2[codex])
+
+arcpy.AddField_management(ParcelPointHelper, "Structure", "TEXT", "", "", "5", "", "NULLABLE", "REQUIRED", "")
+arcpy.AssignDomainToField_management(ParcelPointHelper, "Structure", "YesNoMaybe")
+arcpy.AddField_management(ParcelPointHelper, "Lot", "TEXT", "", "", "5", "", "NULLABLE", "REQUIRED", "")
+arcpy.AssignDomainToField_management(ParcelPointHelper, "Lot", "YesNoMaybe")
+arcpy.AddField_management(ParcelPointHelper, "FoundationType", "TEXT", "", "", "25", "", "NULLABLE", "NON_REQUIRED", "")
+arcpy.AssignDomainToField_management(ParcelPointHelper, "FoundationType", "FoundationType")
+arcpy.AddField_management(ParcelPointHelper, "RoofDamage", "TEXT", "", "", "5", "", "NULLABLE", "NON_REQUIRED", "")
+arcpy.AssignDomainToField_management(ParcelPointHelper, "RoofDamage", "YesNoMaybe")
+arcpy.AddField_management(ParcelPointHelper, "ExteriorDamage", "TEXT", "", "", "5", "", "NULLABLE", "NON_REQUIRED", "")
+arcpy.AssignDomainToField_management(ParcelPointHelper, "ExteriorDamage", "YesNoMaybe")
+arcpy.AddField_management(ParcelPointHelper, "Graffiti", "TEXT", "", "", "5", "", "NULLABLE", "NON_REQUIRED", "")
+arcpy.AssignDomainToField_management(ParcelPointHelper, "Graffiti", "YesNoMaybe")
+arcpy.AddField_management(ParcelPointHelper, "Boarded", "TEXT", "", "", "5", "", "NULLABLE", "NON_REQUIRED", "")
+arcpy.AssignDomainToField_management(ParcelPointHelper, "Boarded", "YesNoMaybe")
+
+arcpy.AddMessage("Step 11: Adding application fields")
+arcpy.CreateDomain_management(Geodatabase, "YesNo", "YesNo", "TEXT", "CODED")
+DomainDict3 = {"Yes": "Yes", "No": "No"}
+for codev in DomainDict3:
+	arcpy.AddCodedValueToDomain_management(Geodatabase, "YesNo", codev, DomainDict3[codev])
+arcpy.AddField_management(ParcelPointHelper, "BestPhotoID", "TEXT", "", "", "5", "", "NULLABLE", "NON_REQUIRED", "")
+arcpy.AssignDomainToField_management(ParcelPointHelper, "BestPhotoID", "YesNo")
+arcpy.AddField_management(ParcelPointHelper, "Surveyed", "TEXT", "", "", "5", "", "NULLABLE", "NON_REQUIRED", "")
+arcpy.AssignDomainToField_management(ParcelPointHelper, "Surveyed", "YesNo")
+arcpy.AddMessage("Step 12: Finalizing photo survey feature class")
+
 
 
 
