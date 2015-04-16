@@ -22,7 +22,7 @@ Geodatabase = arcpy.GetParameterAsText(3)
 Parcels = arcpy.GetParameterAsText(4)
 ParcelPIN = arcpy.GetParameterAsText(5)
 
-arcpy.AddMessage("Step 1: Loading input parameters")
+arcpy.AddMessage("Step 1:  Loading input parameters")
 
 # ______________________________________________________________________________#
 #
@@ -39,14 +39,14 @@ PhotoFeatureClass2 = """{}\\PointAttachments""".format(Geodatabase)
 arcpy.Project_management(PhotoFeatureClass, PhotoFeatureClass2, SRHelper)
 arcpy.Delete_management(PhotoFeatureClass)
 
-arcpy.AddMessage("Step 2: Converting Photos to points")
+arcpy.AddMessage("Step 2:  Converting Photos to points")
 
 # Load up the parcel dataset for the property association (and make a copy)
 
 ParcelsFeatureClass = """{}\\Parcels""".format(Geodatabase)
 arcpy.CopyFeatures_management(Parcels, ParcelsFeatureClass)
 
-arcpy.AddMessage("Step 3: Copying Parcels to staging geodatabase")
+arcpy.AddMessage("Step 3:  Copying Parcels to staging geodatabase")
 
 # Snap Passenger Photos to nearest parcel edge (30ft. default)
 
@@ -79,7 +79,7 @@ NEAR = Nearhelper
 arcpy.GenerateNearTable_analysis(PhotoFeatureClass2, ParcelsFeatureClass, NEAR,
 								 "5 Feet", "NO_LOCATION", "NO_ANGLE", "CLOSEST", "0", "GEODESIC")
 
-arcpy.AddMessage("Step 4: Associating passenger photo points to nearest parcel")
+arcpy.AddMessage("Step 4:  Associating passenger photo points to nearest parcel")
 
 arcpy.JoinField_management(NEAR, "NEAR_FID", ParcelsFeatureClass, "OBJECTID", ParcelPIN)
 
@@ -87,7 +87,7 @@ arcpy.JoinField_management(NEAR, "NEAR_FID", ParcelsFeatureClass, "OBJECTID", Pa
 
 arcpy.JoinField_management(PhotoFeatureClass2, "OBJECTID", NEAR, "IN_FID")
 arcpy.TableToTable_conversion(PhotoFeatureClass2, Geodatabase, "NonMatchedPassengerPhotos", "PIN is Null", "")
-arcpy.AddMessage("Step 5: Reporting non-matched passenger photos to table")
+arcpy.AddMessage("Step 5:  Reporting non-matched passenger photos to table")
 
 # Delete non-matched photo points
 
@@ -150,14 +150,14 @@ Nearhelper = """{}\\NEAR""".format(Geodatabase)
 NEAR = Nearhelper
 arcpy.GenerateNearTable_analysis(PhotoFeatureClass3, ParcelsFeatureClass, NEAR,
 								 "5 Feet", "NO_LOCATION", "NO_ANGLE", "CLOSEST", "0", "GEODESIC")
-arcpy.AddMessage("Step 6: Associating driver photo points to nearest parcel")
+arcpy.AddMessage("Step 6:  Associating driver photo points to nearest parcel")
 arcpy.JoinField_management(NEAR, "NEAR_FID", ParcelsFeatureClass, "OBJECTID", ParcelPIN)
 
 # Export non-matched Photos to table (no GPS, wrong attributes, etc.)
 
 arcpy.JoinField_management(PhotoFeatureClass3, "OBJECTID", NEAR, "IN_FID")
 arcpy.TableToTable_conversion(PhotoFeatureClass3, Geodatabase, "NonMatchedDriverPhotos", "PIN is Null", "")
-arcpy.AddMessage("Step 7: Reporting non-matched driver photos to table")
+arcpy.AddMessage("Step 7:  Reporting non-matched driver photos to table")
 
 # Delete non-matched photos
 
@@ -185,7 +185,7 @@ ParcelPointHelper = """{}\\ParcelPoints""".format(Geodatabase)
 arcpy.FeatureToPoint_management(ParcelsFeatureClass, ParcelPointHelper, "INSIDE")
 arcpy.EnableAttachments_management(ParcelPointHelper)
 arcpy.AddAttachments_management(ParcelPointHelper, "PIN", PhotoFeatureClass3, "PIN", "Path2", "")
-arcpy.AddMessage("Step 8: Creating photo attachments")
+arcpy.AddMessage("Step 8:  Creating photo attachments")
 
 #______________________________________________________________________________#
 #
@@ -195,7 +195,14 @@ arcpy.AddMessage("Step 8: Creating photo attachments")
 arcpy.Delete_management(PhotoFeatureClass2)
 arcpy.Delete_management(PhotoFeatureClass3)
 arcpy.Delete_management(ParcelsFeatureClass)
-arcpy.AddMessage("Step 9: Cleaning up staging geodatabase")
+arcpy.DeleteField_management(ParcelPointHelper, "ORIG_FID")
+arcpy.AddMessage("Step 9:  Cleaning up staging geodatabase")
+
+#______________________________________________________________________________#
+#
+# Adding Survey Fields
+#______________________________________________________________________________#
+
 arcpy.AddMessage("Step 10: Adding survey questions")
 arcpy.CreateDomain_management(Geodatabase, "YesNoMaybe", "YesNoMaybe", "TEXT", "CODED")
 DomainDict1 = {"Yes": "Yes", "No": "No", "Maybe": "Maybe"}
