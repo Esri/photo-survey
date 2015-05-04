@@ -4,7 +4,7 @@
 	@company: Esri
 	@version: 1.0.0
 	@description: Photo Survey Tool to load photos
-	@requirements: Python 2.7.x, ArcGIS 10.2, 10.3, 10.3.1
+	@requirements: Python 2.7.x or higher, ArcGIS 10.2, 10.3.x (also ArcGIS Pro)
 	@copyright: Esri, 2015
 
 """
@@ -216,16 +216,22 @@ for codex in DomainDict2:
 
 arcpy.AddField_management(ParcelPointHelper, "Structure", "TEXT", "", "", "5", "", "NULLABLE", "REQUIRED", "")
 arcpy.AssignDomainToField_management(ParcelPointHelper, "Structure", "YesNoMaybe")
+
 arcpy.AddField_management(ParcelPointHelper, "Lot", "TEXT", "", "", "5", "", "NULLABLE", "REQUIRED", "")
 arcpy.AssignDomainToField_management(ParcelPointHelper, "Lot", "YesNoMaybe")
+
 arcpy.AddField_management(ParcelPointHelper, "FoundationType", "TEXT", "", "", "25", "", "NULLABLE", "NON_REQUIRED", "")
 arcpy.AssignDomainToField_management(ParcelPointHelper, "FoundationType", "FoundationType")
+
 arcpy.AddField_management(ParcelPointHelper, "RoofDamage", "TEXT", "", "", "5", "", "NULLABLE", "NON_REQUIRED", "")
 arcpy.AssignDomainToField_management(ParcelPointHelper, "RoofDamage", "YesNoMaybe")
+
 arcpy.AddField_management(ParcelPointHelper, "ExteriorDamage", "TEXT", "", "", "5", "", "NULLABLE", "NON_REQUIRED", "")
 arcpy.AssignDomainToField_management(ParcelPointHelper, "ExteriorDamage", "YesNoMaybe")
+
 arcpy.AddField_management(ParcelPointHelper, "Graffiti", "TEXT", "", "", "5", "", "NULLABLE", "NON_REQUIRED", "")
 arcpy.AssignDomainToField_management(ParcelPointHelper, "Graffiti", "YesNoMaybe")
+
 arcpy.AddField_management(ParcelPointHelper, "Boarded", "TEXT", "", "", "5", "", "NULLABLE", "NON_REQUIRED", "")
 arcpy.AssignDomainToField_management(ParcelPointHelper, "Boarded", "YesNoMaybe")
 
@@ -234,6 +240,7 @@ arcpy.CreateDomain_management(Geodatabase, "YesNo", "YesNo", "TEXT", "CODED")
 DomainDict3 = {"Yes": "Yes", "No": "No"}
 for codev in DomainDict3:
 	arcpy.AddCodedValueToDomain_management(Geodatabase, "YesNo", codev, DomainDict3[codev])
+
 arcpy.AddField_management(ParcelPointHelper, "BestPhotoID", "TEXT", "", "", "5", "", "NULLABLE", "NON_REQUIRED", "")
 arcpy.AssignDomainToField_management(ParcelPointHelper, "BestPhotoID", "YesNo")
 arcpy.AddField_management(ParcelPointHelper, "Surveyed", "TEXT", "", "", "5", "", "NULLABLE", "NON_REQUIRED", "")
