@@ -86,13 +86,14 @@ arcpy.JoinField_management(NEAR, "NEAR_FID", ParcelsFeatureClass, "OBJECTID", Pa
 # Export non-matched Photos to table (no GPS, wrong attributes, etc.)
 
 arcpy.JoinField_management(PhotoFeatureClass2, "OBJECTID", NEAR, "IN_FID")
-arcpy.TableToTable_conversion(PhotoFeatureClass2, Geodatabase, "NonMatchedPassengerPhotos", "PIN is Null", "")
+arcpy.TableToTable_conversion(PhotoFeatureClass2, Geodatabase,
+							  "NonMatchedPassengerPhotos", "{0} is Null".format(ParcelPIN), "")
 arcpy.AddMessage("Step 5:  Reporting non-matched passenger photos to table")
 
 # Delete non-matched photo points
 
-whereclause = "PIN is Null"
-with arcpy.da.UpdateCursor(PhotoFeatureClass2, "PIN", whereclause) as cursor:
+whereclause = "{0} is Null".format(ParcelPIN)
+with arcpy.da.UpdateCursor(PhotoFeatureClass2, ParcelPIN, whereclause) as cursor:
 	for row in cursor:
 		cursor.deleteRow()
 
@@ -156,13 +157,14 @@ arcpy.JoinField_management(NEAR, "NEAR_FID", ParcelsFeatureClass, "OBJECTID", Pa
 # Export non-matched Photos to table (no GPS, wrong attributes, etc.)
 
 arcpy.JoinField_management(PhotoFeatureClass3, "OBJECTID", NEAR, "IN_FID")
-arcpy.TableToTable_conversion(PhotoFeatureClass3, Geodatabase, "NonMatchedDriverPhotos", "PIN is Null", "")
+arcpy.TableToTable_conversion(PhotoFeatureClass3, Geodatabase, "NonMatchedDriverPhotos",
+							  "{0} is Null".format(ParcelPIN), "")
 arcpy.AddMessage("Step 7:  Reporting non-matched driver photos to table")
 
 # Delete non-matched photos
 
-whereclause = "PIN is Null"
-with arcpy.da.UpdateCursor(PhotoFeatureClass3, "PIN", whereclause) as cursor:
+whereclause = "{0} is Null".format(ParcelPIN)
+with arcpy.da.UpdateCursor(PhotoFeatureClass3, ParcelPIN, whereclause) as cursor:
 	for row in cursor:
 		cursor.deleteRow()
 
@@ -184,7 +186,7 @@ arcpy.Append_management(PhotoFeatureClass2, PhotoFeatureClass3, "TEST", "", "")
 ParcelPointHelper = """{}\\ParcelPoints""".format(Geodatabase)
 arcpy.FeatureToPoint_management(ParcelsFeatureClass, ParcelPointHelper, "INSIDE")
 arcpy.EnableAttachments_management(ParcelPointHelper)
-arcpy.AddAttachments_management(ParcelPointHelper, "PIN", PhotoFeatureClass3, "PIN", "Path2", "")
+arcpy.AddAttachments_management(ParcelPointHelper, ParcelPIN, PhotoFeatureClass3, ParcelPIN, "Path2", "")
 arcpy.AddMessage("Step 8:  Creating photo attachments")
 
 #______________________________________________________________________________#
