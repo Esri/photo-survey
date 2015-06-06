@@ -1,0 +1,18 @@
+﻿{
+    "screenreader": {
+        "h1_title": "Évaluation de photos",
+        "h2_signin": "Connectez-vous dans les médias sociaux",
+        "h2_illustration": "Galerie de photos",
+        "h2_activity": "Évaluation de photos et profil de l'utilisateur",
+        "h2_additionalInfo": "Informations complémentaires"
+    },
+    "tooltips": {
+        "button_tip_additionalInfo": "Informations complémentaires",
+        "button_tip_close": "Fermez le panneau de informations complémentaires"
+    },
+    "signin": {
+        "signinTitle": "Évaluation de photos des propriétés",
+        "signinParagraph": "Le logiciel de évaluation de photos des propriétés peut être utilisé pour effectuer des évaluations rapides des dommages, inventaire gâchée propriétés, cibler les efforts de réappréciation, et d'identifier les structures qui pourraient poser des problèmes de sécurité.",
+        "signinLoginPrompt": "S'il vous plaît vous connecter pour commencer"
+    }
+}
