@@ -245,8 +245,9 @@ for codev in DomainDict3:
 
 arcpy.AddField_management(ParcelPointHelper, "BestPhotoID", "TEXT", "", "", "5", "", "NULLABLE", "NON_REQUIRED", "")
 arcpy.AssignDomainToField_management(ParcelPointHelper, "BestPhotoID", "YesNo")
-arcpy.AddField_management(ParcelPointHelper, "Surveyed", "TEXT", "", "", "5", "", "NULLABLE", "NON_REQUIRED", "")
-arcpy.AssignDomainToField_management(ParcelPointHelper, "Surveyed", "YesNo")
+arcpy.AddField_management(ParcelPointHelper, "Surveyor", "TEXT", "", "", "25", "", "NULLABLE", "NON_REQUIRED", "")
+# Commented out to change this to be the surveyor field instead of a boolean
+# arcpy.AssignDomainToField_management(ParcelPointHelper, "Surveyed", "YesNo")
 arcpy.AddMessage("Step 12: Finalizing photo survey feature class")
 
 
