@@ -19,6 +19,12 @@
 define(function () {
     return {
 
+        //--------------------------------------------------------------------------------------------------------------------//
+
+        // Available upon return
+        contribLevels: [],
+
+        // Available after init's parametersReady deferred
         urlParams: {},
         appParams: {  // Provide fallback values in case neither the configuration file nor the online app can be retrieved
             webmap: "",
@@ -29,13 +35,20 @@ define(function () {
             contributorLevels: ",100,,200,,400,,800,,1600,",
             showFacebook: "true",
             showGooglePlus: "true",
-            showTwitter: "true"
+            showTwitter: "true",
+            surveyorNameField: "",
+            bestPhotoField: ""
         },
+
+        // Available after init's featureServiceReady deferred
         webmapParams: {},
+        opLayer: null,
         featureSvcParams: {},
-        contribLevels: [],
+
+        // Available after init's surveyReady deferred
         survey: [],
 
+        //--------------------------------------------------------------------------------------------------------------------//
 
         logElapsedTime: function (tag, startMs) {  //???
             var ticks = (new Date()).getTime() - startMs;
@@ -47,6 +60,11 @@ define(function () {
             var self = this;
             var url;
             var startMs = (new Date()).getTime();  //???
+
+            var parametersReady = $.Deferred();
+            var featureServiceReady = $.Deferred();
+            var surveyReady = $.Deferred();
+
 
             // Get the URL parameters
             var params = window.location.search;
@@ -94,11 +112,15 @@ define(function () {
                 self.appParams = $.extend(self.appParams, fileAppData, onlineAppData);
                 self.logElapsedTime("merged configs", startMs);  //???
 
-                // Get the app's webmap's data. A URL-supplied webmap overrides a configured one
+                // GA URL-supplied webmap overrides a configured one
                 if (self.urlParams.webmap) {
                     self.appParams.webmap = self.urlParams.webmap;
                 }
 
+                parametersReady.resolve();
+
+
+                // Get the app's webmap's data
                 if (self.appParams.webmap) {
                     $.getJSON("http://www.arcgis.com/sharing/content/items/" + self.appParams.webmap + "/data?f=json", function (data) {
                         self.webmapParams = data || {};
@@ -110,6 +132,7 @@ define(function () {
                         // Get the app's webmap's feature service's data
                             $.getJSON(self.opLayer.url + "?f=json", function (data) {
                                 self.featureSvcParams = data || {};
+                                featureServiceReady.resolve();
                                 self.logElapsedTime("have feature svc", startMs);  //???
 
                                 if (self.featureSvcParams.fields) {
@@ -179,6 +202,8 @@ define(function () {
                                             }
                                         }
                                     });
+
+                                    surveyReady.resolve();
                                 }
                             });
                         }
@@ -208,6 +233,12 @@ define(function () {
                     self.contribLevels = [];
                 }
             }
+
+            return {
+                "parametersReady": parametersReady,
+                "featureServiceReady" : featureServiceReady,
+                "surveyReady" : surveyReady
+            };
         }
 
     };
