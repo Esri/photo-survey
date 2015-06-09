@@ -17,82 +17,85 @@
  */
 //============================================================================================================================//
 define(function () {
-    var deferred, lang, languages, i, url;
+    return {
 
-    deferred = $.Deferred();
+        //--------------------------------------------------------------------------------------------------------------------//
 
-    // Get the language to use
-    lang = (window.navigator.languages ? window.navigator.languages[0] : null)  // Firefox, Chrome
-        || window.navigator.language  // Safari, IE 11, IE Spartan
-        || window.navigator.browserLanguage;  // IE 9, 10
+        // Available after init's deferred
+        //   - contents of resources file merged into module
 
-    if (lang) {
-        // Check that the language is in the supported list
-        languages = [
-            "ar",
-            "cs",
-            "da",
-            "de",
-            "el",
-            "en",
-            "es",
-            "et",
-            "fi",
-            "fr",
-            "he",
-            "it",
-            "ja",
-            "ko",
-            "lt",
-            "lv",
-            "nb",
-            "nl",
-            "pl",
-            "pt-br",
-            "pt-pt",
-            "ro",
-            "ru",
-            "sv",
-            "th",
-            "tr",
-            "vi",
-            "zh-cn",
-            "zh-hk",
-            "zh-tw"
-        ];
+        //--------------------------------------------------------------------------------------------------------------------//
 
-        if ($.inArray(lang.toLowerCase(), languages) < 0) {
-            // If not found, try once more using the language part without the region suffix
-            i = lang.indexOf("-");
-            if (i > 0) {
-                lang = lang.substr(0, i);
+        init: function () {
+            var deferred, lang, languages, i, url, self = this;
+
+            deferred = $.Deferred();
+
+            // Get the language to use
+            lang = (window.navigator.languages ? window.navigator.languages[0] : null)  // Firefox, Chrome
+                || window.navigator.language  // Safari, IE 11, IE Spartan
+                || window.navigator.browserLanguage;  // IE 9, 10
+
+            if (lang) {
+                // Check that the language is in the supported list
+                languages = [
+                //  "ar",
+                //  "cs",
+                //  "da",
+                //  "de",
+                //  "el",
+                //  "es",
+                //  "et",
+                //  "fi",
+                    "fr",
+                //  "he",
+                //  "it",
+                //  "ja",
+                //  "ko",
+                //  "lt",
+                //  "lv",
+                //  "nb",
+                //  "nl",
+                //  "pl",
+                //  "pt-br",
+                //  "pt-pt",
+                //  "ro",
+                //  "ru",
+                //  "sv",
+                //  "th",
+                //  "tr",
+                //  "vi",
+                //  "zh-cn",
+                //  "zh-hk",
+                //  "zh-tw",
+                    "en"
+                ];
+
                 if ($.inArray(lang.toLowerCase(), languages) < 0) {
-                    lang = null;
+                    // If not found, try once more using the language part without the region suffix
+                    i = lang.indexOf("-");
+                    if (i > 0) {
+                        lang = lang.substr(0, i);
+                        if ($.inArray(lang.toLowerCase(), languages) < 0) {
+                            lang = null;
+                        }
+                    } else {
+                        lang = null;
+                    }
                 }
-            } else {
-                lang = null;
             }
+
+            // Get the phrase file for the language, falling back to the root version in the directory
+            // that contains the language-specific folders
+            url = "js/nls/" + (lang ? lang + "/" : "") + "resources.json";
+            self.lang = lang;
+            $.getJSON(url, function (results) {
+                self = $.extend(self, results);
+                deferred.resolve();
+            });
+
+            return deferred;
         }
-    }
 
-    // Get the phrase file for the language, falling back to the root version in the directory
-    // that contains the language-specific folders
-    url = "js/nls/" + (lang ? lang + "/" : "") + "resources.json";
-    $.getJSON(url, function (data) {
-        data.lang = lang;
-
-
-data.note =
-    "window.navigator.userAgent: " + window.navigator.userAgent + "<br>" +
-    "language test:" + "<br>" +
-    "  1. window.navigator.languages[0]: " + (window.navigator.languages ? window.navigator.languages[0] : null) + "<br>" +
-    "  2. window.navigator.language: " + window.navigator.language + "<br>" +
-    "  3. window.navigator.browserLanguage: " + window.navigator.browserLanguage + "<br>" +
-    "  4. window.navigator.userLanguage: " + window.navigator.userLanguage + "<br>";
-
-
-        deferred.resolve(data);
-    });
-
-    return deferred;
+    };
 });
