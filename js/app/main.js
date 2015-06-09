@@ -17,51 +17,113 @@
  */
 //============================================================================================================================//
 define(function (require) {
-    var i18nLoader, self, appConfig, userConfig;
+    var self, i18n, userConfig, appConfig, dataAccess;
 
-    i18nLoader = require('app/i18n');
+    i18n = require('app/i18n');
     appConfig = require('app/appConfig');
     userConfig = require('app/userConfig');
+    dataAccess = require('app/dataAccess');
+
     self = {
         iVisiblePhoto: 0,
-        photoSelected: false
+        photoSelected: false,
+        iSelectedPhoto: -1,
+        candidate: null
     };
 
 //============================================================================================================================//
 
-    // Photos of property from attachment(s) for property; selected photo initially -1, then id? saved as 'best photo id' in FS
-    var _photos = [{
-        label: "VIRB0125.JPG",
-        url: "__test/VIRB0125.5.JPG"
-    }, {
-        label: "VIRB0126.JPG",
-        url: "__test/VIRB0126.5.JPG"
-    }, {
-        label: "VIRB0127.JPG",
-        url: "__test/VIRB0127.5.JPG"
-    }];
-    var iSelectedPhoto = -1;
+    // Get language localization
+    var i18nReady = i18n.init();
 
-//============================================================================================================================//
+    // Start up the social media connections
+    var socialMediaReady = userConfig.init();
+
+    // Get app, webmap, feature service
+    var appConfigReadies = appConfig.init();
+
+    // When the DOM is ready and we have the app parameters, we can start adjusting the UI; some of the UI is also dependent
+    // on the i18n setup
+    appConfigReadies.parametersReady.then(function () {
+        $().ready(function () {
+
+            // Splash UI
+            $("#signinTitle")[0].innerHTML = appConfig.appParams.title;
+            $("#signinParagraph")[0].innerHTML = appConfig.appParams.splashText;
+            $("#signinPage").css("background-image", "url(" + appConfig.appParams.splashBackgroundUrl + ")");
+
+            // UI parts using i18n
+            i18nReady.then(function () {
+
+                // When the feature service info is ready, we can set up the module that reads from and writes to the service
+                appConfigReadies.featureServiceReady.then(function () {
+                    dataAccess.init(appConfig.opLayer.url, appConfig.featureSvcParams.id, appConfig.featureSvcParams.objectIdField,
+                        appConfig.appParams.surveyorNameField + "+is+null");
+                    $("#signinBlock").fadeIn("normal");
+
+                    // Test if there are any surveys remaining to be done
+                    dataAccess.getObjectCount().then(function (countRemaining) {
+                        if (countRemaining > 0) {
+                            $("#signinLoginPrompt")[0].innerHTML = i18n.signin.signinLoginPrompt;
+                            $("#signinLoginPrompt").fadeIn("normal");
+
+                            // When the social media connections are ready, we can enable the social-media sign-in buttons
+                            socialMediaReady.then(function () {
+                                $("#socialMediaButtonArea").fadeIn("fast");
+
+
+                                //???-----------------------------------------------------------------------------------------------------//
+
+                                //??? TODO: placeholder for sign-in operation
+                                $("#signinBlock").on('click', function () {
+                                    userConfig.signIn().then(function () {
+                                        $(document).triggerHandler('signedIn:user');
+                                    });
+                                });
+                                //???-----------------------------------------------------------------------------------------------------//
+
+                            });
+                        } else {
+                            $("#signinLoginPrompt")[0].innerHTML = i18n.signin.noMoreSurveys;
+                            $("#signinLoginPrompt").fadeIn("normal");
+                        }
+                    }).fail(function () {
+                        $("#signinLoginPrompt")[0].innerHTML = i18n.signin.noMoreSurveys;
+                        $("#signinLoginPrompt").fadeIn("normal");
+                    });
+                });
+            });
+
+
+            // Don't need help button if there's no help to display
+            if (appConfig.appParams.helpText.length === 0) {
+                $("#helpButton").css("display", "none");
+            } else {
+                $("#helpTitle")[0].innerHTML = appConfig.appParams.title;
+                $("#helpBody")[0].innerHTML = appConfig.appParams.helpText;
+            }
+
+
+        });
+    });
 
 
 
-    //??? appConfig.ready
-    appConfig.init();
-    $("#signinPage").css("background-image", "url(" + appConfig.appParams.splashBackgroundUrl + ")");
 
-    // Don't need help button if there's no help to display
-    if (appConfig.appParams.helpText.length === 0) {
-        $("#helpButton").css("display", "none");
-    } else {
-        $("#helpTitle")[0].innerHTML = appConfig.appParams.title;
-        $("#helpBody")[0].innerHTML = appConfig.appParams.helpText;
-    }
 
     // Using colons for custom event names as recommended by https://learn.jquery.com/events/introduction-to-custom-events/#naming-custom-events
     $(document).on('signedIn:user', function (e) {
-        $("#signinPage").fadeOut("normal");
-        $(document).triggerHandler('show:newSurvey');
+        appConfigReadies.featureServiceReady.then(function () {
+            // Heading on survey/profile page
+            $("#name")[0].innerHTML = userConfig.name;
+            $("#score")[0].innerHTML = userConfig.completions;
+            $("#hearts").css("display", "none");
+
+            $("#signinPage").fadeOut("normal");
+        });
+        appConfigReadies.surveyReady.then(function () {
+            $(document).triggerHandler('show:newSurvey');
+        });
     });
 
     $(document).on('signedOut:user', function (e) {
@@ -73,26 +135,48 @@ define(function (require) {
 
     //??? TODO: split out new user from new survey
     $(document).on('show:newSurvey', function (e) {
-        // Heading
-        $("#name")[0].innerHTML = userConfig.name;
-        $("#score")[0].innerHTML = userConfig.completions;
+        $("#submitBtn")[0].blur();
+
+        // Get candidate property
+        dataAccess.getCandidate().then(function (candidate) {
+            // obj: attributesData,
+            // attachments: attachmentsData
+
+            if (!candidate.obj) {
+                debugger;  //???
+                $(document).triggerHandler('show:newSurvey');
+                return;
+            } else if (candidate.attachments.length === 0) {
+                candidate.obj.attributes[appConfig.appParams.surveyorNameField] = "no photos";
+                dataAccess.updateCandidate(candidate);
+                console.log("No photos for " + JSON.stringify(candidate));//???
+                $(document).triggerHandler('show:newSurvey');
+                return;
+            }
 
 
+            self.candidate = candidate;
+            self.iSelectedPhoto = -1;
+            console.log("Surveying property " + self.candidate.obj.attributes.PIN) //???
 
-        // Gallery
-        var carouselSlidesHolder = $("#carouselSlidesHolder")[0];
-        $(carouselSlidesHolder).children().remove();  // remove children and their events
-        var carouselIndicatorsHolder = $("#carouselIndicatorsHolder")[0];
-        $(carouselIndicatorsHolder).children().remove();  // remove children and their events
-        var initiallyActiveItem = iSelectedPhoto >= 0 ? iSelectedPhoto : 0;
-        $.each(_photos, function (indexInArray, photoInfo) {
-            addPhoto(carouselSlidesHolder, indexInArray, (initiallyActiveItem === indexInArray), photoInfo);
-            addPhotoIndicator(carouselIndicatorsHolder, indexInArray, (initiallyActiveItem === indexInArray), "carousel");
+
+            // Gallery
+            var carouselSlidesHolder = $("#carouselSlidesHolder")[0];
+            $(carouselSlidesHolder).children().remove();  // remove children and their events
+            var carouselIndicatorsHolder = $("#carouselIndicatorsHolder")[0];
+            $(carouselIndicatorsHolder).children().remove();  // remove children and their events
+            var initiallyActiveItem = self.iSelectedPhoto >= 0 ? self.iSelectedPhoto : 0;
+
+            $.each(candidate.attachments, function (indexInArray, photoUrl) {
+                addPhoto(carouselSlidesHolder, indexInArray, (initiallyActiveItem === indexInArray), photoUrl);
+                addPhotoIndicator(carouselIndicatorsHolder, indexInArray, (initiallyActiveItem === indexInArray), "carousel");
+            });
+            $("#carousel").trigger('create');
+
+            updatePhotoSelectionDisplay();
+        }).fail(function (error) {
+            debugger;//???
         });
-        $("#carousel").trigger('create');
-
-        updatePhotoSelectionDisplay();
-
 
         // Survey
         var surveyContainer = $("#surveyContainer")[0];
@@ -102,7 +186,7 @@ define(function (require) {
         });
         $(".btn-group").trigger('create');
 
-        $("#SURVEY_RESULTS").css("background-color", "white").css("border-left-color", "white")[0].innerHTML = "";  //???
+        //$("#SURVEY_RESULTS").css("background-color", "white").css("border-left-color", "white")[0].innerHTML = "";  //???
 
 
         // Profile
@@ -159,38 +243,6 @@ define(function (require) {
 
 
 
-    // Get and apply the language localization
-    this.i18n = {};
-    i18nLoader.then(function (data) {
-        var self = this;
-        this.i18n = data;
-
-        // Update language-dependent parts of UI
-        $().ready(function () {
-            $("#signinTitle")[0].innerHTML = appConfig.appParams.title;
-            $("#signinParagraph")[0].innerHTML = appConfig.appParams.splashText;
-            $("#signinLoginPrompt")[0].innerHTML = self.i18n.signin.signinLoginPrompt;
-            $("#signinBlock").fadeIn("normal", function () {
-                // Simulate display awaiting setup of social media access
-                setTimeout(function () {
-                    $("#socialMediaButtonArea").fadeIn("fast");
-                }, 200);
-            });
-
-            //??? TODO: placeholder for sign-in
-            $("#signinBlock").on('click', function () {
-                userConfig.signIn().then(function () {
-                    $(document).triggerHandler('signedIn:user');
-                });
-            });
-
-
-
-        });
-    });
-
-
-
     // Wire up app
     $("#userSignoutSelection").on('click', function () {
         $(document).triggerHandler('signedOut:user');
@@ -208,7 +260,7 @@ define(function (require) {
         var surveyContainer, msg, iQuestionResult, hasImportants = true;
 
         surveyContainer = $('#surveyContainer');
-        msg = "<u>Selections (0-based indices)</u><br>";
+        msg = "<u>Selections (0-based indices)</u><br>";//??? debugging
         $.each(appConfig.survey, function (iQuestion, questionInfo) {
             if (questionInfo.style === "button") {
                 iQuestionResult = $('#q' + iQuestion + ' .active', surveyContainer).val();
@@ -216,9 +268,10 @@ define(function (require) {
                 iQuestionResult = $('input[name=q' + iQuestion + ']:checked', surveyContainer).val();
             }
             if (iQuestionResult) {
-                msg += iQuestion + ": " + iQuestionResult + " (" + questionInfo.domain.split("|")[iQuestionResult] + ")<br>";
+                self.candidate.obj.attributes[questionInfo.field] = questionInfo.domain.split("|")[iQuestionResult];
+                msg += iQuestion + ": " + iQuestionResult + " (" + questionInfo.domain.split("|")[iQuestionResult] + ")<br>";//??? debugging
             } else {
-                msg += iQuestion + ": <br>";
+                msg += iQuestion + ": <br>";//??? debugging
             }
 
             // Flag missing importants
@@ -232,15 +285,26 @@ define(function (require) {
             }
         });
 
-        $("#SURVEY_RESULTS").css("background-color", (hasImportants ? "darkseagreen" : "#fbdcd5")).css("border-left-color", (hasImportants ? "forestgreen" : "#de2900"))[0].innerHTML = msg;
+        // Submit the survey if it has the important responses
+        if (hasImportants) {
+            self.candidate.obj.attributes[appConfig.appParams.surveyorNameField] = userConfig.name;
+            if (self.iSelectedPhoto >= 0) {
+                self.candidate.obj.attributes[appConfig.appParams.bestPhotoField] = self.iSelectedPhoto;
+            }
+            console.log("Saving survey for property " + self.candidate.obj.attributes.PIN) //???
+            dataAccess.updateCandidate(self.candidate);
+            $(document).triggerHandler('show:newSurvey');
+        }
+
+        //???$("#SURVEY_RESULTS").css("background-color", (hasImportants ? "darkseagreen" : "#fbdcd5")).css("border-left-color", (hasImportants ? "forestgreen" : "#de2900"))[0].innerHTML = msg;//???
     });
 
     $("#hearts").on('click', function () {
         self.photoSelected = !self.photoSelected;
         self.iVisiblePhoto = parseInt($("#carouselSlidesHolder > .item.active")[0].id.substring(1));
-        iSelectedPhoto = self.photoSelected ? self.iVisiblePhoto : -1;
+        self.iSelectedPhoto = self.photoSelected ? self.iVisiblePhoto : -1;
         /*showHeart('filledHeart', self.photoSelected);
-        iSelectedPhoto = self.photoSelected ? self.iVisiblePhoto : -1;*/
+        self.iSelectedPhoto = self.photoSelected ? self.iVisiblePhoto : -1;*/
         updatePhotoSelectionDisplay();
     });
 
@@ -265,7 +329,7 @@ define(function (require) {
     function updatePhotoSelectionDisplay() {
         // After carousel slide
         self.iVisiblePhoto = parseInt($("#carouselSlidesHolder > .item.active")[0].id.substring(1));
-        self.photoSelected = self.iVisiblePhoto === iSelectedPhoto;
+        self.photoSelected = self.iVisiblePhoto === self.iSelectedPhoto;
         showHeart('emptyHeart', !self.photoSelected);
         showHeart('filledHeart', self.photoSelected);
         $("#hearts").attr("title", (self.photoSelected ? "This is the best photo for the property" : "Click if this is the best photo for the property"));
@@ -343,11 +407,27 @@ define(function (require) {
         }
     }
 
-    function addPhoto(carouselSlidesHolder, indexInArray, isActive, photoInfo) {
+    function addPhoto(carouselSlidesHolder, indexInArray, isActive, photoUrl) {
         // <div id='carousel0' class='item active'><img src='__test/VIRB0125.JPG' alt='VIRB0125.JPG'></div>
+        //var content = "<div id='c" + indexInArray + "' class='item" + (isActive ? " active" : "") +
+        //    "'><img src='" + photoUrl + "'></div>";
+        // $(carouselSlidesHolder).append(content);
+
+        // var content = $("<div id='c" + indexInArray + "' class='item" + (isActive ? " active" : "") + "'></div>");
         var content = "<div id='c" + indexInArray + "' class='item" + (isActive ? " active" : "") +
-            "'><img src='" + photoInfo.url + "' alt='" + photoInfo.label + "'></div>";
+            "'><img /></div>";
         $(carouselSlidesHolder).append(content);
+
+        if (indexInArray === -1) {  //???
+            loadImage(photoUrl, $("#c" + indexInArray + " img")[0]);  //???
+        } else {
+            $("#c" + indexInArray + " img")[0].src = photoUrl;
+        }
+
+        /*loadImage(photoUrl).then(function (imgElement) {
+            $(content).append(imgElement);
+            $(carouselSlidesHolder).append(content);
+        });*/
     }
 
     function addPhotoIndicator(carouselIndicatorsHolder, indexInArray, isActive, carouselId) {
@@ -356,5 +436,94 @@ define(function (require) {
             "'" + (isActive ? " class='active'" : "") + "></li>";
         $(carouselIndicatorsHolder).append(content);
     }
+
+
+
+    function startPhotoSet(numPhotos) {
+        // Init shared progress bar
+    }
+
+    // https://gist.github.com/jafstar/3395525
+    // with mods to anonymous functions
+    var progressBar;
+
+    function loadImage(imageURI, context)
+    {
+        var request;
+        //var deferred = $.Deferred();
+        //var imageElement = document.createElement("img");
+
+        request = new XMLHttpRequest();
+        request.onloadstart = function () {
+            progressBar = document.createElement("progress");
+            progressBar.value = 0;
+            progressBar.max = 100;
+            progressBar.removeAttribute("value");
+            document.body.appendChild(progressBar);
+        };
+        request.onprogress = function (e) {
+            if (e.lengthComputable)
+                progressBar.value = e.loaded / e.total * 100;
+            else
+                progressBar.removeAttribute("value");
+        };
+        request.onload = function () {
+            //imageElement.src = "data:image/jpeg;base64," + base64Encode(request.responseText);
+            //deferred.resolve(imageElement);
+
+            context.src = "data:image/jpeg;base64," + base64Encode(request.responseText);
+        };
+        request.onloadend = function () {
+            document.body.removeChild(progressBar);
+        };
+        request.open("GET", imageURI, true);
+        request.overrideMimeType('text/plain; charset=x-user-defined');
+        request.send(null);
+
+        //return deferred;
+    }
+
+    // This encoding function is from Philippe Tenenhaus's example at http://www.philten.com/us-xmlhttprequest-image/
+    function base64Encode(inputStr)
+    {
+       var b64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+       var outputStr = "";
+       var i = 0;
+
+       while (i < inputStr.length)
+       {
+           //all three "& 0xff" added below are there to fix a known bug
+           //with bytes returned by xhr.responseText
+           var byte1 = inputStr.charCodeAt(i++) & 0xff;
+           var byte2 = inputStr.charCodeAt(i++) & 0xff;
+           var byte3 = inputStr.charCodeAt(i++) & 0xff;
+
+           var enc1 = byte1 >> 2;
+           var enc2 = ((byte1 & 3) << 4) | (byte2 >> 4);
+
+           var enc3, enc4;
+           if (isNaN(byte2))
+           {
+               enc3 = enc4 = 64;
+           }
+           else
+           {
+               enc3 = ((byte2 & 15) << 2) | (byte3 >> 6);
+               if (isNaN(byte3))
+               {
+                   enc4 = 64;
+               }
+               else
+               {
+                   enc4 = byte3 & 63;
+               }
+           }
+
+           outputStr += b64.charAt(enc1) + b64.charAt(enc2) + b64.charAt(enc3) + b64.charAt(enc4);
+        }
+
+        return outputStr;
+    }
+
 
 });
