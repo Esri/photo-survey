@@ -139,8 +139,8 @@ define(function (require) {
 
         // Get candidate property
         dataAccess.getCandidate().then(function (candidate) {
-            // obj: attributesData,
-            // attachments: attachmentsData
+            // obj:feature{}
+            // attachments:[{id,url},...]
 
             if (!candidate.obj) {
                 debugger;  //???
@@ -167,8 +167,8 @@ define(function (require) {
             $(carouselIndicatorsHolder).children().remove();  // remove children and their events
             var initiallyActiveItem = self.iSelectedPhoto >= 0 ? self.iSelectedPhoto : 0;
 
-            $.each(candidate.attachments, function (indexInArray, photoUrl) {
-                addPhoto(carouselSlidesHolder, indexInArray, (initiallyActiveItem === indexInArray), photoUrl);
+            $.each(candidate.attachments, function (indexInArray, attachment) {
+                addPhoto(carouselSlidesHolder, indexInArray, (initiallyActiveItem === indexInArray), attachment.url);
                 addPhotoIndicator(carouselIndicatorsHolder, indexInArray, (initiallyActiveItem === indexInArray), "carousel");
             });
             $("#carousel").trigger('create');
@@ -289,7 +289,7 @@ define(function (require) {
         if (hasImportants) {
             self.candidate.obj.attributes[appConfig.appParams.surveyorNameField] = userConfig.name;
             if (self.iSelectedPhoto >= 0) {
-                self.candidate.obj.attributes[appConfig.appParams.bestPhotoField] = self.iSelectedPhoto;
+                self.candidate.obj.attributes[appConfig.appParams.bestPhotoField] = self.candidate.attachments[self.iSelectedPhoto].id;
             }
             console.log("Saving survey for property " + self.candidate.obj.attributes.PIN) //???
             dataAccess.updateCandidate(self.candidate);

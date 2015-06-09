@@ -141,15 +141,16 @@ define(function () {
                     }
 
                     // No attachments is acceptable
-                    var attachmentUrls = [];
+                    var attachments = [];
                     if (results && results.attachmentInfos) {
                         $.each(results.attachmentInfos, function (idx, attachment) {
-                            attachmentUrls.push(
-                                self.featureServiceUrl + objectId + "/attachment/" + attachment.id
-                            );
+                            attachments.push({
+                                id: attachment.id,
+                                url: self.featureServiceUrl + objectId + "/attachment/" + attachment.id
+                            });
                         });
                     }
-                    attachmentsDeferred.resolve(attachmentUrls);
+                    attachmentsDeferred.resolve(attachments);
                 });
 
                 // Return the attributes and attachments
