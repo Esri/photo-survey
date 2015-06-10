@@ -186,8 +186,6 @@ define(function (require) {
         });
         $(".btn-group").trigger('create');
 
-        //$("#SURVEY_RESULTS").css("background-color", "white").css("border-left-color", "white")[0].innerHTML = "";  //???
-
 
         // Profile
         if (userConfig.avatar) {
@@ -260,7 +258,6 @@ define(function (require) {
         var surveyContainer, msg, iQuestionResult, hasImportants = true;
 
         surveyContainer = $('#surveyContainer');
-        msg = "<u>Selections (0-based indices)</u><br>";//??? debugging
         $.each(appConfig.survey, function (iQuestion, questionInfo) {
             if (questionInfo.style === "button") {
                 iQuestionResult = $('#q' + iQuestion + ' .active', surveyContainer).val();
@@ -269,9 +266,6 @@ define(function (require) {
             }
             if (iQuestionResult) {
                 self.candidate.obj.attributes[questionInfo.field] = questionInfo.domain.split("|")[iQuestionResult];
-                msg += iQuestion + ": " + iQuestionResult + " (" + questionInfo.domain.split("|")[iQuestionResult] + ")<br>";//??? debugging
-            } else {
-                msg += iQuestion + ": <br>";//??? debugging
             }
 
             // Flag missing importants
@@ -295,8 +289,6 @@ define(function (require) {
             dataAccess.updateCandidate(self.candidate);
             $(document).triggerHandler('show:newSurvey');
         }
-
-        //???$("#SURVEY_RESULTS").css("background-color", (hasImportants ? "darkseagreen" : "#fbdcd5")).css("border-left-color", (hasImportants ? "forestgreen" : "#de2900"))[0].innerHTML = msg;//???
     });
 
     $("#hearts").on('click', function () {
