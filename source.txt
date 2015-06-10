@@ -1,0 +1,5 @@
+commit d920784bb7049f250d8b45ec24e52acf297cfe33
+Author: MikeTschudi <mtschudi@esri.com>
+Date:   Wed Jun 10 10:28:20 2015 -0700
+
+    Updated splash

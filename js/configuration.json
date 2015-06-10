@@ -1,0 +1,17 @@
+﻿{
+    "source": "dbd49c155bf249f79bf1e518d56dbbb2",
+    "folderId": "052b07ec56b3462c943adcc6959354ec",
+    "values": {
+        "webmap": "252613b18fff42928e6f5ab84edfbaed",
+        "title": "Property Survey",
+        "splashText": "The Property Survey application can be used to conduct rapid damage assessments, inventory blighted properties, target reappraisal efforts, and identify structures that could pose safety concerns.",
+        "splashBackgroundUrl": "images/splash.jpg",
+        "helpText": "Please select the answers that best describe the property. Questions with a star are particularly important to answer. You can also vote on the best photo for a property.",
+        "contributions": "Beginner,100,Contributor,200,Strong Contributor,400,Civic Trailblazer,800,Outstanding Citizen,1600,Civic Paragon",
+        "showFacebook": "true",
+        "showGooglePlus": "true",
+        "showTwitter": "true",
+        "surveyorNameField": "SRVNAME",
+        "bestPhotoField": "BSTPHOTOID"
+    }
+}
