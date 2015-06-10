@@ -36,9 +36,6 @@ define(function (require) {
     // Get language localization
     var i18nReady = i18n.init();
 
-    // Start up the social media connections
-    var socialMediaReady = userConfig.init();
-
     // Get app, webmap, feature service
     var appConfigReadies = appConfig.init();
 
@@ -46,6 +43,9 @@ define(function (require) {
     // on the i18n setup
     appConfigReadies.parametersReady.then(function () {
         $().ready(function () {
+
+            // Start up the social media connections
+            var socialMediaReady = userConfig.init(appConfig, $("#socialMediaButtonArea")[0]);
 
             // Splash UI
             $("#signinTitle")[0].innerHTML = appConfig.appParams.title;
@@ -64,12 +64,15 @@ define(function (require) {
                     // Test if there are any surveys remaining to be done
                     dataAccess.getObjectCount().then(function (countRemaining) {
                         if (countRemaining > 0) {
-                            $("#signinLoginPrompt")[0].innerHTML = i18n.signin.signinLoginPrompt;
-                            $("#signinLoginPrompt").fadeIn("normal");
-
                             // When the social media connections are ready, we can enable the social-media sign-in buttons
+                            $("#signinLoginPrompt")[0].innerHTML = i18n.signin.signinFetching;
+                            $("#signinLoginPrompt").fadeIn("normal");
                             socialMediaReady.then(function () {
-                                $("#socialMediaButtonArea").fadeIn("fast");
+                                $("#signinLoginPrompt").fadeOut("fast", function () {
+                                    $("#signinLoginPrompt")[0].innerHTML = i18n.signin.signinLoginPrompt;
+                                    $("#signinLoginPrompt").fadeIn("fast");
+                                    $("#socialMediaButtonArea").fadeIn("fast");
+                                });
 
 
                                 //???-----------------------------------------------------------------------------------------------------//
@@ -82,6 +85,11 @@ define(function (require) {
                                 });
                                 //???-----------------------------------------------------------------------------------------------------//
 
+                            }).fail(function () {
+                                $("#signinLoginPrompt").fadeOut("fast", function () {
+                                    $("#signinLoginPrompt")[0].innerHTML = i18n.signin.noMoreSurveys;
+                                    $("#signinLoginPrompt").fadeIn("fast");
+                                });
                             });
                         } else {
                             $("#signinLoginPrompt")[0].innerHTML = i18n.signin.noMoreSurveys;
@@ -429,7 +437,7 @@ define(function (require) {
         $(carouselIndicatorsHolder).append(content);
     }
 
-
+    //------------------------------------------------------------------------------------------------------------------------//
 
     function startPhotoSet(numPhotos) {
         // Init shared progress bar
