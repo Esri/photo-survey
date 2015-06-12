@@ -35,6 +35,9 @@ define(function (require) {
 
 //============================================================================================================================//
 
+    // Bring the app to visibility
+    $("#signinPage").fadeIn("normal");
+
     // Get language localization
     var i18nReady = i18n.init();
 
