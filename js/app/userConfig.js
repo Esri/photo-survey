@@ -30,6 +30,7 @@ define(function () {
         _loggedIn: null,
         _user: null,
         _statusCallback: null,
+        _currentProvider: null,
 
         //--------------------------------------------------------------------------------------------------------------------//
 
@@ -47,11 +48,11 @@ define(function () {
                     // Provide a startup function for when the SDK finishes loading
                     window.fbAsyncInit = function () {
                         FB.Event.subscribe("auth.login", function () {console.warn("auth.login --> update");});//???
-                        FB.Event.subscribe("auth.login", self.updateFacebookUser);
+                        FB.Event.subscribe("auth.login", self._updateFacebookUser);
                         FB.Event.subscribe("auth.statusChange", function () {console.warn("auth.statusChange --> update");});//???
-                        FB.Event.subscribe("auth.statusChange", self.updateFacebookUser);
+                        FB.Event.subscribe("auth.statusChange", self._updateFacebookUser);
                         FB.Event.subscribe("auth.logout", function () {console.warn("auth.logout --> update");});//???
-                        FB.Event.subscribe("auth.logout", self.updateFacebookUser);
+                        FB.Event.subscribe("auth.logout", self._updateFacebookUser);
 
                         FB.init({
                             appId: self.appConfig.appParams.facebookAppId,
@@ -63,7 +64,7 @@ define(function () {
 
                         // Update UI based on whether or not the user is currently logged in to FB
                         console.warn("fbAsyncInit --> update");//???
-                        FB.getLoginStatus(self.updateFacebookUser);
+                        FB.getLoginStatus(self._updateFacebookUser);
                     };
 
                     // Load the SDK asynchronously; it calls window.fbAsyncInit when done
@@ -133,16 +134,6 @@ define(function () {
             return deferred;
         },
 
-        signOut: function () {
-            console.warn("signOut; believed logged in: " + self.isSignedIn());
-            completions = 0;
-            if (self.isSignedIn()) {
-                // Log the user out of the app; known FB issue is that cookies are not cleared as promised if
-                // browser set to block third-party cookies
-                FB.logout();
-            }
-        },
-
         /**
          * Returns the signed-in state.
          * @param {boolean} Logged in or not
@@ -152,12 +143,39 @@ define(function () {
         },
 
         /**
+         * Returns the currently signed-in user name and service id.
+         * @return {JSON} Structure containing "name" and "id" parameters if a user is
+         * logged in, an empty structure if a user is not logged in, and null if the
+         * service is not available due to browser incompatibility or startup failure
+         * @memberOf social#
+         */
+        getUser: function () {
+            return self._user;
+        },
+
+        signOut: function () {
+            console.warn("signOut; believed logged in: " + self.isSignedIn());
+            if (self.isSignedIn()) {
+                switch (self._currentProvider) {
+                    case "facebook":
+                        // Log the user out of the app; known FB issue is that cookies are not cleared as promised if
+                        // browser set to block third-party cookies
+                        FB.logout();
+                        break;
+                }
+            }
+            self._currentProvider = "none";
+        },
+
+        //--------------------------------------------------------------------------------------------------------------------//
+
+        /**
          * Updates the information held about the signed-in user.
          * @param {object} [response] Service-specific response object
          * @memberOf socialFB#
          * @abstract
          */
-        updateFacebookUser: function (response) {
+        _updateFacebookUser: function (response) {
             // Events & FB.getLoginStatus return an updated authResponse object
             // {
             //     status: 'connected',
@@ -171,18 +189,18 @@ define(function () {
 
             // self response may not be true; we'll find out for sure when we call FB.api
             self._loggedIn = response && response.status === "connected";
-            console.warn("updateFacebookUser; believe logged in: " + self._loggedIn);//???
+            console.warn("_updateFacebookUser; believe logged in: " + self._loggedIn);//???
+            self._currentProvider = self._loggedIn ? "facebook" : "";
 
             // If logged in, update info from the account
             self._user = {};
             if (self._loggedIn) {
-                FB.api("/me", {fields: "name"}, function (apiResponse) {
+                FB.api("/me", {fields: "name,id"}, function (apiResponse) {
                     self._loggedIn = apiResponse.name !== undefined;
                     if (self._loggedIn) {
                         self._user = {
                             "name": apiResponse.name,
-                            "id": response.authResponse.userID,
-                            "accessToken": response.authResponse.accessToken
+                            "id": apiResponse.id
                         };
                         // Update the calling app
                         self._statusCallback(self.notificationSignIn);
@@ -204,17 +222,6 @@ define(function () {
                 self._statusCallback(self.notificationSignOut);
                 self._statusCallback(self.notificationAvatarUpdate);
             }
-        },
-
-        /**
-         * Returns the currently signed-in user name and service id.
-         * @return {JSON} Structure containing "name" and "id" parameters if a user is
-         * logged in, an empty structure if a user is not logged in, and null if the
-         * service is not available due to browser incompatibility or startup failure
-         * @memberOf social#
-         */
-        getUser: function () {
-            return self._user;
         },
 
         /**
