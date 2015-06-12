@@ -16,7 +16,7 @@
  | limitations under the License.
  */
 //============================================================================================================================//
-define(['i18n', 'appConfig', 'userConfig', 'dataAccess'],
+define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'],
     function (i18n, appConfig, userConfig, dataAccess) {
     var self;
 
@@ -33,9 +33,6 @@ define(['i18n', 'appConfig', 'userConfig', 'dataAccess'],
 
     // Bring the app to visibility
     $("#signinPage").fadeIn("normal");
-
-    // Get language localization
-    var i18nReady = i18n.init();
 
     // Get app, webmap, feature service
     var appConfigReadies = appConfig.init();
@@ -76,44 +73,39 @@ define(['i18n', 'appConfig', 'userConfig', 'dataAccess'],
             $("#signinParagraph")[0].innerHTML = appConfig.appParams.splashText;
             $("#signinPage").css("background-image", "url(" + appConfig.appParams.splashBackgroundUrl + ")");
 
-            // UI parts using i18n
-            i18nReady.then(function () {
+            // When the feature service info is ready, we can set up the module that reads from and writes to the service
+            appConfigReadies.featureServiceReady.then(function () {
+                dataAccess.init(appConfig.opLayer.url, appConfig.featureSvcParams.id, appConfig.featureSvcParams.objectIdField,
+                    appConfig.appParams.surveyorNameField + "+is+null");
+                $("#signinBlock").fadeIn("normal");
 
-                // When the feature service info is ready, we can set up the module that reads from and writes to the service
-                appConfigReadies.featureServiceReady.then(function () {
-                    dataAccess.init(appConfig.opLayer.url, appConfig.featureSvcParams.id, appConfig.featureSvcParams.objectIdField,
-                        appConfig.appParams.surveyorNameField + "+is+null");
-                    $("#signinBlock").fadeIn("normal");
-
-                    // Test if there are any surveys remaining to be done
-                    dataAccess.getObjectCount().then(function (countRemaining) {
-                        if (countRemaining > 0) {
-                            // When the social media connections are ready, we can enable the social-media sign-in buttons
-                            $("#signinLoginPrompt")[0].innerHTML = i18n.signin.signinFetching;
-                            $("#signinLoginPrompt").fadeIn("normal");
-                            socialMediaReady.then(function () {
-                                $("#signinLoginPrompt").fadeOut("fast", function () {
-                                    $("#signinLoginPrompt")[0].innerHTML = i18n.signin.signinLoginPrompt;
-                                    $("#signinLoginPrompt").fadeIn("fast");
-                                    $("#socialMediaButtonArea").fadeIn("fast");
-                                });
-                            }).fail(function () {
-                                $("#signinLoginPrompt").fadeOut("fast", function () {
-                                    $("#signinLoginPrompt")[0].innerHTML = i18n.signin.noMoreSurveys;
-                                    $("#signinLoginPrompt").fadeIn("fast");
-                                });
+                // Test if there are any surveys remaining to be done
+                dataAccess.getObjectCount().then(function (countRemaining) {
+                    if (countRemaining > 0) {
+                        // When the social media connections are ready, we can enable the social-media sign-in buttons
+                        $("#signinLoginPrompt")[0].innerHTML = i18n.signin.signinFetching;
+                        $("#signinLoginPrompt").fadeIn("normal");
+                        socialMediaReady.then(function () {
+                            $("#signinLoginPrompt").fadeOut("fast", function () {
+                                $("#signinLoginPrompt")[0].innerHTML = i18n.signin.signinLoginPrompt;
+                                $("#signinLoginPrompt").fadeIn("fast");
+                                $("#socialMediaButtonArea").fadeIn("fast");
                             });
-                        } else {
-                            $("#signinLoginPrompt")[0].innerHTML = i18n.signin.noMoreSurveys;
-                            $("#signinLoginPrompt").fadeIn("normal");
-                        }
-                    }).fail(function () {
+                        }).fail(function () {
+                            $("#signinLoginPrompt").fadeOut("fast", function () {
+                                $("#signinLoginPrompt")[0].innerHTML = i18n.signin.noMoreSurveys;
+                                $("#signinLoginPrompt").fadeIn("fast");
+                            });
+                        });
+                    } else {
                         $("#signinLoginPrompt")[0].innerHTML = i18n.signin.noMoreSurveys;
                         $("#signinLoginPrompt").fadeIn("normal");
-                    });
+                    }
+                }).fail(function () {
+                    $("#signinLoginPrompt")[0].innerHTML = i18n.signin.noMoreSurveys;
+                    $("#signinLoginPrompt").fadeIn("normal");
                 });
             });
-
 
             // Don't need help button if there's no help to display
             if (appConfig.appParams.helpText.length === 0) {
