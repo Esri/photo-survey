@@ -28,7 +28,9 @@ define(function (require) {
         iVisiblePhoto: 0,
         photoSelected: false,
         iSelectedPhoto: -1,
-        candidate: null
+        candidate: null,
+        signedIn: false,
+        completions: 0
     };
 
 //============================================================================================================================//
@@ -45,7 +47,30 @@ define(function (require) {
         $().ready(function () {
 
             // Start up the social media connections
-            var socialMediaReady = userConfig.init(appConfig, $("#socialMediaButtonArea")[0]);
+            var socialMediaReady = userConfig.init(appConfig, $("#socialMediaButtonArea")[0], function (notificationType) {
+                // Callback from current social medium
+                switch (notificationType) {
+                    case userConfig.notificationSignIn:
+                        if (!self.signedIn) {
+                            self.signedIn = true;
+                            console.warn("signing in user " + userConfig.getUser().name);//???
+                            $(document).triggerHandler('signedIn:user');
+                        }
+                        break;
+                    case userConfig.notificationSignOut:
+                        self.signedIn = false;
+                        break;
+                    case userConfig.notificationAvatarUpdate:
+                        var avatar = userConfig.getUser().avatar;
+                        if (avatar) {
+                            $("#profileAvatar").css("backgroundImage", "url(" + avatar + ")");
+                            $("#profileAvatar").fadeIn("fast");
+                        } else {
+                            $("#profileAvatar").css("display", "none");
+                        }
+                        break;
+                }
+            });
 
             // Splash UI
             $("#signinTitle")[0].innerHTML = appConfig.appParams.title;
@@ -73,18 +98,6 @@ define(function (require) {
                                     $("#signinLoginPrompt").fadeIn("fast");
                                     $("#socialMediaButtonArea").fadeIn("fast");
                                 });
-
-
-                                //???-----------------------------------------------------------------------------------------------------//
-
-                                //??? TODO: placeholder for sign-in operation
-                                $("#signinBlock").on('click', function () {
-                                    userConfig.signIn().then(function () {
-                                        $(document).triggerHandler('signedIn:user');
-                                    });
-                                });
-                                //???-----------------------------------------------------------------------------------------------------//
-
                             }).fail(function () {
                                 $("#signinLoginPrompt").fadeOut("fast", function () {
                                     $("#signinLoginPrompt")[0].innerHTML = i18n.signin.noMoreSurveys;
@@ -116,15 +129,29 @@ define(function (require) {
     });
 
 
-
-
-
     // Using colons for custom event names as recommended by https://learn.jquery.com/events/introduction-to-custom-events/#naming-custom-events
     $(document).on('signedIn:user', function (e) {
         appConfigReadies.featureServiceReady.then(function () {
+            var user = userConfig.getUser();
+
             // Heading on survey/profile page
-            $("#name")[0].innerHTML = userConfig.name;
-            $("#score")[0].innerHTML = userConfig.completions;
+            $("#name")[0].innerHTML = user.name;
+            $("#name2")[0].innerHTML = user.name;
+
+            dataAccess.getObjectCount(appConfig.appParams.surveyorNameField + "=\'" + user.name + "\'").then(function (count) {
+                if (count >= 0) {
+                    self.completions = count;
+                    updateCount();
+                } else {
+                    $("#profileCount").css("display", "none");
+                    $("#ranking").css("display", "none");
+                }
+
+            }).fail(function (error) {
+                $("#profileCount").css("display", "none");
+                $("#ranking").css("display", "none");
+            });
+
             $("#hearts").css("display", "none");
 
             $("#signinPage").fadeOut("normal");
@@ -141,7 +168,6 @@ define(function (require) {
         userConfig.signOut();
     });
 
-    //??? TODO: split out new user from new survey
     $(document).on('show:newSurvey', function (e) {
         $("#submitBtn")[0].blur();
 
@@ -157,7 +183,7 @@ define(function (require) {
             } else if (candidate.attachments.length === 0) {
                 candidate.obj.attributes[appConfig.appParams.surveyorNameField] = "no photos";
                 dataAccess.updateCandidate(candidate);
-                console.log("No photos for " + JSON.stringify(candidate));//???
+                console.warn("No photos for " + JSON.stringify(candidate));//???
                 $(document).triggerHandler('show:newSurvey');
                 return;
             }
@@ -165,7 +191,7 @@ define(function (require) {
 
             self.candidate = candidate;
             self.iSelectedPhoto = -1;
-            console.log("Surveying property " + self.candidate.obj.attributes.PIN) //???
+            console.warn("Surveying property " + self.candidate.obj.attributes.PIN) //???
 
 
             // Gallery
@@ -193,44 +219,6 @@ define(function (require) {
             addQuestion(surveyContainer, indexInArray, questionInfo);
         });
         $(".btn-group").trigger('create');
-
-
-        // Profile
-        if (userConfig.avatar) {
-            $("#profileAvatar").css("backgroundImage", "url(" + userConfig.avatar + ")");
-        } else {
-            $("#profileAvatar").css("display", "none");
-        }
-        $("#name2")[0].innerHTML = userConfig.name;
-        $("#score2")[0].innerHTML = userConfig.completions;
-
-        if (appConfig.contribLevels.length > 0) {
-            var level = appConfig.contribLevels.length - 1;
-            var remainingToNextLevel = 0;
-            while (appConfig.contribLevels[level].minimumSurveysNeeded > userConfig.completions) {
-                remainingToNextLevel = appConfig.contribLevels[level].minimumSurveysNeeded;
-                level -= 1;
-            }
-            var doneThisLevel = userConfig.completions - appConfig.contribLevels[level].minimumSurveysNeeded;
-            remainingToNextLevel = Math.max(0, remainingToNextLevel - userConfig.completions);
-            var cRankBarWidthPx = 170;
-            $("#profileRankBarFill")[0].style.width = (cRankBarWidthPx * doneThisLevel / (doneThisLevel + remainingToNextLevel)) + "px";
-
-            if (level === 0) {
-                $("img", ".profileRankStars").attr("src", "images/empty-star.png");
-            } else {
-                var stars = $("img:eq(" + (level - 1) + ")", ".profileRankStars");
-                stars.prevAll().andSelf().attr("src", "images/filled-star.png");
-                stars.nextAll().attr("src", "images/empty-star.png");
-            }
-            $("#rankLabel")[0].innerHTML = appConfig.contribLevels[level].label;
-            $("#level")[0].innerHTML = "level $(level)".replace("$(level)", level);
-            $("#remainingToNextLevel")[0].innerHTML = remainingToNextLevel === 0? "" :
-                "$(remainingToNextLevel) surveys left until next level".replace("$(remainingToNextLevel)", remainingToNextLevel);
-        } else {
-            $("#ranking").css("display", "none");
-        }
-
 
         // Show the content
         $("#contentPage").fadeIn("fast");
@@ -260,7 +248,7 @@ define(function (require) {
         $(document).triggerHandler('hide:profile');
     });
     $("#skipBtn").on('click', function () {
-        $(document).triggerHandler('show:newSurvey', userConfig.name);
+        $(document).triggerHandler('show:newSurvey', userConfig.getUser().name);
     });
     $("#submitBtn").on('click', function () {
         var surveyContainer, msg, iQuestionResult, hasImportants = true;
@@ -289,12 +277,16 @@ define(function (require) {
 
         // Submit the survey if it has the important responses
         if (hasImportants) {
-            self.candidate.obj.attributes[appConfig.appParams.surveyorNameField] = userConfig.name;
+            self.candidate.obj.attributes[appConfig.appParams.surveyorNameField] = userConfig.getUser().name;
             if (self.iSelectedPhoto >= 0) {
                 self.candidate.obj.attributes[appConfig.appParams.bestPhotoField] = self.candidate.attachments[self.iSelectedPhoto].id;
             }
-            console.log("Saving survey for property " + self.candidate.obj.attributes.PIN) //???
+            console.warn("Saving survey for property " + self.candidate.obj.attributes.PIN) //???
             dataAccess.updateCandidate(self.candidate);
+
+            self.completions += 1;
+            updateCount();
+
             $(document).triggerHandler('show:newSurvey');
         }
     });
@@ -334,6 +326,41 @@ define(function (require) {
         showHeart('filledHeart', self.photoSelected);
         $("#hearts").attr("title", (self.photoSelected ? "This is the best photo for the property" : "Click if this is the best photo for the property"));
         $("#hearts")[0].style.display = "block";
+    }
+
+    function updateCount() {
+        $("#score")[0].innerHTML = self.completions;
+        $("#score2")[0].innerHTML = self.completions;
+        $("#profileCount").fadeIn("normal");
+
+        if (appConfig.contribLevels.length > 0) {
+            var level = appConfig.contribLevels.length - 1;
+            var remainingToNextLevel = 0;
+            while (appConfig.contribLevels[level].minimumSurveysNeeded > self.completions) {
+                remainingToNextLevel = appConfig.contribLevels[level].minimumSurveysNeeded;
+                level -= 1;
+            }
+            var doneThisLevel = self.completions - appConfig.contribLevels[level].minimumSurveysNeeded;
+            remainingToNextLevel = Math.max(0, remainingToNextLevel - self.completions);
+            var cRankBarWidthPx = 170;
+            $("#profileRankBarFill")[0].style.width = (cRankBarWidthPx * doneThisLevel / (doneThisLevel + remainingToNextLevel)) + "px";
+
+            if (level === 0) {
+                $("img", ".profileRankStars").attr("src", "images/empty-star.png");
+            } else {
+                var stars = $("img:eq(" + (level - 1) + ")", ".profileRankStars");
+                stars.prevAll().andSelf().attr("src", "images/filled-star.png");
+                stars.nextAll().attr("src", "images/empty-star.png");
+            }
+            $("#rankLabel")[0].innerHTML = appConfig.contribLevels[level].label;
+            $("#level")[0].innerHTML = "level $(level)".replace("$(level)", level);
+            $("#remainingToNextLevel")[0].innerHTML = remainingToNextLevel === 0? "" :
+                "$(remainingToNextLevel) surveys left until next level".replace("$(remainingToNextLevel)", remainingToNextLevel);
+
+            $("#ranking").fadeIn("normal");
+        } else {
+            $("#ranking").css("display", "none");
+        }
     }
 
 
