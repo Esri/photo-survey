@@ -28,8 +28,6 @@ define(
             button_tip_close: "Fermez le panneau de informations complémentaires"
         },
         signin: {
-            signinTitle: "Évaluation de photos des propriétés",
-            signinParagraph: "Le logiciel de évaluation de photos des propriétés peut être utilisé pour effectuer des évaluations rapides des dommages, inventaire gâchée propriétés, cibler les efforts de réappréciation, et d'identifier les structures qui pourraient poser des problèmes de sécurité.",
             signinFetching: "Vérification de la disponibilité des médias sociaux...",
             signinLoginPrompt: "S'il vous plaît vous connecter pour commencer",
             noMoreSurveys: "Il n'y a pas de sondages disponibles à ce moment. Merci pour votre participation."

@@ -28,8 +28,6 @@ define({
             button_tip_close: "Close additional information panel"
         },
         signin: {
-            signinTitle: "Property Survey",
-            signinParagraph: "The Property Survey application can be used to conduct rapid damage assessments, inventory blighted properties, target reappraisal efforts, and identify structures that could pose safety concerns.",
             signinFetching: "Checking availability of social media...",
             signinLoginPrompt: "Please sign in to get started",
             noMoreSurveys: "There are no surveys available at this time; thank you for your participation."
