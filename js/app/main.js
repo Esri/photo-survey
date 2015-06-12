@@ -19,10 +19,10 @@
 define(function (require) {
     var self, i18n, userConfig, appConfig, dataAccess;
 
-    i18n = require('app/i18n');
-    appConfig = require('app/appConfig');
-    userConfig = require('app/userConfig');
-    dataAccess = require('app/dataAccess');
+    i18n = require('i18n');
+    appConfig = require('appConfig');
+    userConfig = require('userConfig');
+    dataAccess = require('dataAccess');
 
     self = {
         iVisiblePhoto: 0,
