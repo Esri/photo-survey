@@ -1,0 +1,3 @@
+https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js
+https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js
+http://requirejs.org/docs/release/2.1.18/minified/require.js
