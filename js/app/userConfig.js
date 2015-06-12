@@ -41,6 +41,8 @@ define(function () {
             self._statusCallback = statusCallback;
             self.appConfig = appConfig;
 
+            //................................................................................................................//
+
             // Attempt to initialize Facebook if wanted
             var facebookDeferred = $.Deferred();
             setTimeout(function () {
@@ -99,27 +101,71 @@ define(function () {
                 }
             });
 
+            //................................................................................................................//
+
             // Attempt to initialize Google+ if wanted
             var googlePlusDeferred = $.Deferred();
             setTimeout(function () {
                 if (!isIE8 && appConfig.appParams.showGooglePlus) {
-                    $('<div id="googlePlusSignin" class="socialMediaButton googlePlusOfficialColor" style="background-image:url(\'images/gp-29.png\')">Google+</div>').appendTo(buttonContainer);
-                    googlePlusDeferred.resolve(true);
+                    // Load the SDK asynchronously; it calls window.ggAsyncInit when done
+                    (function () {
+                        // Don't have Google+ API scan page for button
+                        window.___gcfg = {parsetags: "explicit"};
+
+                        // Modernizr/yepnope for load to get onload event cross-browser
+                        Modernizr.load([{
+                            load: "https://apis.google.com/js/client:platform.js",
+                            complete: function () {
+                                gapi.load('auth2', function () {
+                                    gapi.client.load('plus', 'v1').then(function () {
+                                        $('<div id="googlePlusSignin" class="socialMediaButton googlePlusOfficialColor" style="background-image:url(\'images/gp-29.png\')">Google+</div>').appendTo(buttonContainer);
+                                        $('#googlePlusSignin').on('click', function () {
+                                            // Google caveat for setting cookiepolicy to "none":
+                                            // The none value does not set cookies or session storage for the sign-in button
+                                            // and uses a less efficient fallback mechanism for determining user and session
+                                            // information. Setting this value to none also prevents gapi.auth.signout from
+                                            // working for the user and requires you to implement signout appropriately. This
+                                            // value also can prevent a user who is signed in to multiple Google accounts
+                                            // (say, work and personal) from being able to select which account to use with
+                                            // your website.
+                                            // -- https://developers.google.com/+/web/signin/reference/#button_attr_clientid
+                                            gapi.auth.signIn({
+                                                "clientid": self.appConfig.appParams.googleplusClientId,
+                                                "cookiepolicy": "http://" + document.location.hostname,
+                                                "callback": self._updateGooglePlusUser
+                                            });
+                                        });
+                                        googlePlusDeferred.resolve(true);
+                                    });
+                                });
+                            }
+                        }]);
+                    }());
+
+
+
                 } else {
                     googlePlusDeferred.resolve(false);
                 }
             });
 
+            //................................................................................................................//
+
             // Attempt to initialize Twitter if wanted
             var twitterDeferred = $.Deferred();
             setTimeout(function () {
                 if (!isIE8 && appConfig.appParams.showTwitter) {
+
+
+
                     $('<div id="twitterSignin" class="socialMediaButton twitterOfficialColor" style="background-image:url(\'images/Twitter_logo_blue_29.png\')">Twitter</div>').appendTo(buttonContainer);
                     twitterDeferred.resolve(true);
                 } else {
                     twitterDeferred.resolve(false);
                 }
             }, 2000);
+
+            //................................................................................................................//
 
             // Test if we have any initialized providers
             $.when(facebookDeferred, googlePlusDeferred, twitterDeferred)
@@ -157,10 +203,29 @@ define(function () {
             console.warn("signOut; believed logged in: " + self.isSignedIn());
             if (self.isSignedIn()) {
                 switch (self._currentProvider) {
+
                     case "facebook":
                         // Log the user out of the app; known FB issue is that cookies are not cleared as promised if
                         // browser set to block third-party cookies
                         FB.logout();
+                        break;
+
+                    case "googlePlus":
+                        // Log the user out of the app
+                        try {
+                            self._disconnectUser(self._user.access_token);
+                            gapi.auth.signOut();
+                        } catch (result) {
+                            console.warn("G+ signout exception: " + JSON.stringify(result));//???
+                        }
+                        break;
+
+                    case "twitter":
+                        // Log the user out of the app; known Twitter issue that it does not log the current user out
+                        // unless he/she enters a password and then clicks "cancel", and then clicks to return to the
+                        // app even though the Twitter display claims that the app continues to have access to the
+                        // user's information.
+                        this._showTwitterLoginWin(true);
                         break;
                 }
             }
@@ -223,6 +288,145 @@ define(function () {
                 self._statusCallback(self.notificationAvatarUpdate);
             }
         },
+
+        //--------------------------------------------------------------------------------------------------------------------//
+
+        /**
+         * Updates the information held about the signed-in user.
+         * @param {object} [response] Service-specific response object
+         * @memberOf socialGP#
+         * @abstract
+         */
+        _updateGooglePlusUser: function (response) {
+            self._loggedIn = response && response.status && response.status.signed_in;
+            self._currentProvider = self._loggedIn ? "googlePlus" : "";
+
+            // If logged in, update info from the account
+            self._user = {};
+            if (self._loggedIn) {
+                gapi.client.request({
+                    "path": "/plus/v1/people/me"
+                }).then(function (apiResponse) {
+                    self._user = {
+                        "name": apiResponse.result.displayName,
+                        "id": apiResponse.result.id,
+                        "access_token": response.access_token
+                    };
+
+                    // Update the calling app
+                    self._statusCallback(self.notificationSignIn);
+                }, function (reason) {
+                    // Update the calling app
+                    self._statusCallback(self.notificationSignOut);
+                });
+
+            // Report not-logged-in state
+            } else {
+                self._statusCallback(self.notificationSignOut);
+            }
+        },
+
+        // From https://developers.google.com/+/web/signin/disconnect
+        _disconnectUser: function(access_token) {
+            var revokeUrl = 'https://accounts.google.com/o/oauth2/revoke?token=' +
+                access_token;
+
+            // Perform an asynchronous GET request.
+            $.ajax( {
+                type: 'GET',
+                url: revokeUrl,
+                async: false,
+                contentType: "application/json",
+                dataType: 'jsonp',
+                success: function(nullResponse) {
+                    console.warn("access token revoked")//???
+                    self._updateGooglePlusUser();
+                },
+                error: function(e) {
+                    console.warn("access token revoke failed")//???
+                    self._updateGooglePlusUser();
+                }
+            });
+        },
+
+        //--------------------------------------------------------------------------------------------------------------------//
+
+        /**
+         * Displays the Twitter login window.
+         * <br>N.B.: does not log the current user out unless he/she enters a password and then clicks "cancel",
+         * and then clicks to return to the app even though the Twitter display claims that the app continues to have
+         * access to the user's information.
+         * @param {boolean} [forceLogin] If true, requires a re-login
+         */
+        _showTwitterLoginWin: function (forceLogin) {
+            baseUrl, package_path, redirect_uri, left, top, w, h;
+
+            baseUrl = self.appConfig.appParams.twitterSigninUrl;
+            package_path = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
+            redirect_uri = encodeURIComponent(location.protocol + '//' + location.host + package_path + self.appConfig.appParams.twitterCallbackPage);
+            left = (screen.width / 2) - (w / 2);
+            top = (screen.height / 2) - (h / 2);
+            w = screen.width / 2;
+            h = screen.height / 1.5;
+
+            baseUrl += '?';
+            if (forceLogin) {
+                baseUrl += 'force_login=true';
+            }
+            if (forceLogin && redirect_uri) {
+                baseUrl += '&';
+            }
+            if (redirect_uri) {
+                baseUrl += 'redirect_uri=' + redirect_uri;
+            }
+
+            window.open(baseUrl, "twoAuth", "scrollbars=yes, resizable=yes, left=" + left + ", top=" + top + ", width=" + w + ", height=" + h, true);
+            window.oAuthCallback = function () {
+                self._updateTwitterUser();
+            };
+        },
+
+        /**
+         * Updates the information held about the signed-in user.
+         * @param {object} [response] Service-specific response object
+         * @memberOf socialTW#
+         * @abstract
+         */
+        _updateTwitterUser: function () {
+            var query = {
+                include_entities: true,
+                skip_status: true
+            };
+            esriRequest({
+                url: self.appConfig.appParams.twitterUserUrl,
+                handleAs: "json",
+                timeout: 10000,
+                content: query,
+                callbackParamName: "callback"
+            }).then(function (response) {
+                self._loggedIn = !response.hasOwnProperty("signedIn");
+                if (self._loggedIn) {
+                    self._user = {
+                        "name": response.name,
+                        "id": response.id_str
+                    };
+                } else {
+                    self._user = {};
+                }
+
+                // Update the calling app
+                self._statusCallback(self.getUser());
+
+            }).fail(function (err) {
+                // handle an error condition
+                self._loggedIn = false;
+
+                // Update the calling app
+                self._statusCallback(self.getUser());
+            });
+        },
+
+        //--------------------------------------------------------------------------------------------------------------------//
 
         /**
          * Tests if the browser is IE 8 or lower.

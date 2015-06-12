@@ -12,7 +12,7 @@
         "showGooglePlus": "true",
         "showTwitter": "true",
         "facebookAppId": "101991193476073",
-        "googleplusClientId": "862973275076-qadao43h9btc27oui3mfhj846rh4so6o.apps.googleusercontent.com",
+        "googleplusClientId": "884148190980-mrcnakr5q14ura5snpcbgp85ovq7s7ea.apps.googleusercontent.com",
         "twitterSigninUrl": "https://utility.arcgis.com/tproxy/signin",
         "twitterUserUrl": "https://utility.arcgis.com/tproxy/proxy/1.1/account/verify_credentials.json?q=&include_entities=true&skip_status=true&locale=en",
         "twitterCallbackPage": "/oauth-callback.html",
