@@ -16,13 +16,9 @@
  | limitations under the License.
  */
 //============================================================================================================================//
-define(function (require) {
-    var self, i18n, userConfig, appConfig, dataAccess;
-
-    i18n = require('i18n');
-    appConfig = require('appConfig');
-    userConfig = require('userConfig');
-    dataAccess = require('dataAccess');
+define(['i18n', 'appConfig', 'userConfig', 'dataAccess'],
+    function (i18n, appConfig, userConfig, dataAccess) {
+    var self;
 
     self = {
         iVisiblePhoto: 0,
