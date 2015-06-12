@@ -6,11 +6,16 @@
         "title": "Property Survey",
         "splashText": "The Property Survey application can be used to conduct rapid damage assessments, inventory blighted properties, target reappraisal efforts, and identify structures that could pose safety concerns.",
         "splashBackgroundUrl": "images/splash.jpg",
-        "helpText": "Please select the answers that best describe the property. Questions with a star are particularly important to answer. You can also vote on the best photo for a property.",
+        "helpText": "Please select the answers that best describe the property. Questions with a star are particularly important to answer. You can also vote for the best photo for a property.",
         "contributions": "Beginner,100,Contributor,200,Strong Contributor,400,Civic Trailblazer,800,Outstanding Citizen,1600,Civic Paragon",
         "showFacebook": "true",
         "showGooglePlus": "true",
         "showTwitter": "true",
+        "facebookAppId": "101991193476073",
+        "googleplusClientId": "862973275076-qadao43h9btc27oui3mfhj846rh4so6o.apps.googleusercontent.com",
+        "twitterSigninUrl": "https://utility.arcgis.com/tproxy/signin",
+        "twitterUserUrl": "https://utility.arcgis.com/tproxy/proxy/1.1/account/verify_credentials.json?q=&include_entities=true&skip_status=true&locale=en",
+        "twitterCallbackPage": "/oauth-callback.html",
         "surveyorNameField": "SRVNAME",
         "bestPhotoField": "BSTPHOTOID"
     }
