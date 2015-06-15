@@ -216,26 +216,26 @@ DomainDict2 = {"Crawlspace": "Crawlspace", "Raised": "Raised", "Elevated": "Elev
 for codex in DomainDict2:
 	arcpy.AddCodedValueToDomain_management(Geodatabase, "FoundationType", codex, DomainDict2[codex])
 
-arcpy.AddField_management(ParcelPointHelper, "Structure", "TEXT", "", "", "5", "", "NULLABLE", "REQUIRED", "")
-arcpy.AssignDomainToField_management(ParcelPointHelper, "Structure", "YesNoMaybe")
+arcpy.AddField_management(ParcelPointHelper, "STRUCT", "TEXT", "", "", "5", "Structure", "NULLABLE", "REQUIRED", "")
+arcpy.AssignDomainToField_management(ParcelPointHelper, "STRUCT", "YesNoMaybe")
 
-arcpy.AddField_management(ParcelPointHelper, "Lot", "TEXT", "", "", "5", "", "NULLABLE", "REQUIRED", "")
-arcpy.AssignDomainToField_management(ParcelPointHelper, "Lot", "YesNoMaybe")
+arcpy.AddField_management(ParcelPointHelper, "OVERGROWTH", "TEXT", "", "", "5", "Overgrown Lot", "NULLABLE", "REQUIRED", "")
+arcpy.AssignDomainToField_management(ParcelPointHelper, "OVERGROWTH", "YesNoMaybe")
 
-arcpy.AddField_management(ParcelPointHelper, "FoundationType", "TEXT", "", "", "25", "", "NULLABLE", "NON_REQUIRED", "")
-arcpy.AssignDomainToField_management(ParcelPointHelper, "FoundationType", "FoundationType")
+arcpy.AddField_management(ParcelPointHelper, "FOUNDTYPE", "TEXT", "", "", "25", "Foundation Type", "NULLABLE", "NON_REQUIRED", "")
+arcpy.AssignDomainToField_management(ParcelPointHelper, "FOUNDTYPE", "FoundationType")
 
-arcpy.AddField_management(ParcelPointHelper, "RoofDamage", "TEXT", "", "", "5", "", "NULLABLE", "NON_REQUIRED", "")
-arcpy.AssignDomainToField_management(ParcelPointHelper, "RoofDamage", "YesNoMaybe")
+arcpy.AddField_management(ParcelPointHelper, "RFDMG", "TEXT", "", "", "5", "Roof Damage", "NULLABLE", "NON_REQUIRED", "")
+arcpy.AssignDomainToField_management(ParcelPointHelper, "RFDMG", "YesNoMaybe")
 
-arcpy.AddField_management(ParcelPointHelper, "ExteriorDamage", "TEXT", "", "", "5", "", "NULLABLE", "NON_REQUIRED", "")
-arcpy.AssignDomainToField_management(ParcelPointHelper, "ExteriorDamage", "YesNoMaybe")
+arcpy.AddField_management(ParcelPointHelper, "EXTDMG", "TEXT", "", "", "5", "Exterior Damage", "NULLABLE", "NON_REQUIRED", "")
+arcpy.AssignDomainToField_management(ParcelPointHelper, "EXTDMG", "YesNoMaybe")
 
-arcpy.AddField_management(ParcelPointHelper, "Graffiti", "TEXT", "", "", "5", "", "NULLABLE", "NON_REQUIRED", "")
-arcpy.AssignDomainToField_management(ParcelPointHelper, "Graffiti", "YesNoMaybe")
+arcpy.AddField_management(ParcelPointHelper, "GRAFDMG", "TEXT", "", "", "5", "Graffiti Damage", "NULLABLE", "NON_REQUIRED", "")
+arcpy.AssignDomainToField_management(ParcelPointHelper, "GRAFDMG", "YesNoMaybe")
 
-arcpy.AddField_management(ParcelPointHelper, "Boarded", "TEXT", "", "", "5", "", "NULLABLE", "NON_REQUIRED", "")
-arcpy.AssignDomainToField_management(ParcelPointHelper, "Boarded", "YesNoMaybe")
+arcpy.AddField_management(ParcelPointHelper, "BOARDED", "TEXT", "", "", "5", "Boarded", "NULLABLE", "NON_REQUIRED", "")
+arcpy.AssignDomainToField_management(ParcelPointHelper, "BOARDED", "YesNoMaybe")
 
 arcpy.AddMessage("Step 11: Adding application fields")
 arcpy.CreateDomain_management(Geodatabase, "YesNo", "YesNo", "TEXT", "CODED")
@@ -243,9 +243,9 @@ DomainDict3 = {"Yes": "Yes", "No": "No"}
 for codev in DomainDict3:
 	arcpy.AddCodedValueToDomain_management(Geodatabase, "YesNo", codev, DomainDict3[codev])
 
-arcpy.AddField_management(ParcelPointHelper, "BestPhotoID", "TEXT", "", "", "5", "", "NULLABLE", "NON_REQUIRED", "")
-arcpy.AssignDomainToField_management(ParcelPointHelper, "BestPhotoID", "YesNo")
-arcpy.AddField_management(ParcelPointHelper, "Surveyor", "TEXT", "", "", "25", "", "NULLABLE", "NON_REQUIRED", "")
+arcpy.AddField_management(ParcelPointHelper, "BSTPHOTOID", "TEXT", "", "", "5", "Best Photo Identifier", "NULLABLE", "NON_REQUIRED", "")
+arcpy.AssignDomainToField_management(ParcelPointHelper, "BSTPHOTOID", "YesNo")
+arcpy.AddField_management(ParcelPointHelper, "SRVNAME", "TEXT", "", "", "25", "Surveyor Name", "NULLABLE", "NON_REQUIRED", "")
 # Commented out to change this to be the surveyor field instead of a boolean
 # arcpy.AssignDomainToField_management(ParcelPointHelper, "Surveyed", "YesNo")
 arcpy.AddMessage("Step 12: Finalizing photo survey feature class")
