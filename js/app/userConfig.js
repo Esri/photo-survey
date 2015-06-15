@@ -141,9 +141,6 @@ define(function () {
                             }
                         }]);
                     }());
-
-
-
                 } else {
                     googlePlusDeferred.resolve(false);
                 }
@@ -159,6 +156,9 @@ define(function () {
 
 
                     $('<div id="twitterSignin" class="socialMediaButton twitterOfficialColor" style="background-image:url(\'images/Twitter_logo_blue_29.png\')">Twitter</div>').appendTo(buttonContainer);
+                    $('#twitterSignin').on('click', function () {
+                        self._showTwitterLoginWin(false);
+                    });
                     twitterDeferred.resolve(true);
                 } else {
                     twitterDeferred.resolve(false);
@@ -211,21 +211,23 @@ define(function () {
                         break;
 
                     case "googlePlus":
-                        // Log the user out of the app
+                        // Log the user out of the app; known G+ issue that user is not really logged out
                         try {
                             self._disconnectUser(self._user.access_token);
                             gapi.auth.signOut();
-                        } catch (result) {
-                            console.warn("G+ signout exception: " + JSON.stringify(result));//???
+                        } catch (ignore) {
                         }
                         break;
 
                     case "twitter":
+                        // Update the calling app
+                        self._statusCallback(self.notificationSignOut);
+
                         // Log the user out of the app; known Twitter issue that it does not log the current user out
                         // unless he/she enters a password and then clicks "cancel", and then clicks to return to the
                         // app even though the Twitter display claims that the app continues to have access to the
                         // user's information.
-                        this._showTwitterLoginWin(true);
+                        self._showTwitterLoginWin(true);
                         break;
                 }
             }
@@ -285,7 +287,6 @@ define(function () {
             } else {
                 // Update the calling app
                 self._statusCallback(self.notificationSignOut);
-                self._statusCallback(self.notificationAvatarUpdate);
             }
         },
 
@@ -359,11 +360,11 @@ define(function () {
          * @param {boolean} [forceLogin] If true, requires a re-login
          */
         _showTwitterLoginWin: function (forceLogin) {
-            baseUrl, package_path, redirect_uri, left, top, w, h;
+            var baseUrl, package_path, redirect_uri, left, top, w, h;
 
             baseUrl = self.appConfig.appParams.twitterSigninUrl;
             package_path = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
-            redirect_uri = encodeURIComponent(location.protocol + '//' + location.host + package_path + self.appConfig.appParams.twitterCallbackPage);
+            redirect_uri = encodeURIComponent(location.protocol + '//' + location.host + package_path + self.appConfig.appParams.twitterCallbackUrl);
             left = (screen.width / 2) - (w / 2);
             top = (screen.height / 2) - (h / 2);
             w = screen.width / 2;
@@ -380,10 +381,10 @@ define(function () {
                 baseUrl += 'redirect_uri=' + redirect_uri;
             }
 
-            window.open(baseUrl, "twoAuth", "scrollbars=yes, resizable=yes, left=" + left + ", top=" + top + ", width=" + w + ", height=" + h, true);
             window.oAuthCallback = function () {
                 self._updateTwitterUser();
             };
+            window.open(baseUrl, "twoAuth", "scrollbars=yes, resizable=yes, left=" + left + ", top=" + top + ", width=" + w + ", height=" + h, true);
         },
 
         /**
@@ -397,33 +398,42 @@ define(function () {
                 include_entities: true,
                 skip_status: true
             };
-            esriRequest({
+            $.ajax({
                 url: self.appConfig.appParams.twitterUserUrl,
-                handleAs: "json",
+                data: query,
+                dataType: "jsonp",
                 timeout: 10000,
-                content: query,
-                callbackParamName: "callback"
-            }).then(function (response) {
-                self._loggedIn = !response.hasOwnProperty("signedIn");
-                if (self._loggedIn) {
-                    self._user = {
-                        "name": response.name,
-                        "id": response.id_str
-                    };
-                } else {
-                    self._user = {};
+                success: function (data, textStatus, jqXHR) {
+                    console.warn("twitter ajax success: " + textStatus);//???
+
+                    self._loggedIn = data && !data.hasOwnProperty("signedIn") && !data.signedIn;
+                    self._currentProvider = self._loggedIn ? "twitter" : "";
+
+                    if (self._loggedIn) {
+                        self._user = {
+                            "name": data.name,
+                            "id": data.id_str
+                        };
+
+                        // Update the calling app
+                        self._statusCallback(self.notificationSignIn);
+                    } else {
+                        self._user = {};
+
+                        // Update the calling app
+                        self._statusCallback(self.notificationSignOut);
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.warn("twitter ajax fail: " + textStatus);//???  not called for cross-domain?
+
+                    // handle an error condition
+                    self._loggedIn = false;
+
+                    // Update the calling app
+                    self._statusCallback(self.notificationSignOut);
                 }
-
-                // Update the calling app
-                self._statusCallback(self.getUser());
-
-            }).fail(function (err) {
-                // handle an error condition
-                self._loggedIn = false;
-
-                // Update the calling app
-                self._statusCallback(self.getUser());
-            });
+            }, "json");
         },
 
         //--------------------------------------------------------------------------------------------------------------------//

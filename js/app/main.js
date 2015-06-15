@@ -54,7 +54,13 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'],
                         }
                         break;
                     case userConfig.notificationSignOut:
-                        self.signedIn = false;
+                        if (self.signedIn) {
+                            self.signedIn = false;
+                            $("#contentPage").fadeOut("fast");
+                            $("#signinPage").fadeIn("normal");
+                            $(document).triggerHandler('hide:profile');
+                            $("#profileAvatar").css("display", "none");
+                        }
                         break;
                     case userConfig.notificationAvatarUpdate:
                         var avatar = userConfig.getUser().avatar;
@@ -153,9 +159,6 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'],
     });
 
     $(document).on('signedOut:user', function (e) {
-        $("#contentPage").fadeOut("fast");
-        $("#signinPage").fadeIn("normal");
-        $(document).triggerHandler('hide:profile');
         userConfig.signOut();
     });
 

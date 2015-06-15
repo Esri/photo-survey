@@ -41,7 +41,7 @@ define(function () {
             googleplusClientId: "",
             twitterSigninUrl: "https://utility.arcgis.com/tproxy/signin",
             twitterUserUrl: "https://utility.arcgis.com/tproxy/proxy/1.1/account/verify_credentials.json?q=&include_entities=true&skip_status=true&locale=en",
-            twitterCallbackPage: "/oauth-callback.html",
+            twitterCallbackUrl: "/oauth-callback-twitter.html",
 
             surveyorNameField: "",
             bestPhotoField: ""
