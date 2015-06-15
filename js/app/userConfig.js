@@ -314,13 +314,15 @@ define(function () {
                         "id": apiResponse.result.id,
                         "access_token": response.access_token
                     };
+
+                    // Update the calling app
+                    self._statusCallback(self.notificationSignIn);
+
+                    // Update the avatar
                     if (apiResponse.result.image) {
                         self._user.avatar = apiResponse.result.image.url;
                         self._statusCallback(self.notificationAvatarUpdate);
                     }
-
-                    // Update the calling app
-                    self._statusCallback(self.notificationSignIn);
                 }, function (reason) {
                     // Update the calling app
                     self._statusCallback(self.notificationSignOut);
@@ -434,6 +436,12 @@ define(function () {
 
                         // Update the calling app
                         self._statusCallback(self.notificationSignIn);
+
+                        // Update the avatar
+                        if (data.profile_image_url_https) {
+                            self._user.avatar = data.profile_image_url_https;
+                            self._statusCallback(self.notificationAvatarUpdate);
+                        }
                     } else {
                         self._user = {};
 
