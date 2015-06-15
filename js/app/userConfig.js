@@ -273,9 +273,9 @@ define(function () {
                         // Update the calling app
                         self._statusCallback(self.notificationSignIn);
 
-                        // Get the profile picture
+                        // Update the avatar
                         FB.api("/" + self._user.id + "/picture", function (picResponse) {
-                            if (picResponse && !picResponse.error) {
+                            if (picResponse && !picResponse.error && picResponse.data && !picResponse.data.is_silhouette && picResponse.data.url) {
                                 self._user.avatar = picResponse.data.url;
                             }
                             // Update the calling app
@@ -319,7 +319,7 @@ define(function () {
                     self._statusCallback(self.notificationSignIn);
 
                     // Update the avatar
-                    if (apiResponse.result.image) {
+                    if (apiResponse.result.image && !apiResponse.result.image.isDefault && apiResponse.result.image.url) {
                         self._user.avatar = apiResponse.result.image.url;
                         self._statusCallback(self.notificationAvatarUpdate);
                     }
@@ -438,7 +438,7 @@ define(function () {
                         self._statusCallback(self.notificationSignIn);
 
                         // Update the avatar
-                        if (data.profile_image_url_https) {
+                        if (!data.default_profile_image && data.profile_image_url_https) {
                             self._user.avatar = data.profile_image_url_https;
                             self._statusCallback(self.notificationAvatarUpdate);
                         }
