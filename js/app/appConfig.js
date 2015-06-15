@@ -33,9 +33,17 @@ define(function () {
             splashBackgroundUrl: "images/splash.jpg",
             helpText: "",
             contributorLevels: ",100,,200,,400,,800,,1600,",
+
             showFacebook: "true",
             showGooglePlus: "true",
             showTwitter: "true",
+            facebookAppId: "",
+            googleplusClientId: "",
+            googleplusLogoutUrl: "https://accounts.google.com/logout",
+            twitterSigninUrl: "https://utility.arcgis.com/tproxy/signin",
+            twitterUserUrl: "https://utility.arcgis.com/tproxy/proxy/1.1/account/verify_credentials.json?q=&include_entities=true&skip_status=true&locale=en",
+            twitterCallbackUrl: "/oauth-callback-twitter.html",
+
             surveyorNameField: "",
             bestPhotoField: ""
         },
@@ -110,6 +118,12 @@ define(function () {
                     onlineAppData = {};
                 }
                 self.appParams = $.extend(self.appParams, fileAppData, onlineAppData);
+
+                // Normalize booleans
+                self.appParams.showFacebook = self._toBoolean(self.appParams.showFacebook);
+                self.appParams.showGooglePlus = self._toBoolean(self.appParams.showGooglePlus);
+                self.appParams.showTwitter = self._toBoolean(self.appParams.showTwitter);
+
                 self.logElapsedTime("merged configs", startMs);  //???
 
                 // GA URL-supplied webmap overrides a configured one
@@ -239,6 +253,48 @@ define(function () {
                 "featureServiceReady" : featureServiceReady,
                 "surveyReady" : surveyReady
             };
+        },
+
+        //--------------------------------------------------------------------------------------------------------------------//
+
+        /** Normalizes a boolean value to true or false.
+         * @param {boolean|string} boolValue A true or false
+         *        value that is returned directly or a string
+         *        "true" or "false" (case-insensitive) that
+         *        is checked and returned; if neither a
+         *        a boolean or a usable string, falls back to
+         *        defaultValue
+         * @param {boolean} [defaultValue] A true or false
+         *        that is returned if boolValue can't be
+         *        used; if not defined, true is returned
+         * @memberOf js.LGObject#
+         */
+        _toBoolean: function (boolValue, defaultValue) {
+            var lowercaseValue;
+
+            // Shortcut true|false
+            if (boolValue === true) {
+                return true;
+            }
+            if (boolValue === false) {
+                return false;
+            }
+
+            // Handle a true|false string
+            if (typeof boolValue === "string") {
+                lowercaseValue = boolValue.toLowerCase();
+                if (lowercaseValue === "true") {
+                    return true;
+                }
+                if (lowercaseValue === "false") {
+                    return false;
+                }
+            }
+            // Fall back to default
+            if (defaultValue === undefined) {
+                return true;
+            }
+            return defaultValue;
         }
 
     };

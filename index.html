@@ -17,16 +17,12 @@
 
     <!-- Splash overlay and social media sign-in -->
     <h2 class="screenreaderInfo">Social media sign-in</h2>
-    <aside id="signinPage" class="pageFill splashBackground">
+    <aside id="signinPage" class="pageFill splashBackground transparent">
         <div id="signinBlock" class="smallSidebar transparent">
             <div id="signinTitle" class="signinTitle"></div>
             <div id="signinParagraph" class="signinParagraph"></div>
             <div id="signinLoginPrompt" class="signinLoginPrompt transparent"></div>
-            <div id="socialMediaButtonArea" class="socialMediaButtonArea transparent">
-                <div class="socialMediaButton facebookOfficialColor" style="background-image:url('images/FB-f-Logo__blue_29.png')">Facebook</div>
-                <div class="socialMediaButton twitterOfficialColor" style="background-image:url('images/Twitter_logo_blue_29.png')">Twitter</div>
-                <div class="socialMediaButton googlePlusOfficialColor" style="background-image:url('images/gp-29.png')">Google+</div>
-            </div>
+            <div id="socialMediaButtonArea" class="socialMediaButtonArea transparent"></div>
         </div>
     </aside>
 
@@ -87,13 +83,13 @@
 
                 <article id="profile" class="transparent">
                     <div class="profile-frame">
-                        <div id="profileAvatar" class="profileAvatar"></div>
+                        <div id="profileAvatar" class="profileAvatar transparent"></div>
                         <div id="name2" class="profileName"></div>
-                        <div class="profileCount">
+                        <div id="profileCount" class="profileCount transparent">
                             <div id="score2" class="profileCountNum"></div>
                             <div class="profileCountLabel">surveys completed</div>
                         </div>
-                        <div id="ranking">
+                        <div id="ranking" class="ranking transparent">
                             <div id="rankLabel" class="profileRankLabel"></div>
                             <div id="level" class="profileRankLevel"></div>
                             <div class="profileRankStars"><img src="images/empty-star.png"/><img src="images/empty-star.png"/><img src="images/empty-star.png"/><img src="images/empty-star.png"/><img src="images/empty-star.png"/></div>
@@ -132,11 +128,10 @@
         </div>
     </aside>
 
-    <!-- Bootstrap -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
-
-    <!-- AMD module support -->
+    <!-- jQuery, Bootstrap, and AMD module support -->
+    <script src="js/lib/modernizr.custom.69413.js"></script>
+    <script src="js/lib/jquery.min.js"></script>
+    <script src="js/lib/bootstrap.min.js"></script>
     <script data-main="js/app" src="js/lib/require.js"></script>
 </body>
 </html>

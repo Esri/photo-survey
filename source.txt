@@ -1,5 +1,8 @@
-commit d920784bb7049f250d8b45ec24e52acf297cfe33
+From git branch 
+develop
+commit b4a979b5487ccd4f7ed257ee6ccb99574a28b7dc
+Merge: 27332a6 26fc2e0
 Author: MikeTschudi <mtschudi@esri.com>
-Date:   Wed Jun 10 10:28:20 2015 -0700
+Date:   Mon Jun 15 10:54:56 2015 -0700
 
-    Updated splash
+    Merge branch 'master' into develop
