@@ -215,6 +215,7 @@ define(function () {
                         try {
                             self._disconnectUser(self._user.access_token);
                             gapi.auth.signOut();
+                            self._showGooglePlusLogoutWin();
                         } catch (ignore) {
                         }
                         break;
@@ -348,6 +349,18 @@ define(function () {
                     self._updateGooglePlusUser();
                 }
             });
+        },
+
+        _showGooglePlusLogoutWin: function (forceLogin) {
+            var baseUrl, left, top, w, h;
+
+            baseUrl = self.appConfig.appParams.googleplusLogoutUrl;
+            left = (screen.width / 2) - (w / 2);
+            top = (screen.height / 2) - (h / 2);
+            w = screen.width / 2;
+            h = screen.height / 1.5;
+
+            window.open(baseUrl, "GooglePlus", "scrollbars=yes, resizable=yes, left=" + left + ", top=" + top + ", width=" + w + ", height=" + h, true);
         },
 
         //--------------------------------------------------------------------------------------------------------------------//

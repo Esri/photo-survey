@@ -39,6 +39,7 @@ define(function () {
             showTwitter: "true",
             facebookAppId: "",
             googleplusClientId: "",
+            googleplusLogoutUrl: "https://accounts.google.com/logout",
             twitterSigninUrl: "https://utility.arcgis.com/tproxy/signin",
             twitterUserUrl: "https://utility.arcgis.com/tproxy/proxy/1.1/account/verify_credentials.json?q=&include_entities=true&skip_status=true&locale=en",
             twitterCallbackUrl: "/oauth-callback-twitter.html",
