@@ -314,6 +314,10 @@ define(function () {
                         "id": apiResponse.result.id,
                         "access_token": response.access_token
                     };
+                    if (apiResponse.result.image) {
+                        self._user.avatar = apiResponse.result.image.url;
+                        self._statusCallback(self.notificationAvatarUpdate);
+                    }
 
                     // Update the calling app
                     self._statusCallback(self.notificationSignIn);
