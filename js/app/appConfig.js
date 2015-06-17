@@ -150,6 +150,7 @@ define(function () {
                                     self.appParams.webmapImageUrl = "http://www.arcgis.com/sharing/content/items/" + self.appParams.webmap + "/info/" + imageFilename;
                                 }
                             }
+                            self._parseAccessConfig(data.licenseInfo);//???
                         }
                         parametersReady.resolve();
                     });
@@ -185,58 +186,7 @@ define(function () {
                                     });
 
                                     // Parse survey
-                                    // e.g., <p>Is there a Structure on the Property? <b>{<font color='#0000ff'>Structure</font>} </b><b>{<span style='background-color:
-                                    //  rgb(255, 0, 0);'>button</span>}</b></p><p><ul><li>Is the lot overgrown? <b>{Lot} </b><b>{button}</b><br /></li><li>Foundation type
-                                    //  : <b>{<font color='#ffff00' style='background-color: rgb(255, 69, 0);'>FoundationType</font>} </b><b>{radio}</b><br /></li></ul>
-                                    //  </p><p><b><br /></b></p><p>Is there roof damage? <b>{RoofDamage} </b><b>{button}</b></p><p>Is the exterior damaged? <b>
-                                    //  {ExteriorDamage} </b><b>{button}</b></p><p></p><ol><li>Is there graffiti? <b>{Graffiti} </b><b>{button}</b><br /></li><li>
-                                    //  Are there boarded windows/doors? <b>{Boarded} </b><b>{button}</b><br /></li></ol>
-
-                                    //   1. split on </p> and then </li> (lists are enclosed in <p></p> sets)
-                                    var taggedSurveyLines = [];
-                                    var descriptionSplitP = self.opLayer.popupInfo.description.split("</p>");
-                                    $.each(descriptionSplitP, function (idx, line) {
-                                        $.merge(taggedSurveyLines, line.split("</li>"));
-                                    });
-
-                                    //   2. remove all html tags (could have <b>, <i>, <u>, <ol>, <ul>, <li>, <a>, <font>, <span>, <br>,
-                                    // and their closures included or explicit)
-                                    var surveyLines = [];
-                                    $.each(taggedSurveyLines, function (idx, line) {
-                                        var cleanedLine = $(line).text().trim();
-                                        if (cleanedLine.length > 0) {
-                                            surveyLines.push(cleanedLine);
-                                        }
-                                    });
-
-                                    //   3. Separate into question, field, and style
-                                    //      e.g., "Is there a Structure on the Property? {Structure} {button}"
-                                    $.each(surveyLines, function (idx, line) {
-                                        var paramParts = line.split("{");
-                                        var trimmedParts = [];
-                                        $.each(paramParts, function (idx, part) {
-                                            var trimmed = part.replace("}", "").trim();
-                                            if (trimmed.length > 0) {
-                                                trimmedParts.push(trimmed);
-                                            }
-                                        });
-
-                                        // Should have three parts now: question, field, style; we can add in the question's
-                                        // domain and importance from the fieldDomain dictionary created just above
-                                        if (trimmedParts.length === 3) {
-                                            var fieldName = trimmedParts[1];
-                                            if (fieldDomains[fieldName]) {
-                                                var surveyQuestion = {
-                                                    question: trimmedParts[0],
-                                                    field: fieldName,
-                                                    style: trimmedParts[2],
-                                                    domain: fieldDomains[fieldName].domain,
-                                                    important: fieldDomains[fieldName].important
-                                                };
-                                                self.survey.push(surveyQuestion);
-                                            }
-                                        }
-                                    });
+                                    self.survey = self._parseSurvey(self.opLayer.popupInfo.description, fieldDomains);
 
                                     surveyReady.resolve();
                                 }
@@ -277,6 +227,94 @@ define(function () {
         },
 
         //--------------------------------------------------------------------------------------------------------------------//
+
+
+        _parseContributorLevels: function (source) {//???
+        },
+
+        _parseSurvey: function (source, fieldDomains) {
+            // e.g., <p>Is there a Structure on the Property? <b>{<font color='#0000ff'>Structure</font>} </b><b>{<span style='background-color:
+            //  rgb(255, 0, 0);'>button</span>}</b></p><p><ul><li>Is the lot overgrown? <b>{Lot} </b><b>{button}</b><br /></li><li>Foundation type
+            //  : <b>{<font color='#ffff00' style='background-color: rgb(255, 69, 0);'>FoundationType</font>} </b><b>{radio}</b><br /></li></ul>
+            //  </p><p><b><br /></b></p><p>Is there roof damage? <b>{RoofDamage} </b><b>{button}</b></p><p>Is the exterior damaged? <b>
+            //  {ExteriorDamage} </b><b>{button}</b></p><p></p><ol><li>Is there graffiti? <b>{Graffiti} </b><b>{button}</b><br /></li><li>
+            //  Are there boarded windows/doors? <b>{Boarded} </b><b>{button}</b><br /></li></ol>
+
+            //   1. split on </p> and then </li> (lists are enclosed in <p></p> sets)
+            var survey = [];
+            var taggedSurveyLines = [];
+            var descriptionSplitP = source.split("</p>");
+            $.each(descriptionSplitP, function (idx, line) {
+                $.merge(taggedSurveyLines, line.split("</li>"));
+            });
+
+            //   2. remove all html tags (could have <b>, <i>, <u>, <ol>, <ul>, <li>, <a>, <font>, <span>, <br>,
+            // and their closures included or explicit)
+            var surveyLines = [];
+            $.each(taggedSurveyLines, function (idx, line) {
+                var cleanedLine = $(line).text().trim();
+                if (cleanedLine.length > 0) {
+                    surveyLines.push(cleanedLine);
+                }
+            });
+
+            //   3. Separate into question, field, and style
+            //      e.g., "Is there a Structure on the Property? {Structure} {button}"
+            $.each(surveyLines, function (idx, line) {
+                var paramParts = line.split("{");
+                var trimmedParts = [];
+                $.each(paramParts, function (idx, part) {
+                    var trimmed = part.replace("}", "").trim();
+                    if (trimmed.length > 0) {
+                        trimmedParts.push(trimmed);
+                    }
+                });
+
+                // Should have three parts now: question, field, style; we can add in the question's
+                // domain and importance from the fieldDomain dictionary created just above
+                if (trimmedParts.length === 3) {
+                    var fieldName = trimmedParts[1];
+                    if (fieldDomains[fieldName]) {
+                        var surveyQuestion = {
+                            question: trimmedParts[0],
+                            field: fieldName,
+                            style: trimmedParts[2],
+                            domain: fieldDomains[fieldName].domain,
+                            important: fieldDomains[fieldName].important
+                        };
+                        survey.push(surveyQuestion);
+                    }
+                }
+            });
+            return survey;
+        },
+
+        _parseAccessConfig: function (source) {//???
+            // Sample content after beautifying:
+            //    <div>Copyright 2015 My City</div>
+            //    <div>
+            //        <br />
+            //    </div>
+            //    <div>=== Access and use settings ===</div>
+            //    <div>contribution levels:</div><span style='line-height: 1.38461538461538;'>0: Getting Started<br /></span><span style='line-height: 1.38461538461538;'>5: Beginner<br /></span><span style='line-height: 1.38461538461538;'>10: Helper<br /></span><span style='line-height: 1.38461538461538;'>15: Intermediate<br /></span><span style='line-height: 1.38461538461538;'>20: Advanced<br /></span><span style='line-height: 1.38461538461538;'>25: Wow!</span>
+            //    <div>
+            //        <br />
+            //        <div>
+            //            <div>Facebook app id: 101991193476073</div>
+            //        </div>
+            //        <div>Google+ client id: 884148190980-mrcnakr5q14ura5snpcbgp85ovq7s7ea.apps.googleusercontent.com</div>
+            //        <div>show Twitter: true</div>
+            //        <div>
+            //            <br />
+            //        </div>
+            //        <div>
+            //            <div>surveyor name field: SRVNAME</div>
+            //            <div>best photo field: BSTPHOTOID</div>
+            //        </div>
+            //    </div>
+
+
+        },
 
         /** Normalizes a boolean value to true or false.
          * @param {boolean|string} boolValue A true or false
