@@ -32,7 +32,7 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'],
 //============================================================================================================================//
 
     // Bring the app to visibility
-    $("#signinPage").fadeIn("normal");
+    $("#signinPage").fadeIn();
 
     // Get app, webmap, feature service
     var appConfigReadies = appConfig.init();
@@ -57,7 +57,7 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'],
                         if (self.signedIn) {
                             self.signedIn = false;
                             $("#contentPage").fadeOut("fast");
-                            $("#signinPage").fadeIn("normal");
+                            $("#signinPage").fadeIn();
                             $(document).triggerHandler('hide:profile');
                             $("#profileAvatar").css("display", "none");
                         }
@@ -77,20 +77,30 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'],
             // Splash UI
             $("#signinTitle")[0].innerHTML = appConfig.appParams.title;
             $("#signinParagraph")[0].innerHTML = appConfig.appParams.splashText;
-            $("#signinPage").css("background-image", "url(" + appConfig.appParams.splashBackgroundUrl + ")");
+            if (appConfig.appParams.webmapImageUrl) {
+                testURL(appConfig.appParams.webmapImageUrl, function (isOK) {
+                    if (isOK) {
+                        appConfig.appParams.splashBackgroundUrl = appConfig.appParams.webmapImageUrl;
+                    }
+                    $("#signinPageBkgd").css("background-image", "url(" + appConfig.appParams.splashBackgroundUrl + ")").fadeIn(2000);
+                });
+            } else {
+                $("#signinPageBkgd").css("background-image", "url(" + appConfig.appParams.splashBackgroundUrl + ")").fadeIn(2000);
+            }
+
 
             // When the feature service info is ready, we can set up the module that reads from and writes to the service
             appConfigReadies.featureServiceReady.then(function () {
                 dataAccess.init(appConfig.opLayer.url, appConfig.featureSvcParams.id, appConfig.featureSvcParams.objectIdField,
                     appConfig.appParams.surveyorNameField + "+is+null");
-                $("#signinBlock").fadeIn("normal");
+                $("#signinBlock").fadeIn();
 
                 // Test if there are any surveys remaining to be done
                 dataAccess.getObjectCount().then(function (countRemaining) {
                     if (countRemaining > 0) {
                         // When the social media connections are ready, we can enable the social-media sign-in buttons
                         $("#signinLoginPrompt")[0].innerHTML = i18n.signin.signinFetching;
-                        $("#signinLoginPrompt").fadeIn("normal");
+                        $("#signinLoginPrompt").fadeIn();
                         socialMediaReady.then(function () {
                             $("#signinLoginPrompt").fadeOut("fast", function () {
                                 $("#signinLoginPrompt")[0].innerHTML = i18n.signin.signinLoginPrompt;
@@ -105,11 +115,11 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'],
                         });
                     } else {
                         $("#signinLoginPrompt")[0].innerHTML = i18n.signin.noMoreSurveys;
-                        $("#signinLoginPrompt").fadeIn("normal");
+                        $("#signinLoginPrompt").fadeIn();
                     }
                 }).fail(function () {
                     $("#signinLoginPrompt")[0].innerHTML = i18n.signin.noMoreSurveys;
-                    $("#signinLoginPrompt").fadeIn("normal");
+                    $("#signinLoginPrompt").fadeIn();
                 });
             });
 
@@ -151,7 +161,7 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'],
 
             $("#hearts").css("display", "none");
 
-            $("#signinPage").fadeOut("normal");
+            $("#signinPage").fadeOut( );
         });
         appConfigReadies.surveyReady.then(function () {
             $(document).triggerHandler('show:newSurvey');
@@ -325,7 +335,7 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'],
     function updateCount() {
         $("#score")[0].innerHTML = self.completions;
         $("#score2")[0].innerHTML = self.completions;
-        $("#profileCount").fadeIn("normal");
+        $("#profileCount").fadeIn();
 
         if (appConfig.contribLevels.length > 0) {
             var level = appConfig.contribLevels.length - 1;
@@ -351,7 +361,7 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'],
             $("#remainingToNextLevel")[0].innerHTML = remainingToNextLevel === 0? "" :
                 "$(remainingToNextLevel) surveys left until next level".replace("$(remainingToNextLevel)", remainingToNextLevel);
 
-            $("#ranking").fadeIn("normal");
+            $("#ranking").fadeIn();
         } else {
             $("#ranking").css("display", "none");
         }
@@ -459,6 +469,20 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'],
     }
 
     //------------------------------------------------------------------------------------------------------------------------//
+
+
+    function testURL(url, callback) {
+        $.ajax( {
+            type: 'HEAD',
+            url: url,
+            success: function() {
+                callback(true);
+            },
+            error: function() {
+                callback(false);
+            }
+        });
+    }
 
     function startPhotoSet(numPhotos) {
         // Init shared progress bar

@@ -131,14 +131,35 @@ define(function () {
                     self.appParams.webmap = self.urlParams.webmap;
                 }
 
-                parametersReady.resolve();
+                // Get the app's webmap's data
+                if (self.appParams.webmap) {
+                    $.getJSON("http://www.arcgis.com/sharing/content/items/" + self.appParams.webmap + "?f=json", function (data) {
+                        var backgroundUrl;
+                        self.logElapsedTime("have webmap", startMs);  //???
 
+                        // Extract the app configuration from the webmap
+                        if (data) {
+                            self.appParams.title = data.title;
+                            self.appParams.splashText = data.snippet;
+                            self.appParams.helpText = data.description;
+                            var imageFilename = data.thumbnail;
+                            if(imageFilename) {
+                                var iExt = imageFilename.lastIndexOf(".");
+                                if (iExt >= 0) {
+                                    imageFilename = imageFilename.substring(0, iExt) + "_orig" + imageFilename.substr(iExt);
+                                    self.appParams.webmapImageUrl = "http://www.arcgis.com/sharing/content/items/" + self.appParams.webmap + "/info/" + imageFilename;
+                                }
+                            }
+                        }
+                        parametersReady.resolve();
+                    });
+                }
 
                 // Get the app's webmap's data
                 if (self.appParams.webmap) {
                     $.getJSON("http://www.arcgis.com/sharing/content/items/" + self.appParams.webmap + "/data?f=json", function (data) {
                         self.webmapParams = data || {};
-                        self.logElapsedTime("have webmap", startMs);  //???
+                        self.logElapsedTime("have webmap data", startMs);  //???
 
                         if (self.webmapParams && self.webmapParams.operationalLayers && self.webmapParams.operationalLayers.length > 0) {
                             self.opLayer = self.webmapParams.operationalLayers[0];
