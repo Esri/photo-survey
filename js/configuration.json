@@ -7,7 +7,7 @@
         "splashText": "The Property Survey application can be used to conduct rapid damage assessments, inventory blighted properties, target reappraisal efforts, and identify structures that could pose safety concerns.",
         "splashBackgroundUrl": "images/splash.jpg",
         "helpText": "Please select the answers that best describe the property. Questions with a star are particularly important to answer. You can also vote for the best photo for a property.",
-        "contributions": "Beginner,100,Contributor,200,Strong Contributor,400,Civic Trailblazer,800,Outstanding Citizen,1600,Civic Paragon",
+        "contributorLevels": "Beginner,100,Contributor,200,Strong Contributor,400,Civic Trailblazer,800,Outstanding Citizen,1600,Civic Paragon",
         "showFacebook": "true",
         "showGooglePlus": "true",
         "showTwitter": "true",

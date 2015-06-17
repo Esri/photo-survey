@@ -194,30 +194,10 @@ define(function () {
                         }
                     });
                 }
-            });
 
-            // Expand the contributor level definition into an array for easier lookup.
-            // The display uses five stars, so we support six contributor levels separated by five
-            // >0 values in increasing order, e.g., "A,100,B,200,C,400,D,800,E,1600,F". This string
-            // defines contributor levels labeled "A" through "F", with "A" standing for 0 to 99
-            // (i.e., separator 100 minus one), "B" 100 through 199, "C" 200 through 399, etc.
-            var contributorLevelsDataList = self.appParams.contributorLevels.split(",");
-            if (contributorLevelsDataList.length === 11) {
-                try {
-                    var i, label, minimumSurveysNeeded;
-                    for (i = 0; i < contributorLevelsDataList.length; i += 2) {
-                        label = contributorLevelsDataList[i];
-                        minimumSurveysNeeded = i === 0 ? 0 :
-                            Number.parseInt(contributorLevelsDataList[i - 1]);
-                        self.contribLevels.push({
-                            "label": label,
-                            "minimumSurveysNeeded": minimumSurveysNeeded
-                        });
-                    }
-                } catch (ignore) {
-                    self.contribLevels = [];
-                }
-            }
+                // Expand the contributor level definition into an array for easier lookup.
+                self.contribLevels = self._parseContributorLevels(self.appParams.contributorLevels)
+            });
 
             return {
                 "parametersReady": parametersReady,
@@ -229,7 +209,33 @@ define(function () {
         //--------------------------------------------------------------------------------------------------------------------//
 
 
-        _parseContributorLevels: function (source) {//???
+        _parseContributorLevels: function (source) {
+            // The display uses five stars, so we support six contributor levels separated by five
+            // >0 values in increasing order, e.g., "A,100,B,200,C,400,D,800,E,1600,F". This string
+            // defines contributor levels labeled "A" through "F", with "A" standing for 0 to 99
+            // (i.e., separator 100 minus one), "B" 100 through 199, "C" 200 through 399, etc.
+            var contribLevels = [];
+
+            var contributorLevelsDataList = source.split(",");
+            if (contributorLevelsDataList.length === 11) {
+                try {
+                    var i, label, minimumSurveysNeeded;
+                    for (i = 0; i < contributorLevelsDataList.length; i += 2) {
+                        label = contributorLevelsDataList[i];
+                        minimumSurveysNeeded = i === 0 ? 0 :
+                            Number.parseInt(contributorLevelsDataList[i - 1]);
+                        contribLevels.push({
+                            "label": label,
+                            "minimumSurveysNeeded": minimumSurveysNeeded
+                        });
+                    }
+                } catch (ignore) {
+                    // Reset the contributor levels array to empty
+                    contribLevels = [];
+                }
+            }
+
+            return contribLevels;
         },
 
         _parseSurvey: function (source, fieldDomains) {
