@@ -52,7 +52,9 @@ body {
 .radio+.radio {
     margin-top: 0px;
 }
-
+.modal-header {
+    font-weight: bolder;
+}
 
 /* ---------- general page ---------- */
 

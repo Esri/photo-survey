@@ -21,18 +21,16 @@ define(function () {
 
         //--------------------------------------------------------------------------------------------------------------------//
 
-        // Available upon return
-        contribLevels: [],
-
         // Available after init's parametersReady deferred
         urlParams: {},
-        appParams: {  // Provide fallback values in case neither the configuration file nor the online app can be retrieved
+        appParams: {
             webmap: "",
-            title: "Photo Survey",
-            splashText: "The Property Survey application can be used to conduct rapid damage assessments, inventory blighted properties, target reappraisal efforts, and identify structures that could pose safety concerns.",
+            webmapImageUrl: "",
+            title: "",
+            splashText: "",
             splashBackgroundUrl: "images/splash.jpg",
             helpText: "",
-            contributorLevels: ",100,,200,,400,,800,,1600,",
+            contribLevels: [],
 
             showFacebook: "true",
             showGooglePlus: "true",
@@ -50,10 +48,10 @@ define(function () {
 
         // Available after init's featureServiceReady deferred
         webmapParams: {},
-        opLayer: null,
+        opLayerParams: null,
         featureSvcParams: {},
 
-        // Available after init's surveyReady deferred
+        // Available after init's surveyReady deferred; array of {question, style, domain, field, important}
         survey: [],
 
         //--------------------------------------------------------------------------------------------------------------------//
@@ -65,7 +63,7 @@ define(function () {
 
 
         init: function () {
-            var self = this;
+            self = this;
             var url;
             var startMs = (new Date()).getTime();  //???
 
@@ -150,7 +148,12 @@ define(function () {
                                     self.appParams.webmapImageUrl = "http://www.arcgis.com/sharing/content/items/" + self.appParams.webmap + "/info/" + imageFilename;
                                 }
                             }
-                            self._parseAccessConfig(data.licenseInfo);//???
+                            self.appParams = $.extend(self.appParams, self._parseAccessConfig(data.licenseInfo));
+
+                            // Normalize booleans
+                            self.appParams.showFacebook = self._toBoolean(self.appParams.showFacebook);
+                            self.appParams.showGooglePlus = self._toBoolean(self.appParams.showGooglePlus);
+                            self.appParams.showTwitter = self._toBoolean(self.appParams.showTwitter);
                         }
                         parametersReady.resolve();
                     });
@@ -163,10 +166,10 @@ define(function () {
                         self.logElapsedTime("have webmap data", startMs);  //???
 
                         if (self.webmapParams && self.webmapParams.operationalLayers && self.webmapParams.operationalLayers.length > 0) {
-                            self.opLayer = self.webmapParams.operationalLayers[0];
+                            self.opLayerParams = self.webmapParams.operationalLayers[0];
 
                         // Get the app's webmap's feature service's data
-                            $.getJSON(self.opLayer.url + "?f=json", function (data) {
+                            $.getJSON(self.opLayerParams.url + "?f=json", function (data) {
                                 self.featureSvcParams = data || {};
                                 featureServiceReady.resolve();
                                 self.logElapsedTime("have feature svc", startMs);  //???
@@ -186,7 +189,8 @@ define(function () {
                                     });
 
                                     // Parse survey
-                                    self.survey = self._parseSurvey(self.opLayer.popupInfo.description, fieldDomains);
+                                    self.survey = self._parseSurvey(
+                                        self.opLayerParams.popupInfo.description, fieldDomains);
 
                                     surveyReady.resolve();
                                 }
@@ -194,9 +198,6 @@ define(function () {
                         }
                     });
                 }
-
-                // Expand the contributor level definition into an array for easier lookup.
-                self.contribLevels = self._parseContributorLevels(self.appParams.contributorLevels)
             });
 
             return {
@@ -208,64 +209,35 @@ define(function () {
 
         //--------------------------------------------------------------------------------------------------------------------//
 
-
-        _parseContributorLevels: function (source) {
-            // The display uses five stars, so we support six contributor levels separated by five
-            // >0 values in increasing order, e.g., "A,100,B,200,C,400,D,800,E,1600,F". This string
-            // defines contributor levels labeled "A" through "F", with "A" standing for 0 to 99
-            // (i.e., separator 100 minus one), "B" 100 through 199, "C" 200 through 399, etc.
-            var contribLevels = [];
-
-            var contributorLevelsDataList = source.split(",");
-            if (contributorLevelsDataList.length === 11) {
-                try {
-                    var i, label, minimumSurveysNeeded;
-                    for (i = 0; i < contributorLevelsDataList.length; i += 2) {
-                        label = contributorLevelsDataList[i];
-                        minimumSurveysNeeded = i === 0 ? 0 :
-                            Number.parseInt(contributorLevelsDataList[i - 1]);
-                        contribLevels.push({
-                            "label": label,
-                            "minimumSurveysNeeded": minimumSurveysNeeded
-                        });
-                    }
-                } catch (ignore) {
-                    // Reset the contributor levels array to empty
-                    contribLevels = [];
-                }
-            }
-
-            return contribLevels;
-        },
-
         _parseSurvey: function (source, fieldDomains) {
-            // e.g., <p>Is there a Structure on the Property? <b>{<font color='#0000ff'>Structure</font>} </b><b>{<span style='background-color:
-            //  rgb(255, 0, 0);'>button</span>}</b></p><p><ul><li>Is the lot overgrown? <b>{Lot} </b><b>{button}</b><br /></li><li>Foundation type
-            //  : <b>{<font color='#ffff00' style='background-color: rgb(255, 69, 0);'>FoundationType</font>} </b><b>{radio}</b><br /></li></ul>
-            //  </p><p><b><br /></b></p><p>Is there roof damage? <b>{RoofDamage} </b><b>{button}</b></p><p>Is the exterior damaged? <b>
-            //  {ExteriorDamage} </b><b>{button}</b></p><p></p><ol><li>Is there graffiti? <b>{Graffiti} </b><b>{button}</b><br /></li><li>
+            // e.g., <p>Is there a Structure on the Property? <b>{<font color='#0000ff'>Structure</font>} </b><b>{<span
+            //  style='background-color:rgb(255, 0, 0);'>button</span>}</b></p><p><ul><li>Is the lot overgrown? <b>{Lot}
+            //  </b><b>{button}</b><br /></li><li>Foundation type: <b>{<font color='#ffff00' style='background-color:
+            //  rgb(255, 69, 0);'>FoundationType</font>} </b><b>{radio}</b><br /></li></ul></p><p><b><br /></b></p><p>Is
+            //  there roof damage? <b>{RoofDamage} </b><b>{button}</b></p><p>Is the exterior damaged? <b>{ExteriorDamage}
+            //  </b><b>{button}</b></p><p></p><ol><li>Is there graffiti? <b>{Graffiti} </b><b>{button}</b><br /></li><li>
             //  Are there boarded windows/doors? <b>{Boarded} </b><b>{button}</b><br /></li></ol>
-
-            //   1. split on </p> and then </li> (lists are enclosed in <p></p> sets)
             var survey = [];
+
+            // 1. split on </p> and then </li> (lists are enclosed in <p></p> sets)
             var taggedSurveyLines = [];
             var descriptionSplitP = source.split("</p>");
             $.each(descriptionSplitP, function (idx, line) {
                 $.merge(taggedSurveyLines, line.split("</li>"));
             });
 
-            //   2. remove all html tags (could have <b>, <i>, <u>, <ol>, <ul>, <li>, <a>, <font>, <span>, <br>,
+            // 2. remove all html tags (could have <b>, <i>, <u>, <ol>, <ul>, <li>, <a>, <font>, <span>, <br>,
             // and their closures included or explicit)
             var surveyLines = [];
             $.each(taggedSurveyLines, function (idx, line) {
-                var cleanedLine = $(line).text().trim();
+                var cleanedLine = self._stripHTML(line).trim();
                 if (cleanedLine.length > 0) {
                     surveyLines.push(cleanedLine);
                 }
             });
 
-            //   3. Separate into question, field, and style
-            //      e.g., "Is there a Structure on the Property? {Structure} {button}"
+            // 3. Separate into question, field, and style
+            // e.g., "Is there a Structure on the Property? {Structure} {button}"
             $.each(surveyLines, function (idx, line) {
                 var paramParts = line.split("{");
                 var trimmedParts = [];
@@ -295,31 +267,142 @@ define(function () {
             return survey;
         },
 
-        _parseAccessConfig: function (source) {//???
-            // Sample content after beautifying:
-            //    <div>Copyright 2015 My City</div>
-            //    <div>
-            //        <br />
-            //    </div>
-            //    <div>=== Access and use settings ===</div>
-            //    <div>contribution levels:</div><span style='line-height: 1.38461538461538;'>0: Getting Started<br /></span><span style='line-height: 1.38461538461538;'>5: Beginner<br /></span><span style='line-height: 1.38461538461538;'>10: Helper<br /></span><span style='line-height: 1.38461538461538;'>15: Intermediate<br /></span><span style='line-height: 1.38461538461538;'>20: Advanced<br /></span><span style='line-height: 1.38461538461538;'>25: Wow!</span>
-            //    <div>
-            //        <br />
-            //        <div>
-            //            <div>Facebook app id: 101991193476073</div>
-            //        </div>
-            //        <div>Google+ client id: 884148190980-mrcnakr5q14ura5snpcbgp85ovq7s7ea.apps.googleusercontent.com</div>
-            //        <div>show Twitter: true</div>
-            //        <div>
-            //            <br />
-            //        </div>
-            //        <div>
-            //            <div>surveyor name field: SRVNAME</div>
-            //            <div>best photo field: BSTPHOTOID</div>
-            //        </div>
-            //    </div>
+        _parseAccessConfig: function (source) {
+            // e.g., <div>Copyright 2015 My City</div><div><br /></div><div>=== Access and use settings ===</div><div><br />
+            //  </div><div>contribution star levels:</div><div>0: Getting Started @0</div><div>1: Beginner @5</div><div>2:
+            //  Helper @10</div><div>3: Intermediate @15</div><div>4: Advanced @20</div><div>5: Wow! @25</div><div><br />
+            //  </div><div>Facebook app id: 101991193476073</div><div>Google+ client id:
+            //  884148190980-mrcnakr5q14ura5snpcbgp85ovq7s7ea.apps.googleusercontent.com</div><div>show Twitter: true</div>
+            //  <div><br /></div><div>surveyor name field: SRVNAME</div><div>best photo field: BSTPHOTOID</div><div><br /></div>
+            var config = {};
 
+            // 1. split on </div> and then <br
+            var taggedConfigLines = [];
+            var descriptionSplitDiv = source.split("</div>");
+            $.each(descriptionSplitDiv, function (idx, line) {
+                $.merge(taggedConfigLines, line.split("<br />"));
+            });
 
+            // 2. remove all html tags (could have <b>, <i>, <u>, <ol>, <ul>, <li>, <a>, <font>, <span>, <br>, <div>,
+            // and their closures included or explicit)
+            // yields something like:
+            //  0: "Copyright 2015 My City"
+            //  1: "=== Access and use settings ==="
+            //  2: "contribution star levels:"
+            //  3: "0: Getting Started @0"
+            //  4: "1: Beginner @5"
+            //  5: "2: Helper @10"
+            //  6: "3: Intermediate @15"
+            //  7: "4: Advanced @18"
+            //  8: "5: Wow! @25"
+            //  9: "Facebook app id: 103782893296903"
+            //  10: "Google+ client id: 801106938257-am9uvo6dm0ih06r7h048k7m66l6oo3v1.apps.googleusercontent.com"
+            //  11: "show Twitter: true"
+            //  12: "surveyor name field: SRVNAME"
+            //  13: "best photo field: BSTPHOTOID"
+            var configLines = [];
+            $.each(taggedConfigLines, function (idx, line) {
+                var cleanedLine = self._stripHTML(line).trim();
+                if (cleanedLine.length > 0) {
+                    configLines.push(cleanedLine);
+                }
+            });
+
+            // 3. step thru lines seeking keywords
+            var keywordParts = ["=== access and use settings ===",
+                "contribution star levels", "0", "1", "2", "3", "4", "5",
+                "facebook", "google", "twitter", "surveyor", "photo"];
+            var iLine;
+            var iKeyword = 0;
+            var config = {
+                "showFacebook": false,
+                "showGooglePlus": false,
+                "showTwitter": false
+            };
+            var contribLevels = [];
+
+            for (iLine = 0; iLine < configLines.length; iLine += 1) {
+                var lineParts = configLines[iLine].split(':');
+                if (lineParts[0].toLowerCase().indexOf(keywordParts[iKeyword]) >= 0) {
+                    switch (iKeyword) {
+                    case 0: // "=== Access and use settings ==="
+                        break;
+                    case 1: // "contribution star levels"
+                        break;
+                    case 2: // "0"
+                        self._getContribLevel(0, lineParts[1], contribLevels);
+                        break;
+                    case 3: // "1"
+                        self._getContribLevel(1, lineParts[1], contribLevels);
+                        break;
+                    case 4: // "2"
+                        self._getContribLevel(2, lineParts[1], contribLevels);
+                        break;
+                    case 5: // "3"
+                        self._getContribLevel(3, lineParts[1], contribLevels);
+                        break;
+                    case 6: // "4"
+                        self._getContribLevel(4, lineParts[1], contribLevels);
+                        break;
+                    case 7: // "5"
+                        self._getContribLevel(5, lineParts[1], contribLevels);
+                        if (contribLevels != null) {
+                            config.contribLevels = contribLevels;
+                        }
+                        break;
+                    case 8: // "Facebook app id"
+                        config.showFacebook = true;
+                        config.facebookAppId = lineParts[1].trim();
+                        break;
+                    case 9: // "Google+ client id"
+                        config.showGooglePlus = true;
+                        config.googleplusClientId = lineParts[1].trim();
+                        break;
+                    case 10: // "show Twitter"
+                        config.showTwitter = true;
+                        break;
+                    case 11: // "surveyor name field"
+                        config.surveyorNameField = lineParts[1].trim();
+                        break;
+                    case 12: // "best photo field"
+                        config.bestPhotoField = lineParts[1].trim();
+                        break;
+                    }
+
+                    iKeyword += 1;
+                    if (iKeyword >= keywordParts.length) {
+                        break;
+                    }
+                }
+            }
+            return config;
+        },
+
+        _getContribLevel: function (iLevel, levelDescrip, contribLevels) {
+            var levelParts, minimumSurveysNeeded;
+
+            if (contribLevels != null && levelDescrip != null) {
+                levelParts = levelDescrip.split('@');
+                try {
+                    minimumSurveysNeeded = iLevel === 0 ? 0 :
+                        Number.parseInt(levelParts[1]);
+                    contribLevels.push({
+                        "label": levelParts[0].trim(),
+                        "minimumSurveysNeeded": minimumSurveysNeeded
+                    });
+                } catch (ignore) {
+                    // Flag an unusable set
+                    contribLevels = null;
+                }
+            }
+        },
+
+        // By Simon Boudrias, http://stackoverflow.com/a/13140100
+        _stripHTML: function (dirtyString) {
+            var text;
+            var container = document.createElement('div');
+            container.innerHTML = dirtyString;
+            return container.textContent || container.innerText;
         },
 
         /** Normalizes a boolean value to true or false.

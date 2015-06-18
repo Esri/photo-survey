@@ -91,8 +91,8 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'],
 
             // When the feature service info is ready, we can set up the module that reads from and writes to the service
             appConfigReadies.featureServiceReady.then(function () {
-                dataAccess.init(appConfig.opLayer.url, appConfig.featureSvcParams.id, appConfig.featureSvcParams.objectIdField,
-                    appConfig.appParams.surveyorNameField + "+is+null");
+                dataAccess.init(appConfig.opLayerParams.url, appConfig.featureSvcParams.id,
+                    appConfig.featureSvcParams.objectIdField, appConfig.appParams.surveyorNameField + "+is+null");
                 $("#signinBlock").fadeIn();
 
                 // Test if there are any surveys remaining to be done
@@ -337,14 +337,14 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'],
         $("#score2")[0].innerHTML = self.completions;
         $("#profileCount").fadeIn();
 
-        if (appConfig.contribLevels.length > 0) {
-            var level = appConfig.contribLevels.length - 1;
+        if (appConfig.appParams.contribLevels.length > 0) {
+            var level = appConfig.appParams.contribLevels.length - 1;
             var remainingToNextLevel = 0;
-            while (appConfig.contribLevels[level].minimumSurveysNeeded > self.completions) {
-                remainingToNextLevel = appConfig.contribLevels[level].minimumSurveysNeeded;
+            while (appConfig.appParams.contribLevels[level].minimumSurveysNeeded > self.completions) {
+                remainingToNextLevel = appConfig.appParams.contribLevels[level].minimumSurveysNeeded;
                 level -= 1;
             }
-            var doneThisLevel = self.completions - appConfig.contribLevels[level].minimumSurveysNeeded;
+            var doneThisLevel = self.completions - appConfig.appParams.contribLevels[level].minimumSurveysNeeded;
             remainingToNextLevel = Math.max(0, remainingToNextLevel - self.completions);
             var cRankBarWidthPx = 170;
             $("#profileRankBarFill")[0].style.width = (cRankBarWidthPx * doneThisLevel / (doneThisLevel + remainingToNextLevel)) + "px";
@@ -356,7 +356,7 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'],
                 stars.prevAll().andSelf().attr("src", "images/filled-star.png");
                 stars.nextAll().attr("src", "images/empty-star.png");
             }
-            $("#rankLabel")[0].innerHTML = appConfig.contribLevels[level].label;
+            $("#rankLabel")[0].innerHTML = appConfig.appParams.contribLevels[level].label;
             $("#level")[0].innerHTML = "level $(level)".replace("$(level)", level);
             $("#remainingToNextLevel")[0].innerHTML = remainingToNextLevel === 0? "" :
                 "$(remainingToNextLevel) surveys left until next level".replace("$(remainingToNextLevel)", remainingToNextLevel);
