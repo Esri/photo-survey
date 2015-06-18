@@ -17,7 +17,7 @@
  */
 //============================================================================================================================//
 define(function () {
-    var self;
+    var that;
     return {
 
         // Constants for callback to app
@@ -35,11 +35,11 @@ define(function () {
         //--------------------------------------------------------------------------------------------------------------------//
 
         init: function (appConfig, buttonContainer, statusCallback) {
-            self = this;
+            that = this;
             var deferred = $.Deferred();
-            var isIE8 = self._createIE8Test();
-            self._statusCallback = statusCallback;
-            self.appConfig = appConfig;
+            var isIE8 = that._createIE8Test();
+            that._statusCallback = statusCallback;
+            that.appConfig = appConfig;
 
             //................................................................................................................//
 
@@ -50,14 +50,14 @@ define(function () {
                     // Provide a startup function for when the SDK finishes loading
                     window.fbAsyncInit = function () {
                         FB.Event.subscribe("auth.login", function () {console.warn("auth.login --> update");});//???
-                        FB.Event.subscribe("auth.login", self._updateFacebookUser);
+                        FB.Event.subscribe("auth.login", that._updateFacebookUser);
                         FB.Event.subscribe("auth.statusChange", function () {console.warn("auth.statusChange --> update");});//???
-                        FB.Event.subscribe("auth.statusChange", self._updateFacebookUser);
+                        FB.Event.subscribe("auth.statusChange", that._updateFacebookUser);
                         FB.Event.subscribe("auth.logout", function () {console.warn("auth.logout --> update");});//???
-                        FB.Event.subscribe("auth.logout", self._updateFacebookUser);
+                        FB.Event.subscribe("auth.logout", that._updateFacebookUser);
 
                         FB.init({
-                            appId: self.appConfig.appParams.facebookAppId,
+                            appId: that.appConfig.appParams.facebookAppId,
                             cookie: true,  // enable cookies to allow the server to access the session
                             xfbml: false,   // parse social plugins on this page such as Login
                             status: true,  // check login status on every page load
@@ -66,7 +66,7 @@ define(function () {
 
                         // Update UI based on whether or not the user is currently logged in to FB
                         console.warn("fbAsyncInit --> update");//???
-                        FB.getLoginStatus(self._updateFacebookUser);
+                        FB.getLoginStatus(that._updateFacebookUser);
                     };
 
                     // Load the SDK asynchronously; it calls window.fbAsyncInit when done
@@ -130,9 +130,9 @@ define(function () {
                                             // your website.
                                             // -- https://developers.google.com/+/web/signin/reference/#button_attr_clientid
                                             gapi.auth.signIn({
-                                                "clientid": self.appConfig.appParams.googleplusClientId,
+                                                "clientid": that.appConfig.appParams.googleplusClientId,
                                                 "cookiepolicy": "http://" + document.location.hostname,
-                                                "callback": self._updateGooglePlusUser
+                                                "callback": that._updateGooglePlusUser
                                             });
                                         });
                                         googlePlusDeferred.resolve(true);
@@ -157,7 +157,7 @@ define(function () {
 
                     $('<div id="twitterSignin" class="socialMediaButton twitterOfficialColor" style="background-image:url(\'images/Twitter_logo_blue_29.png\')">Twitter</div>').appendTo(buttonContainer);
                     $('#twitterSignin').on('click', function () {
-                        self._showTwitterLoginWin(false);
+                        that._showTwitterLoginWin(false);
                     });
                     twitterDeferred.resolve(true);
                 } else {
@@ -185,7 +185,7 @@ define(function () {
          * @param {boolean} Logged in or not
          */
         isSignedIn: function () {
-            return self._loggedIn;
+            return that._loggedIn;
         },
 
         /**
@@ -196,13 +196,13 @@ define(function () {
          * @memberOf social#
          */
         getUser: function () {
-            return self._user;
+            return that._user;
         },
 
         signOut: function () {
-            console.warn("signOut; believed logged in: " + self.isSignedIn());
-            if (self.isSignedIn()) {
-                switch (self._currentProvider) {
+            console.warn("signOut; believed logged in: " + that.isSignedIn());
+            if (that.isSignedIn()) {
+                switch (that._currentProvider) {
 
                     case "facebook":
                         // Log the user out of the app; known FB issue is that cookies are not cleared as promised if
@@ -213,26 +213,26 @@ define(function () {
                     case "googlePlus":
                         // Log the user out of the app; known G+ issue that user is not really logged out
                         try {
-                            self._disconnectUser(self._user.access_token);
+                            that._disconnectUser(that._user.access_token);
                             gapi.auth.signOut();
-                            self._showGooglePlusLogoutWin();
+                            that._showGooglePlusLogoutWin();
                         } catch (ignore) {
                         }
                         break;
 
                     case "twitter":
                         // Update the calling app
-                        self._statusCallback(self.notificationSignOut);
+                        that._statusCallback(that.notificationSignOut);
 
                         // Log the user out of the app; known Twitter issue that it does not log the current user out
                         // unless he/she enters a password and then clicks "cancel", and then clicks to return to the
                         // app even though the Twitter display claims that the app continues to have access to the
                         // user's information.
-                        self._showTwitterLoginWin(true);
+                        that._showTwitterLoginWin(true);
                         break;
                 }
             }
-            self._currentProvider = "none";
+            that._currentProvider = "none";
         },
 
         //--------------------------------------------------------------------------------------------------------------------//
@@ -255,39 +255,39 @@ define(function () {
             //     }
             // }
 
-            // self response may not be true; we'll find out for sure when we call FB.api
-            self._loggedIn = response && response.status === "connected";
-            console.warn("_updateFacebookUser; believe logged in: " + self._loggedIn);//???
-            self._currentProvider = self._loggedIn ? "facebook" : "";
+            // that response may not be true; we'll find out for sure when we call FB.api
+            that._loggedIn = response && response.status === "connected";
+            console.warn("_updateFacebookUser; believe logged in: " + that._loggedIn);//???
+            that._currentProvider = that._loggedIn ? "facebook" : "";
 
             // If logged in, update info from the account
-            self._user = {};
-            if (self._loggedIn) {
+            that._user = {};
+            if (that._loggedIn) {
                 FB.api("/me", {fields: "name,id"}, function (apiResponse) {
-                    self._loggedIn = apiResponse.name !== undefined;
-                    if (self._loggedIn) {
-                        self._user = {
+                    that._loggedIn = apiResponse.name !== undefined;
+                    if (that._loggedIn) {
+                        that._user = {
                             "name": apiResponse.name,
                             "id": apiResponse.id
                         };
                         // Update the calling app
-                        self._statusCallback(self.notificationSignIn);
+                        that._statusCallback(that.notificationSignIn);
 
                         // Update the avatar
-                        FB.api("/" + self._user.id + "/picture", function (picResponse) {
+                        FB.api("/" + that._user.id + "/picture", function (picResponse) {
                             if (picResponse && !picResponse.error && picResponse.data && !picResponse.data.is_silhouette && picResponse.data.url) {
-                                self._user.avatar = picResponse.data.url;
+                                that._user.avatar = picResponse.data.url;
                             }
                             // Update the calling app
-                            self._statusCallback(self.notificationAvatarUpdate);
+                            that._statusCallback(that.notificationAvatarUpdate);
                         });
                     }
-                    self._statusCallback(self.notificationAvatarUpdate);
+                    that._statusCallback(that.notificationAvatarUpdate);
                 });
 
             } else {
                 // Update the calling app
-                self._statusCallback(self.notificationSignOut);
+                that._statusCallback(that.notificationSignOut);
             }
         },
 
@@ -300,37 +300,37 @@ define(function () {
          * @abstract
          */
         _updateGooglePlusUser: function (response) {
-            self._loggedIn = response && response.status && response.status.signed_in;
-            self._currentProvider = self._loggedIn ? "googlePlus" : "";
+            that._loggedIn = response && response.status && response.status.signed_in;
+            that._currentProvider = that._loggedIn ? "googlePlus" : "";
 
             // If logged in, update info from the account
-            self._user = {};
-            if (self._loggedIn) {
+            that._user = {};
+            if (that._loggedIn) {
                 gapi.client.request({
                     "path": "/plus/v1/people/me"
                 }).then(function (apiResponse) {
-                    self._user = {
+                    that._user = {
                         "name": apiResponse.result.displayName,
                         "id": apiResponse.result.id,
                         "access_token": response.access_token
                     };
 
                     // Update the calling app
-                    self._statusCallback(self.notificationSignIn);
+                    that._statusCallback(that.notificationSignIn);
 
                     // Update the avatar
                     if (apiResponse.result.image && !apiResponse.result.image.isDefault && apiResponse.result.image.url) {
-                        self._user.avatar = apiResponse.result.image.url;
-                        self._statusCallback(self.notificationAvatarUpdate);
+                        that._user.avatar = apiResponse.result.image.url;
+                        that._statusCallback(that.notificationAvatarUpdate);
                     }
                 }, function (reason) {
                     // Update the calling app
-                    self._statusCallback(self.notificationSignOut);
+                    that._statusCallback(that.notificationSignOut);
                 });
 
             // Report not-logged-in state
             } else {
-                self._statusCallback(self.notificationSignOut);
+                that._statusCallback(that.notificationSignOut);
             }
         },
 
@@ -348,11 +348,11 @@ define(function () {
                 dataType: 'jsonp',
                 success: function(nullResponse) {
                     console.warn("access token revoked")//???
-                    self._updateGooglePlusUser();
+                    that._updateGooglePlusUser();
                 },
                 error: function(e) {
                     console.warn("access token revoke failed")//???
-                    self._updateGooglePlusUser();
+                    that._updateGooglePlusUser();
                 }
             });
         },
@@ -360,7 +360,7 @@ define(function () {
         _showGooglePlusLogoutWin: function (forceLogin) {
             var baseUrl, left, top, w, h;
 
-            baseUrl = self.appConfig.appParams.googleplusLogoutUrl;
+            baseUrl = that.appConfig.appParams.googleplusLogoutUrl;
             left = (screen.width / 2) - (w / 2);
             top = (screen.height / 2) - (h / 2);
             w = screen.width / 2;
@@ -381,9 +381,9 @@ define(function () {
         _showTwitterLoginWin: function (forceLogin) {
             var baseUrl, package_path, redirect_uri, left, top, w, h;
 
-            baseUrl = self.appConfig.appParams.twitterSigninUrl;
+            baseUrl = that.appConfig.appParams.twitterSigninUrl;
             package_path = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
-            redirect_uri = encodeURIComponent(location.protocol + '//' + location.host + package_path + self.appConfig.appParams.twitterCallbackUrl);
+            redirect_uri = encodeURIComponent(location.protocol + '//' + location.host + package_path + that.appConfig.appParams.twitterCallbackUrl);
             left = (screen.width / 2) - (w / 2);
             top = (screen.height / 2) - (h / 2);
             w = screen.width / 2;
@@ -401,7 +401,7 @@ define(function () {
             }
 
             window.oAuthCallback = function () {
-                self._updateTwitterUser();
+                that._updateTwitterUser();
             };
             window.open(baseUrl, "twoAuth", "scrollbars=yes, resizable=yes, left=" + left + ", top=" + top + ", width=" + w + ", height=" + h, true);
         },
@@ -418,45 +418,45 @@ define(function () {
                 skip_status: true
             };
             $.ajax({
-                url: self.appConfig.appParams.twitterUserUrl,
+                url: that.appConfig.appParams.twitterUserUrl,
                 data: query,
                 dataType: "jsonp",
                 timeout: 10000,
                 success: function (data, textStatus, jqXHR) {
                     console.warn("twitter ajax success: " + textStatus);//???
 
-                    self._loggedIn = data && !data.hasOwnProperty("signedIn") && !data.signedIn;
-                    self._currentProvider = self._loggedIn ? "twitter" : "";
+                    that._loggedIn = data && !data.hasOwnProperty("signedIn") && !data.signedIn;
+                    that._currentProvider = that._loggedIn ? "twitter" : "";
 
-                    if (self._loggedIn) {
-                        self._user = {
+                    if (that._loggedIn) {
+                        that._user = {
                             "name": data.name,
                             "id": data.id_str
                         };
 
                         // Update the calling app
-                        self._statusCallback(self.notificationSignIn);
+                        that._statusCallback(that.notificationSignIn);
 
                         // Update the avatar
                         if (!data.default_profile_image && data.profile_image_url_https) {
-                            self._user.avatar = data.profile_image_url_https;
-                            self._statusCallback(self.notificationAvatarUpdate);
+                            that._user.avatar = data.profile_image_url_https;
+                            that._statusCallback(that.notificationAvatarUpdate);
                         }
                     } else {
-                        self._user = {};
+                        that._user = {};
 
                         // Update the calling app
-                        self._statusCallback(self.notificationSignOut);
+                        that._statusCallback(that.notificationSignOut);
                     }
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
                     console.warn("twitter ajax fail: " + textStatus);//???  not called for cross-domain?
 
                     // handle an error condition
-                    self._loggedIn = false;
+                    that._loggedIn = false;
 
                     // Update the calling app
-                    self._statusCallback(self.notificationSignOut);
+                    that._statusCallback(that.notificationSignOut);
                 }
             }, "json");
         },
@@ -468,7 +468,7 @@ define(function () {
          * @return {boolean} True if the browser is IE 8 or lower
          */
         _createIE8Test: function () {
-            return self._isIE(8, "lte");
+            return that._isIE(8, "lte");
         },
 
         /**

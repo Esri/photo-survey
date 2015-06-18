@@ -18,9 +18,9 @@
 //============================================================================================================================//
 define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'],
     function (i18n, appConfig, userConfig, dataAccess) {
-    var self;
+    var that;
 
-    self = {
+    that = {
         iVisiblePhoto: 0,
         photoSelected: false,
         iSelectedPhoto: -1,
@@ -47,15 +47,15 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'],
                 // Callback from current social medium
                 switch (notificationType) {
                     case userConfig.notificationSignIn:
-                        if (!self.signedIn) {
-                            self.signedIn = true;
+                        if (!that.signedIn) {
+                            that.signedIn = true;
                             console.warn("signing in user " + userConfig.getUser().name);//???
                             $(document).triggerHandler('signedIn:user');
                         }
                         break;
                     case userConfig.notificationSignOut:
-                        if (self.signedIn) {
-                            self.signedIn = false;
+                        if (that.signedIn) {
+                            that.signedIn = false;
                             $("#contentPage").fadeOut("fast");
                             $("#signinPage").fadeIn();
                             $(document).triggerHandler('hide:profile');
@@ -147,7 +147,7 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'],
 
             dataAccess.getObjectCount(appConfig.appParams.surveyorNameField + "=\'" + user.name + "\'").then(function (count) {
                 if (count >= 0) {
-                    self.completions = count;
+                    that.completions = count;
                     updateCount();
                 } else {
                     $("#profileCount").css("display", "none");
@@ -193,9 +193,9 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'],
             }
 
 
-            self.candidate = candidate;
-            self.iSelectedPhoto = -1;
-            console.warn("Surveying property " + self.candidate.obj.attributes.PIN) //???
+            that.candidate = candidate;
+            that.iSelectedPhoto = -1;
+            console.warn("Surveying property " + that.candidate.obj.attributes.PIN) //???
 
 
             // Gallery
@@ -203,7 +203,7 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'],
             $(carouselSlidesHolder).children().remove();  // remove children and their events
             var carouselIndicatorsHolder = $("#carouselIndicatorsHolder")[0];
             $(carouselIndicatorsHolder).children().remove();  // remove children and their events
-            var initiallyActiveItem = self.iSelectedPhoto >= 0 ? self.iSelectedPhoto : 0;
+            var initiallyActiveItem = that.iSelectedPhoto >= 0 ? that.iSelectedPhoto : 0;
 
             $.each(candidate.attachments, function (indexInArray, attachment) {
                 addPhoto(carouselSlidesHolder, indexInArray, (initiallyActiveItem === indexInArray), attachment.url);
@@ -265,7 +265,7 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'],
                 iQuestionResult = $('input[name=q' + iQuestion + ']:checked', surveyContainer).val();
             }
             if (iQuestionResult) {
-                self.candidate.obj.attributes[questionInfo.field] = questionInfo.domain.split("|")[iQuestionResult];
+                that.candidate.obj.attributes[questionInfo.field] = questionInfo.domain.split("|")[iQuestionResult];
             }
 
             // Flag missing importants
@@ -281,14 +281,14 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'],
 
         // Submit the survey if it has the important responses
         if (hasImportants) {
-            self.candidate.obj.attributes[appConfig.appParams.surveyorNameField] = userConfig.getUser().name;
-            if (self.iSelectedPhoto >= 0) {
-                self.candidate.obj.attributes[appConfig.appParams.bestPhotoField] = self.candidate.attachments[self.iSelectedPhoto].id;
+            that.candidate.obj.attributes[appConfig.appParams.surveyorNameField] = userConfig.getUser().name;
+            if (that.iSelectedPhoto >= 0) {
+                that.candidate.obj.attributes[appConfig.appParams.bestPhotoField] = that.candidate.attachments[that.iSelectedPhoto].id;
             }
-            console.warn("Saving survey for property " + self.candidate.obj.attributes.PIN) //???
-            dataAccess.updateCandidate(self.candidate);
+            console.warn("Saving survey for property " + that.candidate.obj.attributes.PIN) //???
+            dataAccess.updateCandidate(that.candidate);
 
-            self.completions += 1;
+            that.completions += 1;
             updateCount();
 
             $(document).triggerHandler('show:newSurvey');
@@ -296,11 +296,11 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'],
     });
 
     $("#hearts").on('click', function () {
-        self.photoSelected = !self.photoSelected;
-        self.iVisiblePhoto = parseInt($("#carouselSlidesHolder > .item.active")[0].id.substring(1));
-        self.iSelectedPhoto = self.photoSelected ? self.iVisiblePhoto : -1;
-        /*showHeart('filledHeart', self.photoSelected);
-        self.iSelectedPhoto = self.photoSelected ? self.iVisiblePhoto : -1;*/
+        that.photoSelected = !that.photoSelected;
+        that.iVisiblePhoto = parseInt($("#carouselSlidesHolder > .item.active")[0].id.substring(1));
+        that.iSelectedPhoto = that.photoSelected ? that.iVisiblePhoto : -1;
+        /*showHeart('filledHeart', that.photoSelected);
+        that.iSelectedPhoto = that.photoSelected ? that.iVisiblePhoto : -1;*/
         updatePhotoSelectionDisplay();
     });
 
@@ -324,28 +324,28 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'],
 
     function updatePhotoSelectionDisplay() {
         // After carousel slide
-        self.iVisiblePhoto = parseInt($("#carouselSlidesHolder > .item.active")[0].id.substring(1));
-        self.photoSelected = self.iVisiblePhoto === self.iSelectedPhoto;
-        showHeart('emptyHeart', !self.photoSelected);
-        showHeart('filledHeart', self.photoSelected);
-        $("#hearts").attr("title", (self.photoSelected ? "This is the best photo for the property" : "Click if this is the best photo for the property"));
+        that.iVisiblePhoto = parseInt($("#carouselSlidesHolder > .item.active")[0].id.substring(1));
+        that.photoSelected = that.iVisiblePhoto === that.iSelectedPhoto;
+        showHeart('emptyHeart', !that.photoSelected);
+        showHeart('filledHeart', that.photoSelected);
+        $("#hearts").attr("title", (that.photoSelected ? "This is the best photo for the property" : "Click if this is the best photo for the property"));
         $("#hearts")[0].style.display = "block";
     }
 
     function updateCount() {
-        $("#score")[0].innerHTML = self.completions;
-        $("#score2")[0].innerHTML = self.completions;
+        $("#score")[0].innerHTML = that.completions;
+        $("#score2")[0].innerHTML = that.completions;
         $("#profileCount").fadeIn();
 
         if (appConfig.appParams.contribLevels.length > 0) {
             var level = appConfig.appParams.contribLevels.length - 1;
             var remainingToNextLevel = 0;
-            while (appConfig.appParams.contribLevels[level].minimumSurveysNeeded > self.completions) {
+            while (appConfig.appParams.contribLevels[level].minimumSurveysNeeded > that.completions) {
                 remainingToNextLevel = appConfig.appParams.contribLevels[level].minimumSurveysNeeded;
                 level -= 1;
             }
-            var doneThisLevel = self.completions - appConfig.appParams.contribLevels[level].minimumSurveysNeeded;
-            remainingToNextLevel = Math.max(0, remainingToNextLevel - self.completions);
+            var doneThisLevel = that.completions - appConfig.appParams.contribLevels[level].minimumSurveysNeeded;
+            remainingToNextLevel = Math.max(0, remainingToNextLevel - that.completions);
             var cRankBarWidthPx = 170;
             $("#profileRankBarFill")[0].style.width = (cRankBarWidthPx * doneThisLevel / (doneThisLevel + remainingToNextLevel)) + "px";
 

@@ -17,6 +17,7 @@
  */
 //============================================================================================================================//
 define(function () {
+    var that;
     return {
 
         //--------------------------------------------------------------------------------------------------------------------//
@@ -63,7 +64,7 @@ define(function () {
 
 
         init: function () {
-            self = this;
+            that = this;
             var url;
             var startMs = (new Date()).getTime();  //???
 
@@ -78,7 +79,7 @@ define(function () {
                 params = params.substring(1).split("&");
                 $.map(params, function (item, index) {
                     var paramParts = item.split("=");
-                    self.urlParams[paramParts[0].toLowerCase()] = paramParts[1];
+                    that.urlParams[paramParts[0].toLowerCase()] = paramParts[1];
                 });
             }
 
@@ -87,18 +88,18 @@ define(function () {
             // were changed from the defaults.
             var fileAppDeferred = $.Deferred();
             $.getJSON("js/configuration.json", function (data) {
-                self.logElapsedTime("resolve config file", startMs);  //???
+                that.logElapsedTime("resolve config file", startMs);  //???
                 fileAppDeferred.resolve(data);
             });
 
             var onlineAppDeferred = $.Deferred();
-            if (self.urlParams.appid) {
-                $.getJSON("http://www.arcgis.com/sharing/content/items/" + self.urlParams.appid + "/data?f=json", function (data) {
-                    self.logElapsedTime("resolve online config", startMs);  //???
+            if (that.urlParams.appid) {
+                $.getJSON("http://www.arcgis.com/sharing/content/items/" + that.urlParams.appid + "/data?f=json", function (data) {
+                    that.logElapsedTime("resolve online config", startMs);  //???
                     onlineAppDeferred.resolve(data);
                 });
             } else {
-                self.logElapsedTime("no online config", startMs);  //???
+                that.logElapsedTime("no online config", startMs);  //???
                 onlineAppDeferred.resolve({});
             }
 
@@ -115,69 +116,69 @@ define(function () {
                 } else {
                     onlineAppData = {};
                 }
-                self.appParams = $.extend(self.appParams, fileAppData, onlineAppData);
+                that.appParams = $.extend(that.appParams, fileAppData, onlineAppData);
 
                 // Normalize booleans
-                self.appParams.showFacebook = self._toBoolean(self.appParams.showFacebook);
-                self.appParams.showGooglePlus = self._toBoolean(self.appParams.showGooglePlus);
-                self.appParams.showTwitter = self._toBoolean(self.appParams.showTwitter);
+                that.appParams.showFacebook = that._toBoolean(that.appParams.showFacebook);
+                that.appParams.showGooglePlus = that._toBoolean(that.appParams.showGooglePlus);
+                that.appParams.showTwitter = that._toBoolean(that.appParams.showTwitter);
 
-                self.logElapsedTime("merged configs", startMs);  //???
+                that.logElapsedTime("merged configs", startMs);  //???
 
                 // GA URL-supplied webmap overrides a configured one
-                if (self.urlParams.webmap) {
-                    self.appParams.webmap = self.urlParams.webmap;
+                if (that.urlParams.webmap) {
+                    that.appParams.webmap = that.urlParams.webmap;
                 }
 
                 // Get the app's webmap's data
-                if (self.appParams.webmap) {
-                    $.getJSON("http://www.arcgis.com/sharing/content/items/" + self.appParams.webmap + "?f=json", function (data) {
+                if (that.appParams.webmap) {
+                    $.getJSON("http://www.arcgis.com/sharing/content/items/" + that.appParams.webmap + "?f=json", function (data) {
                         var backgroundUrl;
-                        self.logElapsedTime("have webmap", startMs);  //???
+                        that.logElapsedTime("have webmap", startMs);  //???
 
                         // Extract the app configuration from the webmap
                         if (data) {
-                            self.appParams.title = data.title;
-                            self.appParams.splashText = data.snippet;
-                            self.appParams.helpText = data.description;
+                            that.appParams.title = data.title;
+                            that.appParams.splashText = data.snippet;
+                            that.appParams.helpText = data.description;
                             var imageFilename = data.thumbnail;
                             if(imageFilename) {
                                 var iExt = imageFilename.lastIndexOf(".");
                                 if (iExt >= 0) {
                                     imageFilename = imageFilename.substring(0, iExt) + "_orig" + imageFilename.substr(iExt);
-                                    self.appParams.webmapImageUrl = "http://www.arcgis.com/sharing/content/items/" + self.appParams.webmap + "/info/" + imageFilename;
+                                    that.appParams.webmapImageUrl = "http://www.arcgis.com/sharing/content/items/" + that.appParams.webmap + "/info/" + imageFilename;
                                 }
                             }
-                            self.appParams = $.extend(self.appParams, self._parseAccessConfig(data.licenseInfo));
+                            that.appParams = $.extend(that.appParams, that._parseAccessConfig(data.licenseInfo));
 
                             // Normalize booleans
-                            self.appParams.showFacebook = self._toBoolean(self.appParams.showFacebook);
-                            self.appParams.showGooglePlus = self._toBoolean(self.appParams.showGooglePlus);
-                            self.appParams.showTwitter = self._toBoolean(self.appParams.showTwitter);
+                            that.appParams.showFacebook = that._toBoolean(that.appParams.showFacebook);
+                            that.appParams.showGooglePlus = that._toBoolean(that.appParams.showGooglePlus);
+                            that.appParams.showTwitter = that._toBoolean(that.appParams.showTwitter);
                         }
                         parametersReady.resolve();
                     });
                 }
 
                 // Get the app's webmap's data
-                if (self.appParams.webmap) {
-                    $.getJSON("http://www.arcgis.com/sharing/content/items/" + self.appParams.webmap + "/data?f=json", function (data) {
-                        self.webmapParams = data || {};
-                        self.logElapsedTime("have webmap data", startMs);  //???
+                if (that.appParams.webmap) {
+                    $.getJSON("http://www.arcgis.com/sharing/content/items/" + that.appParams.webmap + "/data?f=json", function (data) {
+                        that.webmapParams = data || {};
+                        that.logElapsedTime("have webmap data", startMs);  //???
 
-                        if (self.webmapParams && self.webmapParams.operationalLayers && self.webmapParams.operationalLayers.length > 0) {
-                            self.opLayerParams = self.webmapParams.operationalLayers[0];
+                        if (that.webmapParams && that.webmapParams.operationalLayers && that.webmapParams.operationalLayers.length > 0) {
+                            that.opLayerParams = that.webmapParams.operationalLayers[0];
 
                         // Get the app's webmap's feature service's data
-                            $.getJSON(self.opLayerParams.url + "?f=json", function (data) {
-                                self.featureSvcParams = data || {};
+                            $.getJSON(that.opLayerParams.url + "?f=json", function (data) {
+                                that.featureSvcParams = data || {};
                                 featureServiceReady.resolve();
-                                self.logElapsedTime("have feature svc", startMs);  //???
+                                that.logElapsedTime("have feature svc", startMs);  //???
 
-                                if (self.featureSvcParams.fields) {
+                                if (that.featureSvcParams.fields) {
                                     // Create dictionary of fields with their domains and nullability; skip fields without domains
                                     var fieldDomains = {};
-                                    $.each(self.featureSvcParams.fields, function (idx, field) {
+                                    $.each(that.featureSvcParams.fields, function (idx, field) {
                                         if (field.domain && field.domain.codedValues) {
                                             fieldDomains[field.name] = {
                                                 domain: $.map(field.domain.codedValues, function (item, index) {
@@ -189,8 +190,8 @@ define(function () {
                                     });
 
                                     // Parse survey
-                                    self.survey = self._parseSurvey(
-                                        self.opLayerParams.popupInfo.description, fieldDomains);
+                                    that.survey = that._parseSurvey(
+                                        that.opLayerParams.popupInfo.description, fieldDomains);
 
                                     surveyReady.resolve();
                                 }
@@ -230,7 +231,7 @@ define(function () {
             // and their closures included or explicit)
             var surveyLines = [];
             $.each(taggedSurveyLines, function (idx, line) {
-                var cleanedLine = self._stripHTML(line).trim();
+                var cleanedLine = that._stripHTML(line).trim();
                 if (cleanedLine.length > 0) {
                     surveyLines.push(cleanedLine);
                 }
@@ -302,7 +303,7 @@ define(function () {
             //  13: "best photo field: BSTPHOTOID"
             var configLines = [];
             $.each(taggedConfigLines, function (idx, line) {
-                var cleanedLine = self._stripHTML(line).trim();
+                var cleanedLine = that._stripHTML(line).trim();
                 if (cleanedLine.length > 0) {
                     configLines.push(cleanedLine);
                 }
@@ -330,22 +331,22 @@ define(function () {
                     case 1: // "contribution star levels"
                         break;
                     case 2: // "0"
-                        self._getContribLevel(0, lineParts[1], contribLevels);
+                        that._getContribLevel(0, lineParts[1], contribLevels);
                         break;
                     case 3: // "1"
-                        self._getContribLevel(1, lineParts[1], contribLevels);
+                        that._getContribLevel(1, lineParts[1], contribLevels);
                         break;
                     case 4: // "2"
-                        self._getContribLevel(2, lineParts[1], contribLevels);
+                        that._getContribLevel(2, lineParts[1], contribLevels);
                         break;
                     case 5: // "3"
-                        self._getContribLevel(3, lineParts[1], contribLevels);
+                        that._getContribLevel(3, lineParts[1], contribLevels);
                         break;
                     case 6: // "4"
-                        self._getContribLevel(4, lineParts[1], contribLevels);
+                        that._getContribLevel(4, lineParts[1], contribLevels);
                         break;
                     case 7: // "5"
-                        self._getContribLevel(5, lineParts[1], contribLevels);
+                        that._getContribLevel(5, lineParts[1], contribLevels);
                         if (contribLevels != null) {
                             config.contribLevels = contribLevels;
                         }
