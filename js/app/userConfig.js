@@ -31,10 +31,15 @@ define(function () {
         _user: null,
         _statusCallback: null,
         _currentProvider: null,
+        _availabilities: {
+            facebook: false,
+            googleplus: false,
+            twitter: false
+        },
 
         //--------------------------------------------------------------------------------------------------------------------//
 
-        init: function (appConfig, buttonContainer, statusCallback) {
+        init: function (appConfig, statusCallback) {
             that = this;
             var deferred = $.Deferred();
             var isIE8 = that._createIE8Test();
@@ -49,11 +54,8 @@ define(function () {
                 if (!isIE8 && appConfig.appParams.showFacebook) {
                     // Provide a startup function for when the SDK finishes loading
                     window.fbAsyncInit = function () {
-                        FB.Event.subscribe("auth.login", function () {console.warn("auth.login --> update");});//???
                         FB.Event.subscribe("auth.login", that._updateFacebookUser);
-                        FB.Event.subscribe("auth.statusChange", function () {console.warn("auth.statusChange --> update");});//???
                         FB.Event.subscribe("auth.statusChange", that._updateFacebookUser);
-                        FB.Event.subscribe("auth.logout", function () {console.warn("auth.logout --> update");});//???
                         FB.Event.subscribe("auth.logout", that._updateFacebookUser);
 
                         FB.init({
@@ -65,7 +67,6 @@ define(function () {
                         });
 
                         // Update UI based on whether or not the user is currently logged in to FB
-                        console.warn("fbAsyncInit --> update");//???
                         FB.getLoginStatus(that._updateFacebookUser);
                     };
 
@@ -81,20 +82,7 @@ define(function () {
                         fjs.parentNode.insertBefore(js, fjs);
                     }(document, "script", "facebook-jssdk"));
 
-
-                    $('<div id="facebookSignin" class="socialMediaButton facebookOfficialColor" style="background-image:url(\'images/FB-f-Logo__blue_29.png\')">Facebook</div>').appendTo(buttonContainer);
-                    $('#facebookSignin').on('click', function () {
-                        // Force reauthorization. FB says, "Apps should build their own mechanisms for allowing switching
-                        // between different Facebook user accounts using log out functions and should not rely upon
-                        // re-authentication for this."  (https://developers.facebook.com/docs/facebook-login/reauthentication),
-                        // but doesn't seem to provide a working logout function that clears its cookies if third-party
-                        // cookies are blocked.
-                        FB.login(function (response) {
-                            console.warn("login response: " + JSON.stringify(response));//???
-                        }, {
-                            auth_type: 'reauthenticate'
-                        });
-                    });
+                    that._availabilities.facebook = true;
                     facebookDeferred.resolve(true);
                 } else {
                     facebookDeferred.resolve(false);
@@ -118,23 +106,7 @@ define(function () {
                             complete: function () {
                                 gapi.load('auth2', function () {
                                     gapi.client.load('plus', 'v1').then(function () {
-                                        $('<div id="googlePlusSignin" class="socialMediaButton googlePlusOfficialColor" style="background-image:url(\'images/gp-29.png\')">Google+</div>').appendTo(buttonContainer);
-                                        $('#googlePlusSignin').on('click', function () {
-                                            // Google caveat for setting cookiepolicy to "none":
-                                            // The none value does not set cookies or session storage for the sign-in button
-                                            // and uses a less efficient fallback mechanism for determining user and session
-                                            // information. Setting this value to none also prevents gapi.auth.signout from
-                                            // working for the user and requires you to implement signout appropriately. This
-                                            // value also can prevent a user who is signed in to multiple Google accounts
-                                            // (say, work and personal) from being able to select which account to use with
-                                            // your website.
-                                            // -- https://developers.google.com/+/web/signin/reference/#button_attr_clientid
-                                            gapi.auth.signIn({
-                                                "clientid": that.appConfig.appParams.googleplusClientId,
-                                                "cookiepolicy": "http://" + document.location.hostname,
-                                                "callback": that._updateGooglePlusUser
-                                            });
-                                        });
+                                        that._availabilities.googleplus = true;
                                         googlePlusDeferred.resolve(true);
                                     });
                                 });
@@ -152,18 +124,12 @@ define(function () {
             var twitterDeferred = $.Deferred();
             setTimeout(function () {
                 if (!isIE8 && appConfig.appParams.showTwitter) {
-
-
-
-                    $('<div id="twitterSignin" class="socialMediaButton twitterOfficialColor" style="background-image:url(\'images/Twitter_logo_blue_29.png\')">Twitter</div>').appendTo(buttonContainer);
-                    $('#twitterSignin').on('click', function () {
-                        that._showTwitterLoginWin(false);
-                    });
+                    that._availabilities.twitter = true;
                     twitterDeferred.resolve(true);
                 } else {
                     twitterDeferred.resolve(false);
                 }
-            }, 2000);
+            });
 
             //................................................................................................................//
 
@@ -178,6 +144,51 @@ define(function () {
             });
 
             return deferred;
+        },
+
+        initUI: function (buttonContainer) {
+
+            if (that._availabilities.facebook) {
+                $('<div id="facebookSignin" class="socialMediaButton facebookOfficialColor" style="background-image:url(\'images/FB-f-Logo__blue_29.png\')">Facebook</div>').appendTo(buttonContainer);
+                $('#facebookSignin').on('click', function () {
+                    // Force reauthorization. FB says, "Apps should build their own mechanisms for allowing switching
+                    // between different Facebook user accounts using log out functions and should not rely upon
+                    // re-authentication for this."  (https://developers.facebook.com/docs/facebook-login/reauthentication),
+                    // but doesn't seem to provide a working logout function that clears its cookies if third-party
+                    // cookies are blocked.
+                    FB.login(function (response) {}, {
+                        auth_type: 'reauthenticate'
+                    });
+                });
+            }
+
+            if (that._availabilities.googleplus) {
+                $('<div id="googlePlusSignin" class="socialMediaButton googlePlusOfficialColor" style="background-image:url(\'images/gp-29.png\')">Google+</div>').appendTo(buttonContainer);
+                $('#googlePlusSignin').on('click', function () {
+                    // Google caveat for setting cookiepolicy to "none":
+                    // The none value does not set cookies or session storage for the sign-in button
+                    // and uses a less efficient fallback mechanism for determining user and session
+                    // information. Setting this value to none also prevents gapi.auth.signout from
+                    // working for the user and requires you to implement signout appropriately. This
+                    // value also can prevent a user who is signed in to multiple Google accounts
+                    // (say, work and personal) from being able to select which account to use with
+                    // your website.
+                    // -- https://developers.google.com/+/web/signin/reference/#button_attr_clientid
+                    gapi.auth.signIn({
+                        "clientid": that.appConfig.appParams.googleplusClientId,
+                        "cookiepolicy": "http://" + document.location.hostname,
+                        "callback": that._updateGooglePlusUser
+                    });
+                });
+            }
+
+            if (that._availabilities.twitter) {
+                $('<div id="twitterSignin" class="socialMediaButton twitterOfficialColor" style="background-image:url(\'images/Twitter_logo_blue_29.png\')">Twitter</div>').appendTo(buttonContainer);
+                $('#twitterSignin').on('click', function () {
+                    that._showTwitterLoginWin(false);
+                });
+            }
+
         },
 
         /**
@@ -257,7 +268,6 @@ define(function () {
 
             // that response may not be true; we'll find out for sure when we call FB.api
             that._loggedIn = response && response.status === "connected";
-            console.warn("_updateFacebookUser; believe logged in: " + that._loggedIn);//???
             that._currentProvider = that._loggedIn ? "facebook" : "";
 
             // If logged in, update info from the account
@@ -347,11 +357,9 @@ define(function () {
                 contentType: "application/json",
                 dataType: 'jsonp',
                 success: function(nullResponse) {
-                    console.warn("access token revoked")//???
                     that._updateGooglePlusUser();
                 },
                 error: function(e) {
-                    console.warn("access token revoke failed")//???
                     that._updateGooglePlusUser();
                 }
             });
@@ -400,10 +408,10 @@ define(function () {
                 baseUrl += 'redirect_uri=' + redirect_uri;
             }
 
+            window.open(baseUrl, "twoAuth", "scrollbars=yes, resizable=yes, left=" + left + ", top=" + top + ", width=" + w + ", height=" + h, true);
             window.oAuthCallback = function () {
                 that._updateTwitterUser();
             };
-            window.open(baseUrl, "twoAuth", "scrollbars=yes, resizable=yes, left=" + left + ", top=" + top + ", width=" + w + ", height=" + h, true);
         },
 
         /**
@@ -423,7 +431,6 @@ define(function () {
                 dataType: "jsonp",
                 timeout: 10000,
                 success: function (data, textStatus, jqXHR) {
-                    console.warn("twitter ajax success: " + textStatus);//???
 
                     that._loggedIn = data && !data.hasOwnProperty("signedIn") && !data.signedIn;
                     that._currentProvider = that._loggedIn ? "twitter" : "";
@@ -450,8 +457,6 @@ define(function () {
                     }
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
-                    console.warn("twitter ajax fail: " + textStatus);//???  not called for cross-domain?
-
                     // handle an error condition
                     that._loggedIn = false;
 
