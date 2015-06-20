@@ -2,6 +2,17 @@
     "source": "dbd49c155bf249f79bf1e518d56dbbb2",
     "folderId": "052b07ec56b3462c943adcc6959354ec",
     "values": {
-        "webmap": "252613b18fff42928e6f5ab84edfbaed",
+        "webmap": "f0cee31e847047febcbe0e2fed2d4cf3",
+        "splashBackgroundUrl": "images/splash.jpg",
+        "useWebmapOrigImg": true,
+
+        "facebookAppId": "103782893296903",
+        "googleplusClientId": "801106938257-am9uvo6dm0ih06r7h048k7m66l6oo3v1.apps.googleusercontent.com",
+        "showTwitter": "true",
+
+        "googleplusLogoutUrl": "https://accounts.google.com/logout",
+        "twitterSigninUrl": "https://utility.arcgis.com/tproxy/signin",
+        "twitterUserUrl": "https://utility.arcgis.com/tproxy/proxy/1.1/account/verify_credentials.json?q=&include_entities=true&skip_status=true&locale=en",
+        "twitterCallbackUrl": "/oauth-callback-twitter.html"
     }
 }
