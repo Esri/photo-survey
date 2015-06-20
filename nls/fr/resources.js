@@ -28,7 +28,7 @@ define(
             button_tip_close: "Fermez le panneau de informations complémentaires"
         },
         signin: {
-            signinFetching: "Vérification de la disponibilité des médias sociaux...",
+            signinFetching: "Vérification de la disponibilité des possibilités de connexion...",
             signinLoginPrompt: "S'il vous plaît vous connecter pour commencer",
             noMoreSurveys: "Il n'y a pas de sondages disponibles à ce moment. Merci pour votre participation."
         }

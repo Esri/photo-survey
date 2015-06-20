@@ -28,7 +28,7 @@ define({
             button_tip_close: "Close additional information panel"
         },
         signin: {
-            signinFetching: "Checking availability of social media...",
+            signinFetching: "Checking availability of login possibilities...",
             signinLoginPrompt: "Please sign in to get started",
             noMoreSurveys: "There are no surveys available at this time; thank you for your participation."
         }
