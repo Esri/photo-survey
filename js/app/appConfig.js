@@ -16,434 +16,159 @@
  | limitations under the License.
  */
 //============================================================================================================================//
-define(function () {
+define(['parseConfig', 'fetchConfig'], function (parseConfig, fetchConfig) {
     var that;
     return {
 
         //--------------------------------------------------------------------------------------------------------------------//
 
         // Available after init's parametersReady deferred
-        urlParams: {},
         appParams: {
+            // Parameters that can be overridden by the configuration file, webmap, online app, and/or URL
             webmap: "",
-            webmapImageUrl: "",
+            useWebmapOrigImg: true,
             title: "",
             splashText: "",
             splashBackgroundUrl: "images/splash.jpg",
             helpText: "",
             contribLevels: [],
 
-            showFacebook: "true",
-            showGooglePlus: "true",
-            showTwitter: "true",
             facebookAppId: "",
             googleplusClientId: "",
-            googleplusLogoutUrl: "https://accounts.google.com/logout",
-            twitterSigninUrl: "https://utility.arcgis.com/tproxy/signin",
-            twitterUserUrl: "https://utility.arcgis.com/tproxy/proxy/1.1/account/verify_credentials.json?q=&include_entities=true&skip_status=true&locale=en",
-            twitterCallbackUrl: "/oauth-callback-twitter.html",
+            googleplusLogoutUrl: "",
+            twitterSigninUrl: "",
+            twitterUserUrl: "",
+            twitterCallbackUrl: "",
 
             surveyorNameField: "",
-            bestPhotoField: ""
+            bestPhotoField: "",
+
+            // Parameters defined here
+            showFacebook: "false",
+            showGooglePlus: "false",
+            showTwitter: "false"
         },
 
-        // Available after init's featureServiceReady deferred
-        webmapParams: {},
-        opLayerParams: null,
-        featureSvcParams: {},
-
-        // Available after init's surveyReady deferred; array of {question, style, domain, field, important}
+        // Available after init's surveyReady deferred
+        featureSvcParams: {
+            url: "",
+            id: "",
+            objectIdField: ""
+        },
         survey: [],
+
+        // Available after init's webmapOrigImageUrlReady deferred: event arg is URL to original image or null if no image
+        // configured or if original image not found
+
 
         //--------------------------------------------------------------------------------------------------------------------//
 
-        logElapsedTime: function (tag, startMs) {  //???
-            var ticks = (new Date()).getTime() - startMs;
-            console.log(tag + ": " + ticks);
-        },
-
-
         init: function () {
             that = this;
-            var url;
-            var startMs = (new Date()).getTime();  //???
+            fetchConfig.init();
 
+            // Set up external notifications for various stages of preparation
             var parametersReady = $.Deferred();
-            var featureServiceReady = $.Deferred();
             var surveyReady = $.Deferred();
+            var webmapOrigImageUrlReady = $.Deferred();
 
+            // Prepare for a webmap fetch as soon as we can
+            var webmapParamsFetch = $.Deferred();
+            var webmapDataFetch = $.Deferred();
+            var webmapFetcher = null;
 
             // Get the URL parameters
-            var params = window.location.search;
-            if (params.length > 0 && params[0] === "?") {
-                params = params.substring(1).split("&");
-                $.map(params, function (item, index) {
-                    var paramParts = item.split("=");
-                    that.urlParams[paramParts[0].toLowerCase()] = paramParts[1];
-                });
+            var paramsFromUrl = fetchConfig._getParamsFromUrl();
+
+            // If webmap specified in the URL, we can start a fetch of its data now
+            if (parseConfig._isUsableString(paramsFromUrl.webmap)) {
+                webmapFetcher = "url";
+                fetchConfig._getParamsFromWebmap(paramsFromUrl.webmap, webmapParamsFetch, webmapOrigImageUrlReady);
+                fetchConfig._getWebmapData(paramsFromUrl.webmap, webmapDataFetch);
             }
 
-            // We have two sources of app parameters: an online app indicated by the appId URL parameter
-            // and a configuration file. We want both because the online app only includes parameters that
-            // were changed from the defaults.
-            var fileAppDeferred = $.Deferred();
-            $.getJSON("js/configuration.json", function (data) {
-                that.logElapsedTime("resolve config file", startMs);  //???
-                fileAppDeferred.resolve(data);
+            // If the appId is specified in the URL, fetch its parameters; resolves immediately if no appId
+            var onlineAppFetch = $.Deferred();
+            fetchConfig._getParamsFromOnlineApp(paramsFromUrl.appid).done(function (data) {
+                if (!webmapFetcher) {
+                    if (data && data.webmap) {
+                        // Use webmap specified in online app
+                        webmapFetcher = "online";
+                        fetchConfig._getParamsFromWebmap(data.webmap, webmapParamsFetch, webmapOrigImageUrlReady);
+                        fetchConfig._getWebmapData(data.webmap, webmapDataFetch);
+                    }
+                }
+                onlineAppFetch.resolve(data);
             });
 
-            var onlineAppDeferred = $.Deferred();
-            if (that.urlParams.appid) {
-                $.getJSON("http://www.arcgis.com/sharing/content/items/" + that.urlParams.appid + "/data?f=json", function (data) {
-                    that.logElapsedTime("resolve online config", startMs);  //???
-                    onlineAppDeferred.resolve(data);
+            // Get the configuration file
+            var configFileFetch = fetchConfig._getParamsFromConfigFile(configFileFetch);
+
+            // Once we have config file and online app config (if any), see if we have a webmap
+            $.when(configFileFetch, onlineAppFetch).done(function (paramsFromFile, paramsFromOnline) {
+                // If webmapFetcher is still null, that means that the webmap was not specified
+                // in the URL or in the online app; try the config file
+                if (!webmapFetcher) {
+                    if (paramsFromFile.webmap) {
+                        webmapFetcher = "file";
+                        fetchConfig._getParamsFromWebmap(data.webmap, webmapParamsFetch, webmapOrigImageUrlReady);
+                        fetchConfig._getWebmapData(data.webmap, webmapDataFetch);
+                    } else {
+                        // We've no webmap; nothing more that can be done
+                        parametersReady.resolve(false);
+                        surveyReady.resolve(false);
+                        webmapOrigImageUrlReady.resolve(false);
+                    }
+                }
+
+                // Once we have the webmap, we can assemble the app parameters
+                webmapParamsFetch.done(function (paramsFromWebmap) {
+                    // Parameters priority in increasing-importance order:
+                    //  1. barebones structure appParams
+                    //  2. configuration file
+                    //  3. webmap
+                    //  4. online app
+                    //  5. URL
+                    that.appParams = $.extend(
+                        that.appParams, paramsFromFile, paramsFromWebmap, paramsFromOnline, paramsFromUrl);
+
+                    // Normalize booleans
+                    that.appParams.showFacebook =
+                        that.appParams.facebookAppId && that.appParams.facebookAppId.length > 0;
+                    that.appParams.showGooglePlus =
+                        that.appParams.googleplusClientId && that.appParams.googleplusClientId.length > 0;
+                    that.appParams.showTwitter = parseConfig._toBoolean(that.appParams.showTwitter);
+
+                    parametersReady.resolve(true);
                 });
-            } else {
-                that.logElapsedTime("no online config", startMs);  //???
-                onlineAppDeferred.resolve({});
-            }
 
-            // After getting both parameter sets, we overwrite the barebones parameters defined above first with the file
-            // values and then with the online app values
-            $.when(fileAppDeferred, onlineAppDeferred).done(function (fileAppData, onlineAppData) {
-                if (fileAppData && fileAppData.values) {
-                    fileAppData = fileAppData.values;
-                } else {
-                    fileAppData = {};
-                }
-                if (onlineAppData && onlineAppData.values) {
-                    onlineAppData = onlineAppData.values;
-                } else {
-                    onlineAppData = {};
-                }
-                that.appParams = $.extend(that.appParams, fileAppData, onlineAppData);
+                // Once we have the webmap's data, we can try assemble the survey
+                webmapDataFetch.done(function (data) {
+                    if (data.opLayerParams && data.opLayerParams.popupInfo && data.opLayerParams.popupInfo.description
+                        && data.featureSvcParams && data.featureSvcParams.fields) {
+                        that.featureSvcParams.url = data.opLayerParams.url;
+                        that.featureSvcParams.id = data.featureSvcParams.id;
+                        that.featureSvcParams.objectIdField = data.featureSvcParams.objectIdField;
 
-                // Normalize booleans
-                that.appParams.showFacebook = that._toBoolean(that.appParams.showFacebook);
-                that.appParams.showGooglePlus = that._toBoolean(that.appParams.showGooglePlus);
-                that.appParams.showTwitter = that._toBoolean(that.appParams.showTwitter);
+                        // Create dictionary of domains
+                        var dictionary = parseConfig._createSurveyDictionary(data.featureSvcParams.fields);
 
-                that.logElapsedTime("merged configs", startMs);  //???
-
-                // GA URL-supplied webmap overrides a configured one
-                if (that.urlParams.webmap) {
-                    that.appParams.webmap = that.urlParams.webmap;
-                }
-
-                // Get the app's webmap's data
-                if (that.appParams.webmap) {
-                    $.getJSON("http://www.arcgis.com/sharing/content/items/" + that.appParams.webmap + "?f=json", function (data) {
-                        var backgroundUrl;
-                        that.logElapsedTime("have webmap", startMs);  //???
-
-                        // Extract the app configuration from the webmap
-                        if (data) {
-                            that.appParams.title = data.title;
-                            that.appParams.splashText = data.snippet;
-                            that.appParams.helpText = data.description;
-                            var imageFilename = data.thumbnail;
-                            if(imageFilename) {
-                                var iExt = imageFilename.lastIndexOf(".");
-                                if (iExt >= 0) {
-                                    imageFilename = imageFilename.substring(0, iExt) + "_orig" + imageFilename.substr(iExt);
-                                    that.appParams.webmapImageUrl = "http://www.arcgis.com/sharing/content/items/" + that.appParams.webmap + "/info/" + imageFilename;
-                                }
-                            }
-                            that.appParams = $.extend(that.appParams, that._parseAccessConfig(data.licenseInfo));
-
-                            // Normalize booleans
-                            that.appParams.showFacebook = that._toBoolean(that.appParams.showFacebook);
-                            that.appParams.showGooglePlus = that._toBoolean(that.appParams.showGooglePlus);
-                            that.appParams.showTwitter = that._toBoolean(that.appParams.showTwitter);
-                        }
-                        parametersReady.resolve();
-                    });
-                }
-
-                // Get the app's webmap's data
-                if (that.appParams.webmap) {
-                    $.getJSON("http://www.arcgis.com/sharing/content/items/" + that.appParams.webmap + "/data?f=json", function (data) {
-                        that.webmapParams = data || {};
-                        that.logElapsedTime("have webmap data", startMs);  //???
-
-                        if (that.webmapParams && that.webmapParams.operationalLayers && that.webmapParams.operationalLayers.length > 0) {
-                            that.opLayerParams = that.webmapParams.operationalLayers[0];
-
-                        // Get the app's webmap's feature service's data
-                            $.getJSON(that.opLayerParams.url + "?f=json", function (data) {
-                                that.featureSvcParams = data || {};
-                                featureServiceReady.resolve();
-                                that.logElapsedTime("have feature svc", startMs);  //???
-
-                                if (that.featureSvcParams.fields) {
-                                    // Create dictionary of fields with their domains and nullability; skip fields without domains
-                                    var fieldDomains = {};
-                                    $.each(that.featureSvcParams.fields, function (idx, field) {
-                                        if (field.domain && field.domain.codedValues) {
-                                            fieldDomains[field.name] = {
-                                                domain: $.map(field.domain.codedValues, function (item, index) {
-                                                    return item.code
-                                                }).join("|"),
-                                                important: !field.nullable
-                                            }
-                                        }
-                                    });
-
-                                    // Parse survey
-                                    that.survey = that._parseSurvey(
-                                        that.opLayerParams.popupInfo.description, fieldDomains);
-
-                                    surveyReady.resolve();
-                                }
-                            });
-                        }
-                    });
-                }
+                        // Parse survey
+                        that.survey = parseConfig._parseSurvey(data.opLayerParams.popupInfo.description, dictionary);
+                        surveyReady.resolve(true);
+                    } else {
+                        that.featureSvcParams = {};
+                        that.survey = {};
+                        surveyReady.resolve(false);
+                    }
+                });
             });
 
             return {
                 "parametersReady": parametersReady,
-                "featureServiceReady" : featureServiceReady,
-                "surveyReady" : surveyReady
+                "surveyReady" : surveyReady,
+                "webmapOrigImageUrlReady": webmapOrigImageUrlReady
             };
-        },
-
-        //--------------------------------------------------------------------------------------------------------------------//
-
-        _parseSurvey: function (source, fieldDomains) {
-            // e.g., <p>Is there a Structure on the Property? <b>{<font color='#0000ff'>Structure</font>} </b><b>{<span
-            //  style='background-color:rgb(255, 0, 0);'>button</span>}</b></p><p><ul><li>Is the lot overgrown? <b>{Lot}
-            //  </b><b>{button}</b><br /></li><li>Foundation type: <b>{<font color='#ffff00' style='background-color:
-            //  rgb(255, 69, 0);'>FoundationType</font>} </b><b>{radio}</b><br /></li></ul></p><p><b><br /></b></p><p>Is
-            //  there roof damage? <b>{RoofDamage} </b><b>{button}</b></p><p>Is the exterior damaged? <b>{ExteriorDamage}
-            //  </b><b>{button}</b></p><p></p><ol><li>Is there graffiti? <b>{Graffiti} </b><b>{button}</b><br /></li><li>
-            //  Are there boarded windows/doors? <b>{Boarded} </b><b>{button}</b><br /></li></ol>
-            var survey = [];
-
-            // 1. split on </p> and then </li> (lists are enclosed in <p></p> sets)
-            var taggedSurveyLines = [];
-            var descriptionSplitP = source.split("</p>");
-            $.each(descriptionSplitP, function (idx, line) {
-                $.merge(taggedSurveyLines, line.split("</li>"));
-            });
-
-            // 2. remove all html tags (could have <b>, <i>, <u>, <ol>, <ul>, <li>, <a>, <font>, <span>, <br>,
-            // and their closures included or explicit)
-            var surveyLines = [];
-            $.each(taggedSurveyLines, function (idx, line) {
-                var cleanedLine = that._stripHTML(line).trim();
-                if (cleanedLine.length > 0) {
-                    surveyLines.push(cleanedLine);
-                }
-            });
-
-            // 3. Separate into question, field, and style
-            // e.g., "Is there a Structure on the Property? {Structure} {button}"
-            $.each(surveyLines, function (idx, line) {
-                var paramParts = line.split("{");
-                var trimmedParts = [];
-                $.each(paramParts, function (idx, part) {
-                    var trimmed = part.replace("}", "").trim();
-                    if (trimmed.length > 0) {
-                        trimmedParts.push(trimmed);
-                    }
-                });
-
-                // Should have three parts now: question, field, style; we can add in the question's
-                // domain and importance from the fieldDomain dictionary created just above
-                if (trimmedParts.length === 3) {
-                    var fieldName = trimmedParts[1];
-                    if (fieldDomains[fieldName]) {
-                        var surveyQuestion = {
-                            question: trimmedParts[0],
-                            field: fieldName,
-                            style: trimmedParts[2],
-                            domain: fieldDomains[fieldName].domain,
-                            important: fieldDomains[fieldName].important
-                        };
-                        survey.push(surveyQuestion);
-                    }
-                }
-            });
-            return survey;
-        },
-
-        _parseAccessConfig: function (source) {
-            // e.g., <div>Copyright 2015 My City</div><div><br /></div><div>=== Access and use settings ===</div><div><br />
-            //  </div><div>contribution star levels:</div><div>0: Getting Started @0</div><div>1: Beginner @5</div><div>2:
-            //  Helper @10</div><div>3: Intermediate @15</div><div>4: Advanced @20</div><div>5: Wow! @25</div><div><br />
-            //  </div><div>Facebook app id: 101991193476073</div><div>Google+ client id:
-            //  884148190980-mrcnakr5q14ura5snpcbgp85ovq7s7ea.apps.googleusercontent.com</div><div>show Twitter: true</div>
-            //  <div><br /></div><div>surveyor name field: SRVNAME</div><div>best photo field: BSTPHOTOID</div><div><br /></div>
-            var config = {};
-
-            // 1. split on </div> and then <br
-            var taggedConfigLines = [];
-            var descriptionSplitDiv = source.split("</div>");
-            $.each(descriptionSplitDiv, function (idx, line) {
-                $.merge(taggedConfigLines, line.split("<br />"));
-            });
-
-            // 2. remove all html tags (could have <b>, <i>, <u>, <ol>, <ul>, <li>, <a>, <font>, <span>, <br>, <div>,
-            // and their closures included or explicit)
-            // yields something like:
-            //  0: "Copyright 2015 My City"
-            //  1: "=== Access and use settings ==="
-            //  2: "contribution star levels:"
-            //  3: "0: Getting Started @0"
-            //  4: "1: Beginner @5"
-            //  5: "2: Helper @10"
-            //  6: "3: Intermediate @15"
-            //  7: "4: Advanced @18"
-            //  8: "5: Wow! @25"
-            //  9: "Facebook app id: 103782893296903"
-            //  10: "Google+ client id: 801106938257-am9uvo6dm0ih06r7h048k7m66l6oo3v1.apps.googleusercontent.com"
-            //  11: "show Twitter: true"
-            //  12: "surveyor name field: SRVNAME"
-            //  13: "best photo field: BSTPHOTOID"
-            var configLines = [];
-            $.each(taggedConfigLines, function (idx, line) {
-                var cleanedLine = that._stripHTML(line).trim();
-                if (cleanedLine.length > 0) {
-                    configLines.push(cleanedLine);
-                }
-            });
-
-            // 3. step thru lines seeking keywords
-            var keywordParts = ["=== access and use settings ===",
-                "contribution star levels", "0", "1", "2", "3", "4", "5",
-                "facebook", "google", "twitter", "surveyor", "photo"];
-            var iLine;
-            var iKeyword = 0;
-            var config = {
-                "showFacebook": false,
-                "showGooglePlus": false,
-                "showTwitter": false
-            };
-            var contribLevels = [];
-
-            for (iLine = 0; iLine < configLines.length; iLine += 1) {
-                var lineParts = configLines[iLine].split(':');
-                if (lineParts[0].toLowerCase().indexOf(keywordParts[iKeyword]) >= 0) {
-                    switch (iKeyword) {
-                    case 0: // "=== Access and use settings ==="
-                        break;
-                    case 1: // "contribution star levels"
-                        break;
-                    case 2: // "0"
-                        that._getContribLevel(0, lineParts[1], contribLevels);
-                        break;
-                    case 3: // "1"
-                        that._getContribLevel(1, lineParts[1], contribLevels);
-                        break;
-                    case 4: // "2"
-                        that._getContribLevel(2, lineParts[1], contribLevels);
-                        break;
-                    case 5: // "3"
-                        that._getContribLevel(3, lineParts[1], contribLevels);
-                        break;
-                    case 6: // "4"
-                        that._getContribLevel(4, lineParts[1], contribLevels);
-                        break;
-                    case 7: // "5"
-                        that._getContribLevel(5, lineParts[1], contribLevels);
-                        if (contribLevels != null) {
-                            config.contribLevels = contribLevels;
-                        }
-                        break;
-                    case 8: // "Facebook app id"
-                        config.showFacebook = true;
-                        config.facebookAppId = lineParts[1].trim();
-                        break;
-                    case 9: // "Google+ client id"
-                        config.showGooglePlus = true;
-                        config.googleplusClientId = lineParts[1].trim();
-                        break;
-                    case 10: // "show Twitter"
-                        config.showTwitter = true;
-                        break;
-                    case 11: // "surveyor name field"
-                        config.surveyorNameField = lineParts[1].trim();
-                        break;
-                    case 12: // "best photo field"
-                        config.bestPhotoField = lineParts[1].trim();
-                        break;
-                    }
-
-                    iKeyword += 1;
-                    if (iKeyword >= keywordParts.length) {
-                        break;
-                    }
-                }
-            }
-            return config;
-        },
-
-        _getContribLevel: function (iLevel, levelDescrip, contribLevels) {
-            var levelParts, minimumSurveysNeeded;
-
-            if (contribLevels != null && levelDescrip != null) {
-                levelParts = levelDescrip.split('@');
-                try {
-                    minimumSurveysNeeded = iLevel === 0 ? 0 :
-                        Number.parseInt(levelParts[1]);
-                    contribLevels.push({
-                        "label": levelParts[0].trim(),
-                        "minimumSurveysNeeded": minimumSurveysNeeded
-                    });
-                } catch (ignore) {
-                    // Flag an unusable set
-                    contribLevels = null;
-                }
-            }
-        },
-
-        // By Simon Boudrias, http://stackoverflow.com/a/13140100
-        _stripHTML: function (dirtyString) {
-            var text;
-            var container = document.createElement('div');
-            container.innerHTML = dirtyString;
-            return container.textContent || container.innerText;
-        },
-
-        /** Normalizes a boolean value to true or false.
-         * @param {boolean|string} boolValue A true or false
-         *        value that is returned directly or a string
-         *        "true" or "false" (case-insensitive) that
-         *        is checked and returned; if neither a
-         *        a boolean or a usable string, falls back to
-         *        defaultValue
-         * @param {boolean} [defaultValue] A true or false
-         *        that is returned if boolValue can't be
-         *        used; if not defined, true is returned
-         * @memberOf js.LGObject#
-         */
-        _toBoolean: function (boolValue, defaultValue) {
-            var lowercaseValue;
-
-            // Shortcut true|false
-            if (boolValue === true) {
-                return true;
-            }
-            if (boolValue === false) {
-                return false;
-            }
-
-            // Handle a true|false string
-            if (typeof boolValue === "string") {
-                lowercaseValue = boolValue.toLowerCase();
-                if (lowercaseValue === "true") {
-                    return true;
-                }
-                if (lowercaseValue === "false") {
-                    return false;
-                }
-            }
-            // Fall back to default
-            if (defaultValue === undefined) {
-                return true;
-            }
-            return defaultValue;
         }
 
     };
