@@ -37,50 +37,52 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'],
     // Get app, webmap, feature service
     var appConfigReadies = appConfig.init();
 
-    // When the DOM is ready and we have the app parameters, we can start adjusting the UI; some of the UI is also dependent
-    // on the i18n setup
+    // When we have the app parameters, we can continue setting up the app
     appConfigReadies.parametersReady.then(function () {
+
+        // Start up the social media connections
+        var socialMediaReady = userConfig.init(appConfig, function (notificationType) {
+            // Callback from current social medium
+            switch (notificationType) {
+                case userConfig.notificationSignIn:
+                    if (!that.signedIn) {
+                        that.signedIn = true;
+                        $(document).triggerHandler('signedIn:user');
+                    }
+                    break;
+                case userConfig.notificationSignOut:
+                    if (that.signedIn) {
+                        that.signedIn = false;
+                        $("#contentPage").fadeOut("fast");
+                        $("#signinPage").fadeIn();
+                        $(document).triggerHandler('hide:profile');
+                        $("#profileAvatar").css("display", "none");
+                    }
+                    break;
+                case userConfig.notificationAvatarUpdate:
+                    var avatar = userConfig.getUser().avatar;
+                    if (avatar) {
+                        $("#profileAvatar").css("backgroundImage", "url(" + avatar + ")");
+                        $("#profileAvatar").fadeIn("fast");
+                    } else {
+                        $("#profileAvatar").css("display", "none");
+                    }
+                    break;
+            }
+        });
+
+        // When the DOM is ready, we can start adjusting the UI
         $().ready(function () {
 
-            // Start up the social media connections
-            var socialMediaReady = userConfig.init(appConfig, $("#socialMediaButtonArea")[0], function (notificationType) {
-                // Callback from current social medium
-                switch (notificationType) {
-                    case userConfig.notificationSignIn:
-                        if (!that.signedIn) {
-                            that.signedIn = true;
-                            console.warn("signing in user " + userConfig.getUser().name);//???
-                            $(document).triggerHandler('signedIn:user');
-                        }
-                        break;
-                    case userConfig.notificationSignOut:
-                        if (that.signedIn) {
-                            that.signedIn = false;
-                            $("#contentPage").fadeOut("fast");
-                            $("#signinPage").fadeIn();
-                            $(document).triggerHandler('hide:profile');
-                            $("#profileAvatar").css("display", "none");
-                        }
-                        break;
-                    case userConfig.notificationAvatarUpdate:
-                        var avatar = userConfig.getUser().avatar;
-                        if (avatar) {
-                            $("#profileAvatar").css("backgroundImage", "url(" + avatar + ")");
-                            $("#profileAvatar").fadeIn("fast");
-                        } else {
-                            $("#profileAvatar").css("display", "none");
-                        }
-                        break;
-                }
-            });
-
-            // Splash UI
+            // Populate the splash UI
             $("#signinTitle")[0].innerHTML = appConfig.appParams.title;
             $("#signinParagraph")[0].innerHTML = appConfig.appParams.splashText;
-            if (appConfig.appParams.webmapImageUrl) {
-                testURL(appConfig.appParams.webmapImageUrl, function (isOK) {
-                    if (isOK) {
-                        appConfig.appParams.splashBackgroundUrl = appConfig.appParams.webmapImageUrl;
+
+            // If we're not going to wait for the webmap's original image, just set the splash
+            if (appConfig.appParams.useWebmapOrigImg) {
+                appConfigReadies.webmapOrigImageUrlReady.then(function (url) {
+                    if (url) {
+                        appConfig.appParams.splashBackgroundUrl = url;
                     }
                     $("#signinPageBkgd").css("background-image", "url(" + appConfig.appParams.splashBackgroundUrl + ")").fadeIn(2000);
                 });
@@ -88,12 +90,14 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'],
                 $("#signinPageBkgd").css("background-image", "url(" + appConfig.appParams.splashBackgroundUrl + ")").fadeIn(2000);
             }
 
+            // Show the splash UI
+            $("#signinBlock").fadeIn();
 
-            // When the feature service info is ready, we can set up the module that reads from and writes to the service
-            appConfigReadies.featureServiceReady.then(function () {
-                dataAccess.init(appConfig.opLayerParams.url, appConfig.featureSvcParams.id,
-                    appConfig.featureSvcParams.objectIdField, appConfig.appParams.surveyorNameField + "+is+null");
-                $("#signinBlock").fadeIn();
+            // When the feature service and survey are ready, we can set up the module that reads from and writes to the service
+            appConfigReadies.surveyReady.then(function () {
+                dataAccess.init(appConfig.featureSvcParams.url, appConfig.featureSvcParams.id,
+                    appConfig.featureSvcParams.objectIdField,
+                    appConfig.appParams.surveyorNameField + "+is+null");
 
                 // Test if there are any surveys remaining to be done
                 dataAccess.getObjectCount().then(function (countRemaining) {
@@ -102,12 +106,17 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'],
                         $("#signinLoginPrompt")[0].innerHTML = i18n.signin.signinFetching;
                         $("#signinLoginPrompt").fadeIn();
                         socialMediaReady.then(function () {
+                            // Add the sign-in buttons
+                            userConfig.initUI($("#socialMediaButtonArea")[0]);
+
+                            // Switch to the sign-in prompt
                             $("#signinLoginPrompt").fadeOut("fast", function () {
                                 $("#signinLoginPrompt")[0].innerHTML = i18n.signin.signinLoginPrompt;
                                 $("#signinLoginPrompt").fadeIn("fast");
                                 $("#socialMediaButtonArea").fadeIn("fast");
                             });
                         }).fail(function () {
+                            // Switch to the no-surveys message
                             $("#signinLoginPrompt").fadeOut("fast", function () {
                                 $("#signinLoginPrompt")[0].innerHTML = i18n.signin.noMoreSurveys;
                                 $("#signinLoginPrompt").fadeIn("fast");
@@ -138,7 +147,7 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'],
 
     // Using colons for custom event names as recommended by https://learn.jquery.com/events/introduction-to-custom-events/#naming-custom-events
     $(document).on('signedIn:user', function (e) {
-        appConfigReadies.featureServiceReady.then(function () {
+        appConfigReadies.surveyReady.then(function () {
             var user = userConfig.getUser();
 
             // Heading on survey/profile page
@@ -181,13 +190,11 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'],
             // attachments:[{id,url},...]
 
             if (!candidate.obj) {
-                debugger;  //???
                 $(document).triggerHandler('show:newSurvey');
                 return;
             } else if (candidate.attachments.length === 0) {
                 candidate.obj.attributes[appConfig.appParams.surveyorNameField] = "no photos";
                 dataAccess.updateCandidate(candidate);
-                console.warn("No photos for " + JSON.stringify(candidate));//???
                 $(document).triggerHandler('show:newSurvey');
                 return;
             }
@@ -195,7 +202,6 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'],
 
             that.candidate = candidate;
             that.iSelectedPhoto = -1;
-            console.warn("Surveying property " + that.candidate.obj.attributes.PIN) //???
 
 
             // Gallery
@@ -213,7 +219,6 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'],
 
             updatePhotoSelectionDisplay();
         }).fail(function (error) {
-            debugger;//???
         });
 
         // Survey
@@ -285,7 +290,6 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'],
             if (that.iSelectedPhoto >= 0) {
                 that.candidate.obj.attributes[appConfig.appParams.bestPhotoField] = that.candidate.attachments[that.iSelectedPhoto].id;
             }
-            console.warn("Saving survey for property " + that.candidate.obj.attributes.PIN) //???
             dataAccess.updateCandidate(that.candidate);
 
             that.completions += 1;
@@ -440,13 +444,12 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'],
 
     function addPhoto(carouselSlidesHolder, indexInArray, isActive, photoUrl) {
         // <div id='carousel0' class='item active'><img src='__test/VIRB0125.JPG' alt='VIRB0125.JPG'></div>
-        //var content = "<div id='c" + indexInArray + "' class='item" + (isActive ? " active" : "") +
+        // var content = "<div id='c" + indexInArray + "' class='item" + (isActive ? " active" : "") +
         //    "'><img src='" + photoUrl + "'></div>";
         // $(carouselSlidesHolder).append(content);
 
         // var content = $("<div id='c" + indexInArray + "' class='item" + (isActive ? " active" : "") + "'></div>");
-        var content = "<div id='c" + indexInArray + "' class='item" + (isActive ? " active" : "") +
-            "'><img /></div>";
+        var content = "<div id='c" + indexInArray + "' class='item" + (isActive ? " active" : "") + "'><img /></div>";
         $(carouselSlidesHolder).append(content);
 
         if (indexInArray === -1) {  //???
