@@ -42,8 +42,9 @@ define(function () {
             var deferred = $.Deferred();
 
             var url = that.featureServiceUrl + "query?where=" + (condition || that.validCandidateCondition)
-                + "&objectIds=&returnIdsOnly=false&returnCountOnly=true&outFields=" + that.fixedQueryParams;
-            $.getJSON(url, function (results) {
+                + "&objectIds=&returnIdsOnly=false&returnCountOnly=true&outFields=" + that.fixedQueryParams
+                + "&callback=?";
+            $.getJSON(url, "jsonp", function (results) {
                 if (!results || results.error) {
                     deferred.reject(-1);
                 }
@@ -99,8 +100,10 @@ define(function () {
             var deferred = $.Deferred();
 
             // Get
-            var url = that.featureServiceUrl + "query?where=" + that.validCandidateCondition + "&objectIds=&returnIdsOnly=true&returnCountOnly=false&outFields=" + that.fixedQueryParams;
-            $.getJSON(url, function (results) {
+            var url = that.featureServiceUrl + "query?where=" + that.validCandidateCondition
+                + "&objectIds=&returnIdsOnly=true&returnCountOnly=false&outFields=" + that.fixedQueryParams
+                + "&callback=?";
+            $.getJSON(url, "jsonp", function (results) {
                 if (!results || results.error) {
                     deferred.reject({
                         obj: null,
@@ -121,8 +124,10 @@ define(function () {
 
                 // Get the candidate's attributes
                 var attributesDeferred = $.Deferred();
-                var objectAttrsUrl = that.featureServiceUrl + "query?objectIds=" + objectId + "&returnIdsOnly=false&returnCountOnly=false&outFields=*" + that.fixedQueryParams;
-                $.getJSON(objectAttrsUrl, function (results) {
+                var objectAttrsUrl = that.featureServiceUrl + "query?objectIds=" + objectId
+                    + "&returnIdsOnly=false&returnCountOnly=false&outFields=*" + that.fixedQueryParams
+                    + "&callback=?";
+                $.getJSON(objectAttrsUrl, "jsonp", function (results) {
                     // No attributes is a problem
                     if (!results || results.error || !results.features || results.features.length === 0) {
                         attributesDeferred.reject();
@@ -134,8 +139,8 @@ define(function () {
 
                 // Get the candidate's attachments
                 var attachmentsDeferred = $.Deferred();
-                var objectAttachmentsUrl = that.featureServiceUrl + objectId + "/attachments?f=json";
-                $.getJSON(objectAttachmentsUrl, function (results) {
+                var objectAttachmentsUrl = that.featureServiceUrl + objectId + "/attachments?f=json&callback=?";
+                $.getJSON(objectAttachmentsUrl, "jsonp", function (results) {
                     if (!results || results.error) {
                         attributesDeferred.reject();
                         return;
