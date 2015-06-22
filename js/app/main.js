@@ -46,25 +46,27 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess', 'd
             // Callback from current social medium
             switch (notificationType) {
                 case userConfig.notificationSignIn:
-                    diag.appendWithLF("sign-in callback (" + that.signedIn + ")");  //???
+                    diag.appendWithLF("sign-in callback; believed logged in: " + that.signedIn);  //???
                     if (!that.signedIn) {
                         that.signedIn = true;
+                        diag.appendWithLF("    trigger signedIn:user");  //???
                         $(document).triggerHandler('signedIn:user');
                     }
                     break;
                 case userConfig.notificationSignOut:
-                    diag.appendWithLF("sign-out callback (" + that.signedIn + ")");  //???
+                    diag.appendWithLF("sign-out callback; believed logged in: " + that.signedIn);  //???
                     if (that.signedIn) {
                         that.signedIn = false;
                         $("#contentPage").fadeOut("fast");
                         $("#signinPage").fadeIn();
+                        diag.appendWithLF("    switch content->signin");  //???
                         $(document).triggerHandler('hide:profile');
                         $("#profileAvatar").css("display", "none");
                     }
                     break;
                 case userConfig.notificationAvatarUpdate:
                     var avatar = userConfig.getUser().avatar;
-                    diag.appendWithLF("avatar callback (" + that.signedIn + ")");  //???
+                    diag.appendWithLF("avatar callback; believed logged in: " + that.signedIn);  //???
                     if (avatar) {
                         $("#profileAvatar").css("backgroundImage", "url(" + avatar + ")");
                         $("#profileAvatar").fadeIn("fast");
@@ -197,6 +199,7 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess', 'd
                 $(document).triggerHandler('show:newSurvey');
                 return;
             } else if (candidate.attachments.length === 0) {
+                diag.appendWithLF("no photos for property " + JSON.stringify(candidate.obj.attributes));  //???
                 candidate.obj.attributes[appConfig.appParams.surveyorNameField] = "no photos";
                 dataAccess.updateCandidate(candidate);
                 $(document).triggerHandler('show:newSurvey');
@@ -294,6 +297,7 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess', 'd
             if (that.iSelectedPhoto >= 0) {
                 that.candidate.obj.attributes[appConfig.appParams.bestPhotoField] = that.candidate.attachments[that.iSelectedPhoto].id;
             }
+            diag.appendWithLF("saving survey for property " + JSON.stringify(that.candidate.obj.attributes));  //???
             dataAccess.updateCandidate(that.candidate);
 
             that.completions += 1;

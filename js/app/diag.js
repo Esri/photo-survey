@@ -26,10 +26,13 @@ define(function () {
         init: function () {
             if (ignore) {
                 // Create the display modal box and the button to trigger it
-                $("body").append("<span id='diagnosticButton' style='z-index:2000;position:absolute;left:0;top:0;"
-                    + "width:20px;height:20px;background-color:transparent' data-toggle='modal' data-target='#diagnosticPanel'>"
-                    + "</span><div id='diagnosticPanel' class='modal fade' role='dialog'><div class='modal-dialog'>"
-                    + "<div id='diagnosticLog' class='modal-content' style='padding:8px'></div></div></div>");
+                $("body").append("<span id='diagnosticButton' style='z-index:2000;position:absolute;left:0;top:0;width:20px;"
+                    + "height:20px;background-color:transparent' data-toggle='modal' data-target='#diagnosticPanel'></span>"
+                    + "<div id='diagnosticPanel' class='modal fade' role='dialog'>"
+                    + "  <div class='modal-dialog'>"
+                    + "    <div id='diagnosticLog' class='modal-content' style='padding:8px;word-wrap:break-word;'></div>"
+                    + "  </div>"
+                    + "</div>");
                 ignore = false;
             }
         },
