@@ -16,8 +16,8 @@
  | limitations under the License.
  */
 //============================================================================================================================//
-define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'],
-    function (i18n, appConfig, userConfig, dataAccess) {
+define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess', 'diag'],
+    function (i18n, appConfig, userConfig, dataAccess, diag) {
     var that;
 
     that = {
@@ -39,18 +39,21 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'],
 
     // When we have the app parameters, we can continue setting up the app
     appConfigReadies.parametersReady.then(function () {
+        if (appConfig.appParams.diag !== undefined) {diag.init()};  //???
 
         // Start up the social media connections
         var socialMediaReady = userConfig.init(appConfig, function (notificationType) {
             // Callback from current social medium
             switch (notificationType) {
                 case userConfig.notificationSignIn:
+                    diag.appendWithLF("sign-in callback (" + that.signedIn + ")");  //???
                     if (!that.signedIn) {
                         that.signedIn = true;
                         $(document).triggerHandler('signedIn:user');
                     }
                     break;
                 case userConfig.notificationSignOut:
+                    diag.appendWithLF("sign-out callback (" + that.signedIn + ")");  //???
                     if (that.signedIn) {
                         that.signedIn = false;
                         $("#contentPage").fadeOut("fast");
@@ -61,6 +64,7 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'],
                     break;
                 case userConfig.notificationAvatarUpdate:
                     var avatar = userConfig.getUser().avatar;
+                    diag.appendWithLF("avatar callback (" + that.signedIn + ")");  //???
                     if (avatar) {
                         $("#profileAvatar").css("backgroundImage", "url(" + avatar + ")");
                         $("#profileAvatar").fadeIn("fast");

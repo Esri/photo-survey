@@ -16,7 +16,7 @@
  | limitations under the License.
  */
 //============================================================================================================================//
-define(function () {
+define(['diag'], function (diag) {
     var that;
     return {
 
@@ -211,17 +211,19 @@ define(function () {
         },
 
         signOut: function () {
-            console.warn("signOut; believed logged in: " + that.isSignedIn());
+            diag.appendWithLF("signOut; believed logged in: " + that.isSignedIn());  //???
             if (that.isSignedIn()) {
                 switch (that._currentProvider) {
 
                     case "facebook":
+                        diag.appendWithLF("FB logout");  //???
                         // Log the user out of the app; known FB issue is that cookies are not cleared as promised if
                         // browser set to block third-party cookies
                         FB.logout();
                         break;
 
                     case "googlePlus":
+                        diag.appendWithLF("G+ logout");  //???
                         // Log the user out of the app; known G+ issue that user is not really logged out
                         try {
                             that._disconnectUser(that._user.access_token);
@@ -232,6 +234,7 @@ define(function () {
                         break;
 
                     case "twitter":
+                        diag.appendWithLF("Tw logout");  //???
                         // Update the calling app
                         that._statusCallback(that.notificationSignOut);
 
