@@ -16,7 +16,7 @@
  | limitations under the License.
  */
 //============================================================================================================================//
-define(function () {
+define(['diag'], function (diag) {
     var that;
     return {
 
@@ -48,6 +48,7 @@ define(function () {
                 if (!results || results.error) {
                     deferred.reject(-1);
                 }
+                diag.appendWithLF("surveys remaining: " + results.count);  //???
                 deferred.resolve(results.count);
             });
 
@@ -61,14 +62,24 @@ define(function () {
                 + "&updates=" + that.stringifyForApplyEdits(candidate.obj);
             var url = that.featureServiceUrl + "applyEdits";
             $.post(url, update, function (results, status) {
-
-                //???
                 // seek
-                // status === "success"
-                // results.updateResults[0].objectId === candidate.obj.<objectIdField>
-                // results.updateResults[0].success === true
-
-
+                //   * status === "success"
+                //   * results.updateResults[0].objectId === candidate.obj[that.objectIdField]
+                //   * results.updateResults[0].success === true
+                diag.append("update obj #" + candidate.obj.attributes[that.objectIdField] + " result: ");  //???
+                if (status === "success" && results && results.updateResults.length > 0) {  //???
+                    if (results.updateResults[0].success === true  //???
+                        && results.updateResults[0].objectId === candidate.obj.attributes[that.objectIdField]) {  //???
+                        diag.appendWithLF("OK");  //???
+                    } else if (results.updateResults[0].error)  {  //???
+                        diag.appendWithLF("fail #" + results.updateResults[0].error.code  //???
+                            + " (" + results.updateResults[0].error.description + ")");  //???
+                    } else {  //???
+                        diag.appendWithLF("unspecified update fail");  //???
+                    }  //???
+                } else {  //???
+                    diag.appendWithLF("overall fail: " + status);  //???
+                }  //???
             }, "json");
 
             return deferred;

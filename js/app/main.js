@@ -205,6 +205,8 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess', 'd
                 $(document).triggerHandler('show:newSurvey');
                 return;
             }
+            diag.appendWithLF("showing property " + JSON.stringify(candidate.obj.attributes) + " with "  //???
+                + candidate.attachments.length + " photos");  //???
 
 
             that.candidate = candidate;
