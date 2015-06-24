@@ -12,6 +12,11 @@
 
 import arcpy
 import math
+import sys, os, datetime
+import ConfigParser
+from os.path import dirname, join, exists, splitext, isfile
+
+arcpy.env.overwriteOutput = True
 
 # Script arguments (set in the GP tool)
 
@@ -100,6 +105,8 @@ with arcpy.da.UpdateCursor(PhotoFeatureClass2, ParcelPIN, whereclause) as cursor
 # Cleanup matched Photos (intermediate data)
 
 arcpy.DeleteField_management(PhotoFeatureClass2, "IN_FID;NEAR_FID;NEAR_DIST")
+arcpy.AddField_management(PhotoFeatureClass2, "REVERSE", "TEXT", "", "", "5", "", "NULLABLE", "NON_REQUIRED", "")
+arcpy.CalculateField_management(PhotoFeatureClass2, "REVERSE", "\"YES\"", "PYTHON", "")
 arcpy.Delete_management(NEAR)
 
 #______________________________________________________________________________#
@@ -178,13 +185,18 @@ arcpy.AddField_management(PhotoFeatureClass3, "Path2", "TEXT", "", "", "150", ""
 arcpy.CalculateField_management(PhotoFeatureClass3, "Path2", "!Path!", "PYTHON", "")
 arcpy.DeleteField_management(PhotoFeatureClass2, "Path")
 arcpy.DeleteField_management(PhotoFeatureClass3, "Path")
+arcpy.AddField_management(PhotoFeatureClass3, "REVERSE", "TEXT", "", "", "5", "", "NULLABLE", "NON_REQUIRED", "")
+arcpy.CalculateField_management(PhotoFeatureClass3, "REVERSE", "\"NO\"", "PYTHON", "")
 
-arcpy.Append_management(PhotoFeatureClass2, PhotoFeatureClass3, "TEST", "", "")
+arcpy.Append_management(PhotoFeatureClass2, PhotoFeatureClass3, "NO_TEST", "", "")
 
 #Create Photo Attachments
 
 ParcelPointHelper = """{}\\ParcelPoints""".format(Geodatabase)
 arcpy.FeatureToPoint_management(ParcelsFeatureClass, ParcelPointHelper, "INSIDE")
+arcpy.AddField_management(ParcelPointHelper, "REVERSE", "TEXT", "", "", "5", "", "NULLABLE", "NON_REQUIRED", "")
+arcpy.JoinField_management(ParcelPointHelper, ParcelPIN, PhotoFeatureClass3, ParcelPIN)
+arcpy.CalculateField_management(ParcelPointHelper, "REVERSE", "!REVERSE_1!", "PYTHON", "")
 arcpy.EnableAttachments_management(ParcelPointHelper)
 arcpy.AddAttachments_management(ParcelPointHelper, ParcelPIN, PhotoFeatureClass3, ParcelPIN, "Path2", "")
 arcpy.AddMessage("Step 8:  Creating photo attachments")
@@ -198,6 +210,13 @@ arcpy.Delete_management(PhotoFeatureClass2)
 arcpy.Delete_management(PhotoFeatureClass3)
 arcpy.Delete_management(ParcelsFeatureClass)
 arcpy.DeleteField_management(ParcelPointHelper, "ORIG_FID")
+arcpy.DeleteField_management(ParcelPointHelper, "REVERSE_1")
+arcpy.DeleteField_management(ParcelPointHelper, "PIN_1")
+arcpy.DeleteField_management(ParcelPointHelper, "PATH2")
+
+arcpy.MakeFeatureLayer_management(ParcelPointHelper, "PARCELSFORSELECTION", "Name is NULL")
+arcpy.DeleteRows_management("PARCELSFORSELECTION")
+
 arcpy.AddMessage("Step 9:  Cleaning up staging geodatabase")
 
 #______________________________________________________________________________#
@@ -237,17 +256,9 @@ arcpy.AssignDomainToField_management(ParcelPointHelper, "GRAFDMG", "YesNoMaybe")
 arcpy.AddField_management(ParcelPointHelper, "BOARDED", "TEXT", "", "", "5", "Boarded", "NULLABLE", "NON_REQUIRED", "")
 arcpy.AssignDomainToField_management(ParcelPointHelper, "BOARDED", "YesNoMaybe")
 
-arcpy.AddMessage("Step 11: Adding application fields")
-arcpy.CreateDomain_management(Geodatabase, "YesNo", "YesNo", "TEXT", "CODED")
-DomainDict3 = {"Yes": "Yes", "No": "No"}
-for codev in DomainDict3:
-	arcpy.AddCodedValueToDomain_management(Geodatabase, "YesNo", codev, DomainDict3[codev])
-
+arcpy.AddMessage("Step 11: Adding application required fields")
 arcpy.AddField_management(ParcelPointHelper, "BSTPHOTOID", "TEXT", "", "", "5", "Best Photo Identifier", "NULLABLE", "NON_REQUIRED", "")
-arcpy.AssignDomainToField_management(ParcelPointHelper, "BSTPHOTOID", "YesNo")
 arcpy.AddField_management(ParcelPointHelper, "SRVNAME", "TEXT", "", "", "25", "Surveyor Name", "NULLABLE", "NON_REQUIRED", "")
-# Commented out to change this to be the surveyor field instead of a boolean
-# arcpy.AssignDomainToField_management(ParcelPointHelper, "Surveyed", "YesNo")
 arcpy.AddMessage("Step 12: Finalizing photo survey feature class")
 
 
