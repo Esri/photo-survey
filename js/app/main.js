@@ -395,17 +395,17 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess', 'd
         $("#profileCount").fadeIn();
 
         if (appConfig.appParams.contribLevels.length > 0) {
+            // Find the user's level
             var level = appConfig.appParams.contribLevels.length - 1;
-            var remainingToNextLevel = 0;
+            var surveysForNextLevel = -1;
             while (appConfig.appParams.contribLevels[level].minimumSurveysNeeded > that.completions) {
-                remainingToNextLevel = appConfig.appParams.contribLevels[level].minimumSurveysNeeded;
+                surveysForNextLevel = appConfig.appParams.contribLevels[level].minimumSurveysNeeded;
                 level -= 1;
             }
-            var doneThisLevel = that.completions - appConfig.appParams.contribLevels[level].minimumSurveysNeeded;
-            remainingToNextLevel = Math.max(0, remainingToNextLevel - that.completions);
-            var cRankBarWidthPx = 170;
-            $("#profileRankBarFill")[0].style.width = (cRankBarWidthPx * doneThisLevel / (doneThisLevel + remainingToNextLevel)) + "px";
 
+            // Show ranking via text and stars
+            $("#rankLabel")[0].innerHTML = appConfig.appParams.contribLevels[level].label;
+            $("#level")[0].innerHTML = "level $(level)".replace("$(level)", level);
             if (level === 0) {
                 $("img", ".profileRankStars").attr("src", "images/empty-star.png");
             } else {
@@ -413,10 +413,22 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess', 'd
                 stars.prevAll().andSelf().attr("src", "images/filled-star.png");
                 stars.nextAll().attr("src", "images/empty-star.png");
             }
-            $("#rankLabel")[0].innerHTML = appConfig.appParams.contribLevels[level].label;
-            $("#level")[0].innerHTML = "level $(level)".replace("$(level)", level);
-            $("#remainingToNextLevel")[0].innerHTML = remainingToNextLevel === 0? "" :
-                "$(remainingToNextLevel) surveys left until next level".replace("$(remainingToNextLevel)", remainingToNextLevel);
+
+            // If below top level, show how far to next level
+            var doneThisLevel = that.completions - appConfig.appParams.contribLevels[level].minimumSurveysNeeded;
+            var remainingToNextLevel = Math.max(0, surveysForNextLevel - that.completions);
+            var surveysThisLevel = doneThisLevel + remainingToNextLevel;
+            if (surveysForNextLevel >= 0 && surveysThisLevel > 0) {
+                var cRankBarWidthPx = 170;
+                $("#profileRankBarFill")[0].style.width = (cRankBarWidthPx * doneThisLevel / surveysThisLevel) + "px";
+                $("#profileRankBar").css("display", "block");
+
+                $("#remainingToNextLevel")[0].innerHTML =
+                    "$(remainingToNextLevel) surveys left until next level".replace("$(remainingToNextLevel)", remainingToNextLevel);
+            } else {
+                $("#remainingToNextLevel")[0].innerHTML = "";
+                $("#profileRankBar").css("display", "none");
+            }
 
             $("#ranking").fadeIn();
         } else {
