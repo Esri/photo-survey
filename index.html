@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="fragment" content="!">
     <title>Photo Survey</title>
 
     <!-- Bootstrap styles -->
@@ -12,12 +13,15 @@
     <!-- Custom styles -->
     <link href="styles.css" rel="stylesheet">
 </head>
-<body>
+<!--[if lt IE 9]><body class="unsupportedIE"><![endif]-->
+<!--[if IE 9]><body class="IE9"><![endif]-->
+<!--[if !IE]> --><body><!-- <![endif]-->
     <h1 class="screenreaderInfo">Photo-based survey</h1>
 
     <!-- Splash overlay and social media sign-in -->
     <h2 class="screenreaderInfo">Social media sign-in</h2>
-    <aside id="signinPage" class="pageFill splashBackground transparent">
+    <aside id="signinPage" class="pageFill transparent">
+        <div id="signinPageBkgd" class="splashBackground transparent"></div>
         <div id="signinBlock" class="smallSidebar transparent">
             <div id="signinTitle" class="signinTitle"></div>
             <div id="signinParagraph" class="signinParagraph"></div>
@@ -78,7 +82,6 @@
                       <button id="skipBtn" type="button" class="btn skip-button">Skip</button>
                       <button id="submitBtn" type="submit" class="btn pull-right submit-button">Submit survey</button>
                     </div>
-                    <div id="SURVEY_RESULTS" style="padding:4px;border-left:white solid 7px"><!-- //??? --></div>
                 </article>
 
                 <article id="profile" class="transparent">
@@ -93,7 +96,7 @@
                             <div id="rankLabel" class="profileRankLabel"></div>
                             <div id="level" class="profileRankLevel"></div>
                             <div class="profileRankStars"><img src="images/empty-star.png"/><img src="images/empty-star.png"/><img src="images/empty-star.png"/><img src="images/empty-star.png"/><img src="images/empty-star.png"/></div>
-                            <div class="profileRankBar">
+                            <div id="profileRankBar" class="profileRankBar">
                                 <div id="profileRankBarFill" class="profileRankBarFill"></div>
                             </div>
                             <div id="remainingToNextLevel" class="profileRankToGo"></div>
@@ -108,7 +111,7 @@
         </div>
     </main>
 
-    <!-- Help overlay -->
+    <!-- Help and message overlay -->
     <h2 class="screenreaderInfo">Additional information</h2>
     <aside id="additionalInfoPanel" class="modal fade" role="dialog">
         <div class="modal-dialog">

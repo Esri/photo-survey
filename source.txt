@@ -1,8 +1,13 @@
-From git branch 
+From git repository 
+origin	git@github.com:ArcGIS/photo-survey.git (fetch)
+origin	git@github.com:ArcGIS/photo-survey.git (push)
+. 
+branch 
 develop
-commit b4a979b5487ccd4f7ed257ee6ccb99574a28b7dc
-Merge: 27332a6 26fc2e0
+. 
+commit 019660e8b85232611bffcd590477a25935459b75
+Merge: d700801 925ba49
 Author: MikeTschudi <mtschudi@esri.com>
-Date:   Mon Jun 15 10:54:56 2015 -0700
+Date:   Wed Jun 24 15:51:35 2015 -0700
 
-    Merge branch 'master' into develop
+    Merge remote-tracking branch 'origin/master' into develop
