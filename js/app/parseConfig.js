@@ -206,7 +206,7 @@ define(function () {
             if (contribLevels !== null && levelDescrip !== null) {
                 levelParts = levelDescrip.split('@');
                 try {
-                    minimumSurveysNeeded = iLevel === 0 ? 0 : Number.parseInt(levelParts[1]);
+                    minimumSurveysNeeded = iLevel === 0 ? 0 : parseInt(levelParts[1]);
                     contribLevels.push({
                         "label": levelParts[0].trim(),
                         "minimumSurveysNeeded": minimumSurveysNeeded
