@@ -6,6 +6,8 @@
         "splashBackgroundUrl": "images/splash.jpg",
         "useWebmapOrigImg": true,
 
+        "proxyProgram": "proxy/proxy.ashx",
+
         "facebookAppId": "103782893296903",
         "googleplusClientId": "801106938257-am9uvo6dm0ih06r7h048k7m66l6oo3v1.apps.googleusercontent.com",
         "showTwitter": "true",

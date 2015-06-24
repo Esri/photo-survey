@@ -29,9 +29,10 @@ define(['parseConfig', 'fetchConfig'], function (parseConfig, fetchConfig) {
             useWebmapOrigImg: true,
             title: "",
             splashText: "",
-            splashBackgroundUrl: "images/splash.jpg",
+            splashBackgroundUrl: "",
             helpText: "",
             contribLevels: [],
+            proxyProgram: "",
 
             facebookAppId: "",
             googleplusClientId: "",
