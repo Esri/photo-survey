@@ -52,7 +52,9 @@ body {
 .radio+.radio {
     margin-top: 0px;
 }
-
+.modal-header {
+    font-weight: bolder;
+}
 
 /* ---------- general page ---------- */
 
@@ -115,10 +117,9 @@ header, section, footer, aside, nav, main, article, figure {
     right: 0px;
     top: 0px;
     bottom: 0px;
-    background-color: lightgray;
     background-size: cover;
     background-repeat: no-repeat;
-    z-index: 1000;
+    z-index: -1;
 }
 .smallSidebar {
     background-color: white;
