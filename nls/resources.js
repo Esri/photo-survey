@@ -28,6 +28,9 @@ define({
             button_tip_close: "Close additional information panel"
         },
         signin: {
+            checkingServer: "Checking availability of the server...",
+            unsupported: "This version of Internet Explorer is not supported. Please use Internet Explorer 10 or newer.",
+            needProxy: "This version of Internet Explorer is not supported by our server. Please use Internet Explorer 10 or newer.",
             signinFetching: "Checking availability of login possibilities...",
             signinLoginPrompt: "Please sign in to get started",
             noMoreSurveys: "There are no surveys available at this time; thank you for your participation."

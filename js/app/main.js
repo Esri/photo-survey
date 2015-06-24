@@ -18,7 +18,7 @@
 //============================================================================================================================//
 define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess', 'diag'],
     function (i18n, appConfig, userConfig, dataAccess, diag) {
-    var that;
+    var that, unsupported = false, needProxy = false, proxyReady;
 
     that = {
         iVisiblePhoto: 0,
@@ -31,6 +31,13 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess', 'd
 
 //============================================================================================================================//
 
+    // Check for obsolete IE
+    if ($("body").hasClass("unsupportedIE")) {
+        unsupported = true;
+    } else if ($("body").hasClass("IE9")) {
+        needProxy = true;
+    }
+
     // Bring the app to visibility
     $("#signinPage").fadeIn();
 
@@ -40,6 +47,19 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess', 'd
     // When we have the app parameters, we can continue setting up the app
     appConfigReadies.parametersReady.then(function () {
         if (appConfig.appParams.diag !== undefined) {diag.init()};  //???
+
+        // If a proxy is needed, launch the test for a usable proxy
+        proxyReady = $.Deferred();
+        if (needProxy) {
+            $.getJSON(appConfig.appParams.proxyProgram + "?ping", function () {
+                proxyReady.resolve();
+            }).fail(function () {
+                proxyReady.reject();
+            });
+        } else {
+            appConfig.appParams.proxyProgram = null;
+            proxyReady.resolve();
+        }
 
         // Start up the social media connections
         var socialMediaReady = userConfig.init(appConfig, function (notificationType) {
@@ -99,53 +119,76 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess', 'd
             // Show the splash UI
             $("#signinBlock").fadeIn();
 
-            // When the feature service and survey are ready, we can set up the module that reads from and writes to the service
-            appConfigReadies.surveyReady.then(function () {
-                dataAccess.init(appConfig.featureSvcParams.url, appConfig.featureSvcParams.id,
-                    appConfig.featureSvcParams.objectIdField,
-                    appConfig.appParams.surveyorNameField + "+is+null");
-
-                // Test if there are any surveys remaining to be done
-                dataAccess.getObjectCount().then(function (countRemaining) {
-                    if (countRemaining > 0) {
-                        // When the social media connections are ready, we can enable the social-media sign-in buttons
-                        $("#signinLoginPrompt")[0].innerHTML = i18n.signin.signinFetching;
-                        $("#signinLoginPrompt").fadeIn();
-                        socialMediaReady.then(function () {
-                            // Add the sign-in buttons
-                            userConfig.initUI($("#socialMediaButtonArea")[0]);
-
-                            // Switch to the sign-in prompt
-                            $("#signinLoginPrompt").fadeOut("fast", function () {
-                                $("#signinLoginPrompt")[0].innerHTML = i18n.signin.signinLoginPrompt;
-                                $("#signinLoginPrompt").fadeIn("fast");
-                                $("#socialMediaButtonArea").fadeIn("fast");
-                            });
-                        }).fail(function () {
-                            // Switch to the no-surveys message
-                            $("#signinLoginPrompt").fadeOut("fast", function () {
-                                $("#signinLoginPrompt")[0].innerHTML = i18n.signin.noMoreSurveys;
-                                $("#signinLoginPrompt").fadeIn("fast");
-                            });
-                        });
-                    } else {
-                        $("#signinLoginPrompt")[0].innerHTML = i18n.signin.noMoreSurveys;
-                        $("#signinLoginPrompt").fadeIn();
-                    }
-                }).fail(function () {
-                    $("#signinLoginPrompt")[0].innerHTML = i18n.signin.noMoreSurveys;
-                    $("#signinLoginPrompt").fadeIn();
-                });
-            });
-
-            // Don't need help button if there's no help to display
-            if (appConfig.appParams.helpText.length === 0) {
-                $("#helpButton").css("display", "none");
-            } else {
-                $("#helpTitle")[0].innerHTML = appConfig.appParams.title;
-                $("#helpBody")[0].innerHTML = appConfig.appParams.helpText;
+            // If unsupported browser, tell the user and depart
+            if (unsupported) {
+                $("#signinLoginPrompt")[0].innerHTML = i18n.signin.unsupported;
+                $("#signinLoginPrompt").fadeIn();
+                return;
             }
 
+            // If checking for proxy, add "checking" message
+            if (needProxy) {
+                $("#signinLoginPrompt")[0].innerHTML = i18n.signin.checkingServer;
+                $("#signinLoginPrompt").fadeIn();
+            }
+
+            // Wait for the proxy check; already bypassed for browsers that don't need it
+            proxyReady.then(function () {
+
+                // When the feature service and survey are ready, we can set up the module that reads from and writes to the service
+                appConfigReadies.surveyReady.then(function () {
+                    dataAccess.init(appConfig.featureSvcParams.url, appConfig.featureSvcParams.id,
+                        appConfig.featureSvcParams.objectIdField,
+                        appConfig.appParams.surveyorNameField + "+is+null", appConfig.appParams.proxyProgram);
+
+                    // Test if there are any surveys remaining to be done
+                    dataAccess.getObjectCount().then(function (countRemaining) {
+                        if (countRemaining > 0) {
+                            // When the social media connections are ready, we can enable the social-media sign-in buttons
+                            $("#signinLoginPrompt")[0].innerHTML = i18n.signin.signinFetching;
+                            $("#signinLoginPrompt").fadeIn();
+                            socialMediaReady.then(function () {
+                                // Add the sign-in buttons
+                                userConfig.initUI($("#socialMediaButtonArea")[0]);
+
+                                // Switch to the sign-in prompt
+                                $("#signinLoginPrompt").fadeOut("fast", function () {
+                                    $("#signinLoginPrompt")[0].innerHTML = i18n.signin.signinLoginPrompt;
+                                    $("#signinLoginPrompt").fadeIn("fast");
+                                    $("#socialMediaButtonArea").fadeIn("fast");
+                                });
+                            }).fail(function () {
+                                // Switch to the no-surveys message
+                                $("#signinLoginPrompt").fadeOut("fast", function () {
+                                    $("#signinLoginPrompt")[0].innerHTML = i18n.signin.noMoreSurveys;
+                                    $("#signinLoginPrompt").fadeIn("fast");
+                                });
+                            });
+                        } else {
+                            $("#signinLoginPrompt")[0].innerHTML = i18n.signin.noMoreSurveys;
+                            $("#signinLoginPrompt").fadeIn();
+                        }
+                    }).fail(function () {
+                        $("#signinLoginPrompt")[0].innerHTML = i18n.signin.noMoreSurveys;
+                        $("#signinLoginPrompt").fadeIn();
+                    });
+                });
+
+                // Don't need help button if there's no help to display
+                if (appConfig.appParams.helpText.length === 0) {
+                    $("#helpButton").css("display", "none");
+                } else {
+                    $("#helpTitle")[0].innerHTML = appConfig.appParams.title;
+                    $("#helpBody")[0].innerHTML = appConfig.appParams.helpText;
+                }
+
+            }).fail(function () {
+                // If proxy not available, tell the user
+                $("#signinLoginPrompt").fadeOut("fast", function () {
+                    $("#signinLoginPrompt")[0].innerHTML = i18n.signin.needProxy;
+                    $("#signinLoginPrompt").fadeIn("fast");
+                });
+            });
 
         });
     });
@@ -199,13 +242,13 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess', 'd
                 $(document).triggerHandler('show:newSurvey');
                 return;
             } else if (candidate.attachments.length === 0) {
-                diag.appendWithLF("no photos for property " + JSON.stringify(candidate.obj.attributes));  //???
+                diag.appendWithLF("no photos for property <i>" + JSON.stringify(candidate.obj.attributes) + "</i>");  //???
                 candidate.obj.attributes[appConfig.appParams.surveyorNameField] = "no photos";
                 dataAccess.updateCandidate(candidate);
                 $(document).triggerHandler('show:newSurvey');
                 return;
             }
-            diag.appendWithLF("showing property " + JSON.stringify(candidate.obj.attributes) + " with "  //???
+            diag.appendWithLF("showing property <i>" + JSON.stringify(candidate.obj.attributes) + "</i> with "  //???
                 + candidate.attachments.length + " photos");  //???
 
 
@@ -299,7 +342,7 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess', 'd
             if (that.iSelectedPhoto >= 0) {
                 that.candidate.obj.attributes[appConfig.appParams.bestPhotoField] = that.candidate.attachments[that.iSelectedPhoto].id;
             }
-            diag.appendWithLF("saving survey for property " + JSON.stringify(that.candidate.obj.attributes));  //???
+            diag.appendWithLF("saving survey for property <i>" + JSON.stringify(that.candidate.obj.attributes) + "</i>");  //???
             dataAccess.updateCandidate(that.candidate);
 
             that.completions += 1;

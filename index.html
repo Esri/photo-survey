@@ -13,7 +13,9 @@
     <!-- Custom styles -->
     <link href="styles.css" rel="stylesheet">
 </head>
-<body>
+<!--[if lt IE 9]><body class="unsupportedIE"><![endif]-->
+<!--[if IE 9]><body class="IE9"><![endif]-->
+<!--[if !IE]> --><body><!-- <![endif]-->
     <h1 class="screenreaderInfo">Photo-based survey</h1>
 
     <!-- Splash overlay and social media sign-in -->
@@ -109,7 +111,7 @@
         </div>
     </main>
 
-    <!-- Help overlay -->
+    <!-- Help and message overlay -->
     <h2 class="screenreaderInfo">Additional information</h2>
     <aside id="additionalInfoPanel" class="modal fade" role="dialog">
         <div class="modal-dialog">

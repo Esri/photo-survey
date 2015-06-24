@@ -27,7 +27,7 @@ define(['diag'], function (diag) {
         validCandidateCondition: null,
 
 
-        init: function (featureServiceUrl, featureServiceLayerId, objectIdField, validCandidateCondition) {
+        init: function (featureServiceUrl, featureServiceLayerId, objectIdField, validCandidateCondition, proxyProgram) {
             that = this;
             that.featureServiceUrl = featureServiceUrl;
             if (that.featureServiceUrl.lastIndexOf("/") != that.featureServiceUrl.length - 1) {
@@ -36,6 +36,7 @@ define(['diag'], function (diag) {
             that.featureServiceLayerId = featureServiceLayerId;
             that.objectIdField = objectIdField;
             that.validCandidateCondition = validCandidateCondition;
+            that.proxyProgram = proxyProgram;
         },
 
         getObjectCount: function (condition) {
@@ -48,7 +49,7 @@ define(['diag'], function (diag) {
                 if (!results || results.error) {
                     deferred.reject(-1);
                 }
-                diag.appendWithLF("surveys remaining: " + results.count);  //???
+                diag.appendWithLF("surveys using condition \"" + condition + "\": " + results.count);  //???
                 deferred.resolve(results.count);
             });
 
@@ -60,7 +61,7 @@ define(['diag'], function (diag) {
 
             var update = "rollbackOnFailure=true&f=pjson&adds=&deletes=&id=" + that.featureServiceLayerId
                 + "&updates=" + that.stringifyForApplyEdits(candidate.obj);
-            var url = that.featureServiceUrl + "applyEdits";
+            var url = (that.proxyProgram ? that.proxyProgram + "?" : "") + that.featureServiceUrl + "applyEdits";
             $.post(url, update, function (results, status) {
                 // seek
                 //   * status === "success"
@@ -80,7 +81,11 @@ define(['diag'], function (diag) {
                 } else {  //???
                     diag.appendWithLF("overall fail: " + status);  //???
                 }  //???
-            }, "json");
+            }, "json").fail(function (err) {
+                // Unable to POST; can be IE 9 proxy problem
+                diag.appendWithLF("POST fail: " + JSON.stringify(err));  //???
+                diag.appendWithLF("failing URL: " + url);  //???
+            });
 
             return deferred;
         },
