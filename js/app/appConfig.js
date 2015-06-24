@@ -16,285 +16,160 @@
  | limitations under the License.
  */
 //============================================================================================================================//
-define(function () {
+define(['parseConfig', 'fetchConfig'], function (parseConfig, fetchConfig) {
+    var that;
     return {
 
         //--------------------------------------------------------------------------------------------------------------------//
 
-        // Available upon return
-        contribLevels: [],
-
         // Available after init's parametersReady deferred
-        urlParams: {},
-        appParams: {  // Provide fallback values in case neither the configuration file nor the online app can be retrieved
+        appParams: {
+            // Parameters that can be overridden by the configuration file, webmap, online app, and/or URL
             webmap: "",
-            title: "Photo Survey",
-            splashText: "The Property Survey application can be used to conduct rapid damage assessments, inventory blighted properties, target reappraisal efforts, and identify structures that could pose safety concerns.",
-            splashBackgroundUrl: "images/splash.jpg",
+            useWebmapOrigImg: true,
+            title: "",
+            splashText: "",
+            splashBackgroundUrl: "",
             helpText: "",
-            contributorLevels: ",100,,200,,400,,800,,1600,",
+            contribLevels: [],
+            proxyProgram: "",
 
-            showFacebook: "true",
-            showGooglePlus: "true",
-            showTwitter: "true",
             facebookAppId: "",
             googleplusClientId: "",
-            googleplusLogoutUrl: "https://accounts.google.com/logout",
-            twitterSigninUrl: "https://utility.arcgis.com/tproxy/signin",
-            twitterUserUrl: "https://utility.arcgis.com/tproxy/proxy/1.1/account/verify_credentials.json?q=&include_entities=true&skip_status=true&locale=en",
-            twitterCallbackUrl: "/oauth-callback-twitter.html",
+            googleplusLogoutUrl: "",
+            twitterSigninUrl: "",
+            twitterUserUrl: "",
+            twitterCallbackUrl: "",
 
             surveyorNameField: "",
-            bestPhotoField: ""
+            bestPhotoField: "",
+
+            // Parameters defined here
+            showFacebook: "false",
+            showGooglePlus: "false",
+            showTwitter: "false"
         },
 
-        // Available after init's featureServiceReady deferred
-        webmapParams: {},
-        opLayer: null,
-        featureSvcParams: {},
-
         // Available after init's surveyReady deferred
+        featureSvcParams: {
+            url: "",
+            id: "",
+            objectIdField: ""
+        },
         survey: [],
+
+        // Available after init's webmapOrigImageUrlReady deferred: event arg is URL to original image or null if no image
+        // configured or if original image not found
+
 
         //--------------------------------------------------------------------------------------------------------------------//
 
-        logElapsedTime: function (tag, startMs) {  //???
-            var ticks = (new Date()).getTime() - startMs;
-            console.log(tag + ": " + ticks);
-        },
-
-
         init: function () {
-            var self = this;
-            var url;
-            var startMs = (new Date()).getTime();  //???
+            that = this;
+            fetchConfig.init();
 
+            // Set up external notifications for various stages of preparation
             var parametersReady = $.Deferred();
-            var featureServiceReady = $.Deferred();
             var surveyReady = $.Deferred();
+            var webmapOrigImageUrlReady = $.Deferred();
 
+            // Prepare for a webmap fetch as soon as we can
+            var webmapParamsFetch = $.Deferred();
+            var webmapDataFetch = $.Deferred();
+            var webmapFetcher = null;
 
             // Get the URL parameters
-            var params = window.location.search;
-            if (params.length > 0 && params[0] === "?") {
-                params = params.substring(1).split("&");
-                $.map(params, function (item, index) {
-                    var paramParts = item.split("=");
-                    self.urlParams[paramParts[0].toLowerCase()] = paramParts[1];
-                });
+            var paramsFromUrl = fetchConfig._getParamsFromUrl();
+
+            // If webmap specified in the URL, we can start a fetch of its data now
+            if (parseConfig._isUsableString(paramsFromUrl.webmap)) {
+                webmapFetcher = "url";
+                fetchConfig._getParamsFromWebmap(paramsFromUrl.webmap, webmapParamsFetch, webmapOrigImageUrlReady);
+                fetchConfig._getWebmapData(paramsFromUrl.webmap, webmapDataFetch);
             }
 
-            // We have two sources of app parameters: an online app indicated by the appId URL parameter
-            // and a configuration file. We want both because the online app only includes parameters that
-            // were changed from the defaults.
-            var fileAppDeferred = $.Deferred();
-            $.getJSON("js/configuration.json", function (data) {
-                self.logElapsedTime("resolve config file", startMs);  //???
-                fileAppDeferred.resolve(data);
-            });
-
-            var onlineAppDeferred = $.Deferred();
-            if (self.urlParams.appid) {
-                $.getJSON("http://www.arcgis.com/sharing/content/items/" + self.urlParams.appid + "/data?f=json", function (data) {
-                    self.logElapsedTime("resolve online config", startMs);  //???
-                    onlineAppDeferred.resolve(data);
-                });
-            } else {
-                self.logElapsedTime("no online config", startMs);  //???
-                onlineAppDeferred.resolve({});
-            }
-
-            // After getting both parameter sets, we overwrite the barebones parameters defined above first with the file
-            // values and then with the online app values
-            $.when(fileAppDeferred, onlineAppDeferred).done(function (fileAppData, onlineAppData) {
-                if (fileAppData && fileAppData.values) {
-                    fileAppData = fileAppData.values;
-                } else {
-                    fileAppData = {};
-                }
-                if (onlineAppData && onlineAppData.values) {
-                    onlineAppData = onlineAppData.values;
-                } else {
-                    onlineAppData = {};
-                }
-                self.appParams = $.extend(self.appParams, fileAppData, onlineAppData);
-
-                // Normalize booleans
-                self.appParams.showFacebook = self._toBoolean(self.appParams.showFacebook);
-                self.appParams.showGooglePlus = self._toBoolean(self.appParams.showGooglePlus);
-                self.appParams.showTwitter = self._toBoolean(self.appParams.showTwitter);
-
-                self.logElapsedTime("merged configs", startMs);  //???
-
-                // GA URL-supplied webmap overrides a configured one
-                if (self.urlParams.webmap) {
-                    self.appParams.webmap = self.urlParams.webmap;
-                }
-
-                parametersReady.resolve();
-
-
-                // Get the app's webmap's data
-                if (self.appParams.webmap) {
-                    $.getJSON("http://www.arcgis.com/sharing/content/items/" + self.appParams.webmap + "/data?f=json", function (data) {
-                        self.webmapParams = data || {};
-                        self.logElapsedTime("have webmap", startMs);  //???
-
-                        if (self.webmapParams && self.webmapParams.operationalLayers && self.webmapParams.operationalLayers.length > 0) {
-                            self.opLayer = self.webmapParams.operationalLayers[0];
-
-                        // Get the app's webmap's feature service's data
-                            $.getJSON(self.opLayer.url + "?f=json", function (data) {
-                                self.featureSvcParams = data || {};
-                                featureServiceReady.resolve();
-                                self.logElapsedTime("have feature svc", startMs);  //???
-
-                                if (self.featureSvcParams.fields) {
-                                    // Create dictionary of fields with their domains and nullability; skip fields without domains
-                                    var fieldDomains = {};
-                                    $.each(self.featureSvcParams.fields, function (idx, field) {
-                                        if (field.domain && field.domain.codedValues) {
-                                            fieldDomains[field.name] = {
-                                                domain: $.map(field.domain.codedValues, function (item, index) {
-                                                    return item.code
-                                                }).join("|"),
-                                                important: !field.nullable
-                                            }
-                                        }
-                                    });
-
-                                    // Parse survey
-                                    // e.g., <p>Is there a Structure on the Property? <b>{<font color='#0000ff'>Structure</font>} </b><b>{<span style='background-color:
-                                    //  rgb(255, 0, 0);'>button</span>}</b></p><p><ul><li>Is the lot overgrown? <b>{Lot} </b><b>{button}</b><br /></li><li>Foundation type
-                                    //  : <b>{<font color='#ffff00' style='background-color: rgb(255, 69, 0);'>FoundationType</font>} </b><b>{radio}</b><br /></li></ul>
-                                    //  </p><p><b><br /></b></p><p>Is there roof damage? <b>{RoofDamage} </b><b>{button}</b></p><p>Is the exterior damaged? <b>
-                                    //  {ExteriorDamage} </b><b>{button}</b></p><p></p><ol><li>Is there graffiti? <b>{Graffiti} </b><b>{button}</b><br /></li><li>
-                                    //  Are there boarded windows/doors? <b>{Boarded} </b><b>{button}</b><br /></li></ol>
-
-                                    //   1. split on </p> and then </li> (lists are enclosed in <p></p> sets)
-                                    var taggedSurveyLines = [];
-                                    var descriptionSplitP = self.opLayer.popupInfo.description.split("</p>");
-                                    $.each(descriptionSplitP, function (idx, line) {
-                                        $.merge(taggedSurveyLines, line.split("</li>"));
-                                    });
-
-                                    //   2. remove all html tags (could have <b>, <i>, <u>, <ol>, <ul>, <li>, <a>, <font>, <span>, <br>,
-                                    // and their closures included or explicit)
-                                    var surveyLines = [];
-                                    $.each(taggedSurveyLines, function (idx, line) {
-                                        var cleanedLine = $(line).text().trim();
-                                        if (cleanedLine.length > 0) {
-                                            surveyLines.push(cleanedLine);
-                                        }
-                                    });
-
-                                    //   3. Separate into question, field, and style
-                                    //      e.g., "Is there a Structure on the Property? {Structure} {button}"
-                                    $.each(surveyLines, function (idx, line) {
-                                        var paramParts = line.split("{");
-                                        var trimmedParts = [];
-                                        $.each(paramParts, function (idx, part) {
-                                            var trimmed = part.replace("}", "").trim();
-                                            if (trimmed.length > 0) {
-                                                trimmedParts.push(trimmed);
-                                            }
-                                        });
-
-                                        // Should have three parts now: question, field, style; we can add in the question's
-                                        // domain and importance from the fieldDomain dictionary created just above
-                                        if (trimmedParts.length === 3) {
-                                            var fieldName = trimmedParts[1];
-                                            if (fieldDomains[fieldName]) {
-                                                var surveyQuestion = {
-                                                    question: trimmedParts[0],
-                                                    field: fieldName,
-                                                    style: trimmedParts[2],
-                                                    domain: fieldDomains[fieldName].domain,
-                                                    important: fieldDomains[fieldName].important
-                                                };
-                                                self.survey.push(surveyQuestion);
-                                            }
-                                        }
-                                    });
-
-                                    surveyReady.resolve();
-                                }
-                            });
-                        }
-                    });
-                }
-            });
-
-            // Expand the contributor level definition into an array for easier lookup.
-            // The display uses five stars, so we support six contributor levels separated by five
-            // >0 values in increasing order, e.g., "A,100,B,200,C,400,D,800,E,1600,F". This string
-            // defines contributor levels labeled "A" through "F", with "A" standing for 0 to 99
-            // (i.e., separator 100 minus one), "B" 100 through 199, "C" 200 through 399, etc.
-            var contributorLevelsDataList = self.appParams.contributorLevels.split(",");
-            if (contributorLevelsDataList.length === 11) {
-                try {
-                    var i, label, minimumSurveysNeeded;
-                    for (i = 0; i < contributorLevelsDataList.length; i += 2) {
-                        label = contributorLevelsDataList[i];
-                        minimumSurveysNeeded = i === 0 ? 0 :
-                            Number.parseInt(contributorLevelsDataList[i - 1]);
-                        self.contribLevels.push({
-                            "label": label,
-                            "minimumSurveysNeeded": minimumSurveysNeeded
-                        });
+            // If the appId is specified in the URL, fetch its parameters; resolves immediately if no appId
+            var onlineAppFetch = $.Deferred();
+            fetchConfig._getParamsFromOnlineApp(paramsFromUrl.appid).done(function (data) {
+                if (!webmapFetcher) {
+                    if (data && data.webmap) {
+                        // Use webmap specified in online app
+                        webmapFetcher = "online";
+                        fetchConfig._getParamsFromWebmap(data.webmap, webmapParamsFetch, webmapOrigImageUrlReady);
+                        fetchConfig._getWebmapData(data.webmap, webmapDataFetch);
                     }
-                } catch (ignore) {
-                    self.contribLevels = [];
                 }
-            }
+                onlineAppFetch.resolve(data);
+            });
+
+            // Get the configuration file
+            var configFileFetch = fetchConfig._getParamsFromConfigFile(configFileFetch);
+
+            // Once we have config file and online app config (if any), see if we have a webmap
+            $.when(configFileFetch, onlineAppFetch).done(function (paramsFromFile, paramsFromOnline) {
+                // If webmapFetcher is still null, that means that the webmap was not specified
+                // in the URL or in the online app; try the config file
+                if (!webmapFetcher) {
+                    if (paramsFromFile.webmap) {
+                        webmapFetcher = "file";
+                        fetchConfig._getParamsFromWebmap(data.webmap, webmapParamsFetch, webmapOrigImageUrlReady);
+                        fetchConfig._getWebmapData(data.webmap, webmapDataFetch);
+                    } else {
+                        // We've no webmap; nothing more that can be done
+                        parametersReady.resolve(false);
+                        surveyReady.resolve(false);
+                        webmapOrigImageUrlReady.resolve(false);
+                    }
+                }
+
+                // Once we have the webmap, we can assemble the app parameters
+                webmapParamsFetch.done(function (paramsFromWebmap) {
+                    // Parameters priority in increasing-importance order:
+                    //  1. barebones structure appParams
+                    //  2. configuration file
+                    //  3. webmap
+                    //  4. online app
+                    //  5. URL
+                    that.appParams = $.extend(
+                        that.appParams, paramsFromFile, paramsFromWebmap, paramsFromOnline, paramsFromUrl);
+
+                    // Normalize booleans
+                    that.appParams.showFacebook =
+                        that.appParams.facebookAppId && that.appParams.facebookAppId.length > 0;
+                    that.appParams.showGooglePlus =
+                        that.appParams.googleplusClientId && that.appParams.googleplusClientId.length > 0;
+                    that.appParams.showTwitter = parseConfig._toBoolean(that.appParams.showTwitter);
+
+                    parametersReady.resolve(true);
+                });
+
+                // Once we have the webmap's data, we can try assemble the survey
+                webmapDataFetch.done(function (data) {
+                    if (data.opLayerParams && data.opLayerParams.popupInfo && data.opLayerParams.popupInfo.description
+                        && data.featureSvcParams && data.featureSvcParams.fields) {
+                        that.featureSvcParams.url = data.opLayerParams.url;
+                        that.featureSvcParams.id = data.featureSvcParams.id;
+                        that.featureSvcParams.objectIdField = data.featureSvcParams.objectIdField;
+
+                        // Create dictionary of domains
+                        var dictionary = parseConfig._createSurveyDictionary(data.featureSvcParams.fields);
+
+                        // Parse survey
+                        that.survey = parseConfig._parseSurvey(data.opLayerParams.popupInfo.description, dictionary);
+                        surveyReady.resolve(true);
+                    } else {
+                        that.featureSvcParams = {};
+                        that.survey = {};
+                        surveyReady.resolve(false);
+                    }
+                });
+            });
 
             return {
                 "parametersReady": parametersReady,
-                "featureServiceReady" : featureServiceReady,
-                "surveyReady" : surveyReady
+                "surveyReady" : surveyReady,
+                "webmapOrigImageUrlReady": webmapOrigImageUrlReady
             };
-        },
-
-        //--------------------------------------------------------------------------------------------------------------------//
-
-        /** Normalizes a boolean value to true or false.
-         * @param {boolean|string} boolValue A true or false
-         *        value that is returned directly or a string
-         *        "true" or "false" (case-insensitive) that
-         *        is checked and returned; if neither a
-         *        a boolean or a usable string, falls back to
-         *        defaultValue
-         * @param {boolean} [defaultValue] A true or false
-         *        that is returned if boolValue can't be
-         *        used; if not defined, true is returned
-         * @memberOf js.LGObject#
-         */
-        _toBoolean: function (boolValue, defaultValue) {
-            var lowercaseValue;
-
-            // Shortcut true|false
-            if (boolValue === true) {
-                return true;
-            }
-            if (boolValue === false) {
-                return false;
-            }
-
-            // Handle a true|false string
-            if (typeof boolValue === "string") {
-                lowercaseValue = boolValue.toLowerCase();
-                if (lowercaseValue === "true") {
-                    return true;
-                }
-                if (lowercaseValue === "false") {
-                    return false;
-                }
-            }
-            // Fall back to default
-            if (defaultValue === undefined) {
-                return true;
-            }
-            return defaultValue;
         }
 
     };

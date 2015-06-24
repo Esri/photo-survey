@@ -28,7 +28,10 @@ define(
             button_tip_close: "Fermez le panneau de informations complémentaires"
         },
         signin: {
-            signinFetching: "Vérification de la disponibilité des médias sociaux...",
+            checkingServer: "Vérification de la disponibilité du serveur...",
+            unsupported: "Cette version d'Internet Explorer ne sont pas pris en charge. S'il vous plaît utiliser Internet Explorer 10 ou plus récent.",
+            needProxy: "Cette version d'Internet Explorer ne sont pas pris en charge par notre serveur. S'il vous plaît utiliser Internet Explorer 10 ou plus récent.",
+            signinFetching: "Vérification de la disponibilité des possibilités de connexion...",
             signinLoginPrompt: "S'il vous plaît vous connecter pour commencer",
             noMoreSurveys: "Il n'y a pas de sondages disponibles à ce moment. Merci pour votre participation."
         }

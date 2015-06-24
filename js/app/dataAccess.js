@@ -16,7 +16,8 @@
  | limitations under the License.
  */
 //============================================================================================================================//
-define(function () {
+define(['diag'], function (diag) {
+    var that;
     return {
 
         fixedQueryParams: "&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&distance=&units=esriSRUnit_Meter&returnGeometry=false&maxAllowableOffset=&geometryPrecision=&outSR=&returnExtentOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&quantizationParameters=&f=pjson",
@@ -26,25 +27,29 @@ define(function () {
         validCandidateCondition: null,
 
 
-        init: function (featureServiceUrl, featureServiceLayerId, objectIdField, validCandidateCondition) {
-            this.featureServiceUrl = featureServiceUrl;
-            if (this.featureServiceUrl.lastIndexOf("/") != this.featureServiceUrl.length - 1) {
-                this.featureServiceUrl += "/";
+        init: function (featureServiceUrl, featureServiceLayerId, objectIdField, validCandidateCondition, proxyProgram) {
+            that = this;
+            that.featureServiceUrl = featureServiceUrl;
+            if (that.featureServiceUrl.lastIndexOf("/") != that.featureServiceUrl.length - 1) {
+                that.featureServiceUrl += "/";
             }
-            this.featureServiceLayerId = featureServiceLayerId;
-            this.objectIdField = objectIdField;
-            this.validCandidateCondition = validCandidateCondition;
+            that.featureServiceLayerId = featureServiceLayerId;
+            that.objectIdField = objectIdField;
+            that.validCandidateCondition = validCandidateCondition;
+            that.proxyProgram = proxyProgram;
         },
 
         getObjectCount: function (condition) {
             var deferred = $.Deferred();
 
-            var url = this.featureServiceUrl + "query?where=" + (condition || this.validCandidateCondition)
-                + "&objectIds=&returnIdsOnly=false&returnCountOnly=true&outFields=" + this.fixedQueryParams;
-            $.getJSON(url, function (results) {
+            var url = that.featureServiceUrl + "query?where=" + (condition || that.validCandidateCondition)
+                + "&objectIds=&returnIdsOnly=false&returnCountOnly=true&outFields=" + that.fixedQueryParams
+                + "&callback=?";
+            $.getJSON(url, "jsonp", function (results) {
                 if (!results || results.error) {
                     deferred.reject(-1);
                 }
+                diag.appendWithLF("surveys using condition \"" + condition + "\": " + results.count);  //???
                 deferred.resolve(results.count);
             });
 
@@ -54,25 +59,39 @@ define(function () {
         updateCandidate: function (candidate) {
             var deferred = $.Deferred();
 
-            var update = "rollbackOnFailure=true&f=pjson&adds=&deletes=&id=" + this.featureServiceLayerId
-                + "&updates=" + this.stringifyForApplyEdits(candidate.obj);
-            var url = this.featureServiceUrl + "applyEdits";
+            var update = "rollbackOnFailure=true&f=pjson&adds=&deletes=&id=" + that.featureServiceLayerId
+                + "&updates=" + that.stringifyForApplyEdits(candidate.obj);
+            var url = (that.proxyProgram ? that.proxyProgram + "?" : "") + that.featureServiceUrl + "applyEdits";
             $.post(url, update, function (results, status) {
-
-                //???
                 // seek
-                // status === "success"
-                // results.updateResults[0].objectId === candidate.obj.<objectIdField>
-                // results.updateResults[0].success === true
-
-
-            }, "json");
+                //   * status === "success"
+                //   * results.updateResults[0].objectId === candidate.obj[that.objectIdField]
+                //   * results.updateResults[0].success === true
+                diag.append("update obj #" + candidate.obj.attributes[that.objectIdField] + " result: ");  //???
+                if (status === "success" && results && results.updateResults.length > 0) {  //???
+                    if (results.updateResults[0].success === true  //???
+                        && results.updateResults[0].objectId === candidate.obj.attributes[that.objectIdField]) {  //???
+                        diag.appendWithLF("OK");  //???
+                    } else if (results.updateResults[0].error)  {  //???
+                        diag.appendWithLF("fail #" + results.updateResults[0].error.code  //???
+                            + " (" + results.updateResults[0].error.description + ")");  //???
+                    } else {  //???
+                        diag.appendWithLF("unspecified update fail");  //???
+                    }  //???
+                } else {  //???
+                    diag.appendWithLF("overall fail: " + status);  //???
+                }  //???
+            }, "json").fail(function (err) {
+                // Unable to POST; can be IE 9 proxy problem
+                diag.appendWithLF("POST fail: " + JSON.stringify(err));  //???
+                diag.appendWithLF("failing URL: " + url);  //???
+            });
 
             return deferred;
         },
 
         stringifyForApplyEdits: function (value) {
-            var self = this, isFirst = true;
+            var isFirst = true;
             var result = "";
             if (value === null) {
                result += 'null';
@@ -82,7 +101,7 @@ define(function () {
                 result += '%7B';
                 $.each(value, function (part) {
                     if (value.hasOwnProperty(part)) {
-                        result += (isFirst ? '' : '%2C') + part + '%3A' + self.stringifyForApplyEdits(value[part]);
+                        result += (isFirst ? '' : '%2C') + part + '%3A' + that.stringifyForApplyEdits(value[part]);
                         isFirst = false;
                     }
                 });
@@ -95,11 +114,12 @@ define(function () {
 
         getCandidate: function () {
             var deferred = $.Deferred();
-            var self = this;
 
             // Get
-            var url = this.featureServiceUrl + "query?where=" + this.validCandidateCondition + "&objectIds=&returnIdsOnly=true&returnCountOnly=false&outFields=" + this.fixedQueryParams;
-            $.getJSON(url, function (results) {
+            var url = that.featureServiceUrl + "query?where=" + that.validCandidateCondition
+                + "&objectIds=&returnIdsOnly=true&returnCountOnly=false&outFields=" + that.fixedQueryParams
+                + "&callback=?";
+            $.getJSON(url, "jsonp", function (results) {
                 if (!results || results.error) {
                     deferred.reject({
                         obj: null,
@@ -120,8 +140,10 @@ define(function () {
 
                 // Get the candidate's attributes
                 var attributesDeferred = $.Deferred();
-                var objectAttrsUrl = self.featureServiceUrl + "query?objectIds=" + objectId + "&returnIdsOnly=false&returnCountOnly=false&outFields=*" + self.fixedQueryParams;
-                $.getJSON(objectAttrsUrl, function (results) {
+                var objectAttrsUrl = that.featureServiceUrl + "query?objectIds=" + objectId
+                    + "&returnIdsOnly=false&returnCountOnly=false&outFields=*" + that.fixedQueryParams
+                    + "&callback=?";
+                $.getJSON(objectAttrsUrl, "jsonp", function (results) {
                     // No attributes is a problem
                     if (!results || results.error || !results.features || results.features.length === 0) {
                         attributesDeferred.reject();
@@ -133,8 +155,8 @@ define(function () {
 
                 // Get the candidate's attachments
                 var attachmentsDeferred = $.Deferred();
-                var objectAttachmentsUrl = self.featureServiceUrl + objectId + "/attachments?f=json";
-                $.getJSON(objectAttachmentsUrl, function (results) {
+                var objectAttachmentsUrl = that.featureServiceUrl + objectId + "/attachments?f=json&callback=?";
+                $.getJSON(objectAttachmentsUrl, "jsonp", function (results) {
                     if (!results || results.error) {
                         attributesDeferred.reject();
                         return;
@@ -146,7 +168,7 @@ define(function () {
                         $.each(results.attachmentInfos, function (idx, attachment) {
                             attachments.push({
                                 id: attachment.id,
-                                url: self.featureServiceUrl + objectId + "/attachment/" + attachment.id
+                                url: that.featureServiceUrl + objectId + "/attachment/" + attachment.id
                             });
                         });
                     }
