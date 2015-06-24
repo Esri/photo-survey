@@ -37,29 +37,17 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess', 'd
     } else if ($("body").hasClass("IE9")) {
         needProxy = true;
     }
+    var proxyReady = $.Deferred();
 
     // Bring the app to visibility
     $("#signinPage").fadeIn();
 
     // Get app, webmap, feature service
-    var appConfigReadies = appConfig.init();
+    var appConfigReadies = appConfig.init(needProxy, proxyReady);
 
     // When we have the app parameters, we can continue setting up the app
     appConfigReadies.parametersReady.then(function () {
         if (appConfig.appParams.diag !== undefined) {diag.init()};  //???
-
-        // If a proxy is needed, launch the test for a usable proxy
-        proxyReady = $.Deferred();
-        if (needProxy) {
-            $.getJSON(appConfig.appParams.proxyProgram + "?ping", function () {
-                proxyReady.resolve();
-            }).fail(function () {
-                proxyReady.reject();
-            });
-        } else {
-            appConfig.appParams.proxyProgram = null;
-            proxyReady.resolve();
-        }
 
         // Start up the social media connections
         var socialMediaReady = userConfig.init(appConfig, function (notificationType) {

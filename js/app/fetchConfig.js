@@ -43,9 +43,7 @@ define(['parseConfig'], function (parseConfig) {
 
         _getParamsFromConfigFile: function (deferred) {
             var filename = "js/configuration.json";
-            if (!deferred) {
-                deferred = $.Deferred();
-            }
+            deferred = deferred || $.Deferred();
 
             $.getJSON(filename, function (data) {
                 deferred.resolve((data && data.values) || {});
@@ -70,44 +68,53 @@ define(['parseConfig'], function (parseConfig) {
             return deferred;
         },
 
-        _getParamsFromWebmap: function (webmapId, paramsDeferred, origImageUrlDeferred) {
-            var deferreds = {};
-            deferreds.params = paramsDeferred || $.Deferred();
-            deferreds.origImageUrl = origImageUrlDeferred || $.Deferred();
+        _getParamsFromWebmap: function (webmapId, deferred) {
+            deferred = deferred || $.Deferred();
 
             if (parseConfig._isUsableString(webmapId)) {
                 $.getJSON("http://www.arcgis.com/sharing/content/items/" + webmapId + "?f=json&callback=?", "jsonp", function (data) {
-                    var normalizedData = {}, imageUrl, iExt;
+                    var normalizedData = {};
                     normalizedData.title = data.title;
                     normalizedData.splashText = data.snippet;
                     normalizedData.helpText = data.description;
+                    normalizedData.webmapImageUrl = data.thumbnail;
                     normalizedData = $.extend(normalizedData, parseConfig._parseAccessConfig(data.licenseInfo));
-                    deferreds.params.resolve(normalizedData);
-
-                    // See if we can get an original-size image
-                    imageUrl = data.thumbnail;
-                    if (imageUrl) {
-                        iExt = imageUrl.lastIndexOf(".");
-                        if (iExt >= 0) {
-                            imageUrl = imageUrl.substring(0, iExt) + "_orig" + imageUrl.substr(iExt);
-                        } else {
-                            imageUrl = imageUrl + "_orig";
-                        }
-                        imageUrl = "http://www.arcgis.com/sharing/content/items/" + webmapId + "/info/" + imageUrl;
-
-                        that._testURL(imageUrl, function (isOK) {
-                            deferreds.origImageUrl.resolve(isOK ? imageUrl : null);
-                        });
-                    } else {
-                        deferreds.origImageUrl.resolve();
-                    }
+                    deferred.resolve(normalizedData);
                 });
             } else {
-                deferreds.params.resolve({});
-                deferreds.origImageUrl.resolve();
+                deferred.resolve({});
             }
 
-            return deferreds;
+            return deferred;
+        },
+
+        _getOrigImageFromWebmap: function (webmapId, webmapImageUrl, proxyProgram, deferred) {
+            deferred = deferred || $.Deferred();
+
+            if (parseConfig._isUsableString(webmapId) && parseConfig._isUsableString(webmapImageUrl)) {
+                // See if we can get an original-size image
+                imageUrl = webmapImageUrl;
+                if (imageUrl) {
+                    iExt = imageUrl.lastIndexOf(".");
+                    if (iExt >= 0) {
+                        imageUrl = imageUrl.substring(0, iExt) + "_orig" + imageUrl.substr(iExt);
+                    } else {
+                        imageUrl = imageUrl + "_orig";
+                    }
+                    imageUrl = (proxyProgram ? proxyProgram + "?" : "")
+                        + "http://www.arcgis.com/sharing/content/items/" + webmapId + "/info/" + imageUrl;
+
+                    that._testURL(imageUrl, function (isOK) {
+                        deferred.resolve(isOK ? imageUrl : null);
+                    });
+                } else {
+                    deferred.resolve();
+                }
+            } else {
+                deferred.resolve({});
+            }
+
+            return deferred;
         },
 
         _getWebmapData: function (webmapId, deferred) {

@@ -64,7 +64,7 @@ define(['parseConfig', 'fetchConfig'], function (parseConfig, fetchConfig) {
 
         //--------------------------------------------------------------------------------------------------------------------//
 
-        init: function () {
+        init: function (needProxy, proxyReady) {
             that = this;
             fetchConfig.init();
 
@@ -84,7 +84,7 @@ define(['parseConfig', 'fetchConfig'], function (parseConfig, fetchConfig) {
             // If webmap specified in the URL, we can start a fetch of its data now
             if (parseConfig._isUsableString(paramsFromUrl.webmap)) {
                 webmapFetcher = "url";
-                fetchConfig._getParamsFromWebmap(paramsFromUrl.webmap, webmapParamsFetch, webmapOrigImageUrlReady);
+                fetchConfig._getParamsFromWebmap(paramsFromUrl.webmap, webmapParamsFetch);
                 fetchConfig._getWebmapData(paramsFromUrl.webmap, webmapDataFetch);
             }
 
@@ -95,7 +95,7 @@ define(['parseConfig', 'fetchConfig'], function (parseConfig, fetchConfig) {
                     if (data && data.webmap) {
                         // Use webmap specified in online app
                         webmapFetcher = "online";
-                        fetchConfig._getParamsFromWebmap(data.webmap, webmapParamsFetch, webmapOrigImageUrlReady);
+                        fetchConfig._getParamsFromWebmap(data.webmap, webmapParamsFetch);
                         fetchConfig._getWebmapData(data.webmap, webmapDataFetch);
                     }
                 }
@@ -112,7 +112,7 @@ define(['parseConfig', 'fetchConfig'], function (parseConfig, fetchConfig) {
                 if (!webmapFetcher) {
                     if (paramsFromFile.webmap) {
                         webmapFetcher = "file";
-                        fetchConfig._getParamsFromWebmap(data.webmap, webmapParamsFetch, webmapOrigImageUrlReady);
+                        fetchConfig._getParamsFromWebmap(data.webmap, webmapParamsFetch);
                         fetchConfig._getWebmapData(data.webmap, webmapDataFetch);
                     } else {
                         // We've no webmap; nothing more that can be done
@@ -139,6 +139,26 @@ define(['parseConfig', 'fetchConfig'], function (parseConfig, fetchConfig) {
                     that.appParams.showGooglePlus =
                         that.appParams.googleplusClientId && that.appParams.googleplusClientId.length > 0;
                     that.appParams.showTwitter = parseConfig._toBoolean(that.appParams.showTwitter);
+
+                    // If a proxy is needed, launch the test for a usable proxy
+                    if (needProxy) {
+                        $.getJSON(that.appParams.proxyProgram + "?ping", function () {
+                            proxyReady.resolve();
+                        }).fail(function () {
+                            proxyReady.reject();
+                        });
+                    } else {
+                        that.appParams.proxyProgram = null;
+                        proxyReady.resolve();
+                    }
+
+                    proxyReady.done(function () {
+                        // Test for the existence of the original image of the webmap's thumbnail
+                        fetchConfig._getOrigImageFromWebmap(that.appParams.webmap, that.appParams.webmapImageUrl,
+                            that.appParams.proxyProgram, webmapOrigImageUrlReady);
+                    }).fail(function () {
+                        webmapOrigImageUrlReady.reject();
+                    });
 
                     parametersReady.resolve(true);
                 });
