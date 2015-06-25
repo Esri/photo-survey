@@ -261,7 +261,8 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess', 'd
             $(carouselSlidesHolder).children().remove();  // remove children and their events
             var carouselIndicatorsHolder = $("#carouselIndicatorsHolder")[0];
             $(carouselIndicatorsHolder).children().remove();  // remove children and their events
-            var initiallyActiveItem = that.iSelectedPhoto >= 0 ? that.iSelectedPhoto : 0;
+            var initiallyActiveItem =
+                Math.floor((candidate.attachments.length + 1) / 2) - 1;  // len=1,2: idx=0; len=3,4; idx=1; etc. (idx 0-based)
 
             $.each(candidate.attachments, function (indexInArray, attachment) {
                 addPhoto(carouselSlidesHolder, indexInArray, (initiallyActiveItem === indexInArray), attachment.url);
