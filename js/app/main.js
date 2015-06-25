@@ -21,6 +21,7 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess', 'd
     var that, unsupported = false, needProxy = false, proxyReady;
 
     that = {
+        numPhotos: 0,
         iVisiblePhoto: 0,
         photoSelected: false,
         iSelectedPhoto: -1,
@@ -238,10 +239,11 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess', 'd
             // obj:feature{}
             // attachments:[{id,url},...]
 
+            that.numPhotos = candidate.attachments.length;
             if (!candidate.obj) {
                 $(document).triggerHandler('show:newSurvey');
                 return;
-            } else if (candidate.attachments.length === 0) {
+            } else if (that.numPhotos === 0) {
                 diag.appendWithLF("no photos for property <i>" + JSON.stringify(candidate.obj.attributes) + "</i>");  //???
                 candidate.obj.attributes[appConfig.appParams.surveyorNameField] = "no photos";
                 dataAccess.updateCandidate(candidate);
@@ -249,7 +251,7 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess', 'd
                 return;
             }
             diag.appendWithLF("showing property <i>" + JSON.stringify(candidate.obj.attributes) + "</i> with "  //???
-                + candidate.attachments.length + " photos");  //???
+                + that.numPhotos + " photos");  //???
 
 
             that.candidate = candidate;
@@ -262,7 +264,7 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess', 'd
             var carouselIndicatorsHolder = $("#carouselIndicatorsHolder")[0];
             $(carouselIndicatorsHolder).children().remove();  // remove children and their events
             var initiallyActiveItem =
-                Math.floor((candidate.attachments.length + 1) / 2) - 1;  // len=1,2: idx=0; len=3,4; idx=1; etc. (idx 0-based)
+                Math.floor((that.numPhotos + 1) / 2) - 1;  // len=1,2: idx=0; len=3,4; idx=1; etc. (idx 0-based)
 
             $.each(candidate.attachments, function (indexInArray, attachment) {
                 addPhoto(carouselSlidesHolder, indexInArray, (initiallyActiveItem === indexInArray), attachment.url);
@@ -383,6 +385,12 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess', 'd
     function updatePhotoSelectionDisplay() {
         // After carousel slide
         that.iVisiblePhoto = parseInt($("#carouselSlidesHolder > .item.active")[0].id.substring(1));
+
+        // Update left & right sliders for where we are in the carousel to block wrapping of carousel movement
+        $("#leftCarouselCtl").css("display", (that.iVisiblePhoto === 0 ? "none" : "block"));
+        $("#rightCarouselCtl").css("display", (that.iVisiblePhoto === (that.numPhotos - 1) ? "none" : "block"));
+
+        // Update selected photo indicator
         that.photoSelected = that.iVisiblePhoto === that.iSelectedPhoto;
         showHeart('emptyHeart', !that.photoSelected);
         showHeart('filledHeart', that.photoSelected);
