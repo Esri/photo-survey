@@ -42,6 +42,9 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess', 'd
     // Bring the app to visibility
     $("#signinPage").fadeIn();
 
+    // Enable the carousel swipe for mobile
+    $('.carousel').bcSwipe({ threshold: 50 });
+
     // Get app, webmap, feature service
     var appConfigReadies = appConfig.init();
 
