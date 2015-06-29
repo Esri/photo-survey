@@ -143,7 +143,8 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess', 'd
                 appConfigReadies.surveyReady.then(function () {
                     dataAccess.init(appConfig.featureSvcParams.url, appConfig.featureSvcParams.id,
                         appConfig.featureSvcParams.objectIdField,
-                        appConfig.appParams.surveyorNameField + "+is+null", appConfig.appParams.proxyProgram);
+                        appConfig.appParams.surveyorNameField + "+is+null+or+"
+                            + appConfig.appParams.surveyorNameField + "=''", appConfig.appParams.proxyProgram);
 
                     // Test if there are any surveys remaining to be done
                     dataAccess.getObjectCount().then(function (countRemaining) {
