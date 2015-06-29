@@ -233,6 +233,8 @@ define(['diag'], function (diag) {
                 if (lowercaseValue === "false" || lowercaseValue === "f" || lowercaseValue === "no" || lowercaseValue === "n" || lowercaseValue === "0") {
                     return false;
                 }
+            } else if (typeof boolValue === "number") {
+                return boolValue !== 0;
             }
             // Fall back to default
             if (defaultValue === undefined) {
