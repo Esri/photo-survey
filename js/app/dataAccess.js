@@ -162,13 +162,26 @@ define(['diag'], function (diag) {
                         return;
                     }
 
-                    // No attachments is acceptable
+                    // Empty list of attachments is possible
                     var attachments = [];
                     if (results && results.attachmentInfos) {
-                        $.each(results.attachmentInfos, function (idx, attachment) {
-                            attachments.push({
-                                id: attachment.id,
-                                url: that.featureServiceUrl + objectId + "/attachment/" + attachment.id
+
+                        attributesDeferred.done(function (feature) {
+                            // Watch for request to reverse order of attachments
+                            var doReversal = false;
+                            if (feature && feature.attributes && feature.attributes.REVERSE) {
+                                doReversal = that._toBoolean(feature.attributes.REVERSE, false);
+                            }
+
+                            // Build list of attachments
+                            if (doReversal) {
+                                results.attachmentInfos.reverse();
+                            }
+                            $.each(results.attachmentInfos, function (idx, attachment) {
+                                attachments.push({
+                                    id: attachment.id,
+                                    url: that.featureServiceUrl + objectId + "/attachment/" + attachment.id
+                                });
                             });
                         });
                     }
@@ -186,6 +199,48 @@ define(['diag'], function (diag) {
             });
 
             return deferred;
+        },
+
+        /** Normalizes a boolean value to true or false.
+         * @param {boolean|string} boolValue A true or false
+         *        value that is returned directly or a string
+         *        "true" or "false" (case-insensitive) that
+         *        is checked and returned; if neither a
+         *        a boolean or a usable string, falls back to
+         *        defaultValue
+         * @param {boolean} [defaultValue] A true or false
+         *        that is returned if boolValue can't be
+         *        used; if not defined, true is returned
+         * @memberOf js.LGObject#
+         */
+        _toBoolean: function (boolValue, defaultValue) {
+            var lowercaseValue;
+
+            // Shortcut true|false
+            if (boolValue === true) {
+                return true;
+            }
+            if (boolValue === false) {
+                return false;
+            }
+
+            // Handle a true|false string
+            if (typeof boolValue === "string") {
+                lowercaseValue = boolValue.toLowerCase();
+                if (lowercaseValue === "true" || lowercaseValue === "t" || lowercaseValue === "yes" || lowercaseValue === "y" || lowercaseValue === "1") {
+                    return true;
+                }
+                if (lowercaseValue === "false" || lowercaseValue === "f" || lowercaseValue === "no" || lowercaseValue === "n" || lowercaseValue === "0") {
+                    return false;
+                }
+            } else if (typeof boolValue === "number") {
+                return boolValue !== 0;
+            }
+            // Fall back to default
+            if (defaultValue === undefined) {
+                return true;
+            }
+            return defaultValue;
         }
 
     };
