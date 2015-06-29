@@ -13,7 +13,6 @@
 import arcpy
 import math
 import sys, os, datetime
-import ConfigParser
 from os.path import dirname, join, exists, splitext, isfile
 
 arcpy.env.overwriteOutput = True
@@ -43,6 +42,14 @@ PhotoFeatureClass2 = """{}\\PointAttachments""".format(Geodatabase)
 
 arcpy.Project_management(PhotoFeatureClass, PhotoFeatureClass2, SRHelper)
 arcpy.Delete_management(PhotoFeatureClass)
+
+EntGDB = arcpy.Describe(Geodatabase)
+EntGDB.workspaceType
+
+if EntGDB is 'RemoteDatabase':
+	arcpy.RegisterAsVersioned_management(PhotoFeatureClass2)
+else:
+	pass
 
 arcpy.AddMessage("Step 2:  Converting Photos to points")
 
@@ -76,8 +83,9 @@ else:
 
 	pass
 
-SnapHelper = """{} EDGE '30 Unknown'""".format(ParcelsFeatureClass)
-arcpy.Snap_edit(PhotoFeatureClass2, SnapHelper)
+snapenv = [ParcelsFeatureClass, "VERTEX", "30 Feet"]
+arcpy.Snap_edit(PhotoFeatureClass2, [snapenv])
+
 
 Nearhelper = """{}\\NEAR""".format(Geodatabase)
 NEAR = Nearhelper
@@ -95,12 +103,6 @@ arcpy.TableToTable_conversion(PhotoFeatureClass2, Geodatabase,
 							  "NonMatchedPassengerPhotos", "{0} is Null".format(ParcelPIN), "")
 arcpy.AddMessage("Step 5:  Reporting non-matched passenger photos to table")
 
-# Delete non-matched photo points
-
-whereclause = "{0} is Null".format(ParcelPIN)
-with arcpy.da.UpdateCursor(PhotoFeatureClass2, ParcelPIN, whereclause) as cursor:
-	for row in cursor:
-		cursor.deleteRow()
 
 # Cleanup matched Photos (intermediate data)
 
@@ -151,8 +153,8 @@ else:
 
 	pass
 
-SnapHelper = """{} EDGE '100 Unknown'""".format("PARCELSFL2")
-arcpy.Snap_edit(PhotoFeatureClass3, SnapHelper)
+snapenv = ["PARCELSFL2", "VERTEX", "100 Feet"]
+arcpy.Snap_edit(PhotoFeatureClass3, [snapenv])
 
 Nearhelper = """{}\\NEAR""".format(Geodatabase)
 NEAR = Nearhelper
@@ -166,14 +168,8 @@ arcpy.JoinField_management(NEAR, "NEAR_FID", ParcelsFeatureClass, "OBJECTID", Pa
 arcpy.JoinField_management(PhotoFeatureClass3, "OBJECTID", NEAR, "IN_FID")
 arcpy.TableToTable_conversion(PhotoFeatureClass3, Geodatabase, "NonMatchedDriverPhotos",
 							  "{0} is Null".format(ParcelPIN), "")
+
 arcpy.AddMessage("Step 7:  Reporting non-matched driver photos to table")
-
-# Delete non-matched photos
-
-whereclause = "{0} is Null".format(ParcelPIN)
-with arcpy.da.UpdateCursor(PhotoFeatureClass3, ParcelPIN, whereclause) as cursor:
-	for row in cursor:
-		cursor.deleteRow()
 
 # Cleanup matched Photos (intermediate data)
 
@@ -224,6 +220,16 @@ arcpy.AddMessage("Step 9:  Cleaning up staging geodatabase")
 # Adding Survey Fields
 #______________________________________________________________________________#
 
+
+DomGDB = arcpy.Describe(Geodatabase)
+domains = DomGDB.Domains
+dmCount = len(domains)
+if dmCount > 0:
+	for domain in domains:
+		arcpy.DeleteDomain_management(Geodatabase, domain)
+else:
+	pass
+
 arcpy.AddMessage("Step 10: Adding survey questions")
 arcpy.CreateDomain_management(Geodatabase, "YesNoMaybe", "YesNoMaybe", "TEXT", "CODED")
 DomainDict1 = {"Yes": "Yes", "No": "No", "Maybe": "Maybe"}
@@ -260,16 +266,4 @@ arcpy.AddMessage("Step 11: Adding application required fields")
 arcpy.AddField_management(ParcelPointHelper, "BSTPHOTOID", "TEXT", "", "", "5", "Best Photo Identifier", "NULLABLE", "NON_REQUIRED", "")
 arcpy.AddField_management(ParcelPointHelper, "SRVNAME", "TEXT", "", "", "25", "Surveyor Name", "NULLABLE", "NON_REQUIRED", "")
 arcpy.AddMessage("Step 12: Finalizing photo survey feature class")
-
-
-
-
-
-
-
-
-
-
-
-
 
