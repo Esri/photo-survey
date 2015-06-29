@@ -529,7 +529,12 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess', 'd
         if (indexInArray === -1) {  //???
             loadImage(photoUrl, $("#c" + indexInArray + " img")[0]);  //???
         } else {
-            $("#c" + indexInArray + " img")[0].src = photoUrl;
+            var img = $("#c" + indexInArray + " img")[0];
+            img.src = photoUrl;
+            $(img).on('error', function (err) {
+                img.src = "images/noPhoto.png";
+                $(img).css("margin", "auto");
+            });
         }
 
         /*loadImage(photoUrl).then(function (imgElement) {
