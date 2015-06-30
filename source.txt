@@ -5,9 +5,8 @@ origin	git@github.com:ArcGIS/photo-survey.git (push)
 branch 
 develop
 . 
-commit b54ae36df389063ba915534a9011a805292ba94c
-Merge: 9d58887 02952ba
+commit 8ed1c44e9aa95c5e2f0c530b9b2e0eec11417edb
 Author: MikeTschudi <mtschudi@esri.com>
-Date:   Mon Jun 29 15:09:46 2015 -0700
+Date:   Mon Jun 29 16:34:38 2015 -0700
 
-    Merge branch 'reversal' into develop
+    Added support for empty string as well as null for indicating unsurveyed property
