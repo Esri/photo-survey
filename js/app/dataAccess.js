@@ -158,7 +158,7 @@ define(['diag'], function (diag) {
                 var objectAttachmentsUrl = that.featureServiceUrl + objectId + "/attachments?f=json&callback=?";
                 $.getJSON(objectAttachmentsUrl, "jsonp", function (results) {
                     if (!results || results.error) {
-                        attributesDeferred.reject();
+                        attachmentsDeferred.reject();
                         return;
                     }
 
@@ -183,9 +183,13 @@ define(['diag'], function (diag) {
                                     url: that.featureServiceUrl + objectId + "/attachment/" + attachment.id
                                 });
                             });
+                            attachmentsDeferred.resolve(attachments);
+                        }).fail(function () {
+                            attachmentsDeferred.reject();
                         });
+                    } else {
+                        attachmentsDeferred.resolve(attachments);
                     }
-                    attachmentsDeferred.resolve(attachments);
                 });
 
                 // Return the attributes and attachments
