@@ -5,8 +5,8 @@ origin	git@github.com:ArcGIS/photo-survey.git (push)
 branch 
 develop
 . 
-commit 8ed1c44e9aa95c5e2f0c530b9b2e0eec11417edb
+commit c229395d99fb2cc9bfdc8b454c20fd91530a7031
 Author: MikeTschudi <mtschudi@esri.com>
-Date:   Mon Jun 29 16:34:38 2015 -0700
+Date:   Wed Jul 1 14:05:39 2015 -0700
 
-    Added support for empty string as well as null for indicating unsurveyed property
+    Modified custom buttons to support iOS

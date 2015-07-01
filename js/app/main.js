@@ -137,17 +137,17 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess', 'd
             }
 
             // Wait for the proxy check; already bypassed for browsers that don't need it
-            proxyReady.then(function () {
+            proxyReady.done(function () {
 
                 // When the feature service and survey are ready, we can set up the module that reads from and writes to the service
-                appConfigReadies.surveyReady.then(function () {
+                appConfigReadies.surveyReady.done(function () {
                     dataAccess.init(appConfig.featureSvcParams.url, appConfig.featureSvcParams.id,
                         appConfig.featureSvcParams.objectIdField,
                         appConfig.appParams.surveyorNameField + "+is+null+or+"
                             + appConfig.appParams.surveyorNameField + "=''", appConfig.appParams.proxyProgram);
 
                     // Test if there are any surveys remaining to be done
-                    dataAccess.getObjectCount().then(function (countRemaining) {
+                    dataAccess.getObjectCount().done(function (countRemaining) {
                         if (countRemaining > 0) {
                             // When the social media connections are ready, we can enable the social-media sign-in buttons
                             $("#signinLoginPrompt")[0].innerHTML = i18n.signin.signinFetching;
@@ -177,6 +177,9 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess', 'd
                         $("#signinLoginPrompt")[0].innerHTML = i18n.signin.noMoreSurveys;
                         $("#signinLoginPrompt").fadeIn();
                     });
+                }).fail(function () {
+                    $("#signinLoginPrompt")[0].innerHTML = i18n.signin.noMoreSurveys;
+                    $("#signinLoginPrompt").fadeIn();
                 });
 
                 // Don't need help button if there's no help to display
@@ -378,8 +381,16 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess', 'd
     });
 
     $("#carousel").on('slide.bs.carousel', function (data) {
-        // Before carousel slide
-        $("#hearts")[0].style.display = "none";
+        // Check if we should slide: swipe jumps right into here
+        if ((that.iVisiblePhoto === 0 && data.direction === "right")
+            || (that.iVisiblePhoto === (that.numPhotos - 1) && data.direction === "left")) {
+            // Block move
+diag.appendWithLF("block slide to " + data.direction);  //???
+            data.preventDefault();
+        } else {
+            // Otherwise, hide the heart until the next slide appears
+            $("#hearts")[0].style.display = "none";
+        }
     });
 
     $("#carousel").on('slid.bs.carousel', function (data) {

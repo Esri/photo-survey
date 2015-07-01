@@ -141,6 +141,8 @@ define(['parseConfig', 'fetchConfig'], function (parseConfig, fetchConfig) {
                     that.appParams.showTwitter = parseConfig._toBoolean(that.appParams.showTwitter);
 
                     parametersReady.resolve(true);
+                }).fail(function () {
+                    parametersReady.resolve(false);
                 });
 
                 // Once we have the webmap's data, we can try assemble the survey
@@ -156,12 +158,14 @@ define(['parseConfig', 'fetchConfig'], function (parseConfig, fetchConfig) {
 
                         // Parse survey
                         that.survey = parseConfig._parseSurvey(data.opLayerParams.popupInfo.description, dictionary);
-                        surveyReady.resolve(true);
+                        surveyReady.resolve();
                     } else {
                         that.featureSvcParams = {};
                         that.survey = {};
-                        surveyReady.resolve(false);
+                        surveyReady.reject();
                     }
+                }).fail(function () {
+                    surveyReady.reject();
                 });
             });
 

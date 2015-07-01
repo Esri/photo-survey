@@ -84,6 +84,12 @@ header, section, footer, aside, nav, main, article, figure {
 
 /* ---------- content ---------- */
 
+.iconButton, .iconButton:focus, .iconButton:hover {
+    border: none;
+    background: none;
+    outline-style: none;
+}
+
 @media only screen and (min-width: 768px) {
     .conditionalPageFill {
         height: 100%;
@@ -98,6 +104,7 @@ header, section, footer, aside, nav, main, article, figure {
     padding: 8px !important;
 }
 .mainContent {
+    min-height: 200px;
     background-color: lightgray;
 }
 .sidebarContent {
