@@ -98,6 +98,7 @@ header, section, footer, aside, nav, main, article, figure {
     padding: 8px !important;
 }
 .mainContent {
+    min-height: 200px;
     background-color: lightgray;
 }
 .sidebarContent {
