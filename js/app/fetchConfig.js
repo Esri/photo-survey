@@ -124,6 +124,9 @@ define(['parseConfig'], function (parseConfig) {
 
                         // Get the app's webmap's feature service's data
                         that._getFeatureSvcData(featureSvcData.opLayerParams.url).done(function (data) {
+                            if (!data || data.error) {
+                                deferred.reject();
+                            }
                             featureSvcData.featureSvcParams = data;
                             deferred.resolve(featureSvcData);
                         });
