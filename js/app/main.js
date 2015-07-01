@@ -381,8 +381,16 @@ define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess', 'd
     });
 
     $("#carousel").on('slide.bs.carousel', function (data) {
-        // Before carousel slide
-        $("#hearts")[0].style.display = "none";
+        // Check if we should slide: swipe jumps right into here
+        if ((that.iVisiblePhoto === 0 && data.direction === "right")
+            || (that.iVisiblePhoto === (that.numPhotos - 1) && data.direction === "left")) {
+            // Block move
+diag.appendWithLF("block slide to " + data.direction);  //???
+            data.preventDefault();
+        } else {
+            // Otherwise, hide the heart until the next slide appears
+            $("#hearts")[0].style.display = "none";
+        }
     });
 
     $("#carousel").on('slid.bs.carousel', function (data) {
