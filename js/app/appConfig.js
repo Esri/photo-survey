@@ -64,6 +64,13 @@ define(['parseConfig', 'fetchConfig'], function (parseConfig, fetchConfig) {
 
         //--------------------------------------------------------------------------------------------------------------------//
 
+        /**
+         * Initializes the module by fetching parameters from the URL, the configuration file, and the webmap.
+         * @return {object} Object with properties parametersReady, surveyReady, webmapOrigImageUrlReady that contain
+         * Deferreds for when the app's configuration parameters are ready to use, when the survey gleaned from the webmap
+         * is ready to use, and when the original-size version of the webmap's thumbnail has been checked and is ready to use,
+         * respectively.
+         */
         init: function () {
             that = this;
             fetchConfig.init();
@@ -79,7 +86,7 @@ define(['parseConfig', 'fetchConfig'], function (parseConfig, fetchConfig) {
             var webmapFetcher = null;
 
             // Get the URL parameters
-            var paramsFromUrl = that._screenParams(["webmap", "diag"], fetchConfig._getParamsFromUrl());
+            var paramsFromUrl = that._screenProperties(["webmap", "diag"], fetchConfig._getParamsFromUrl());
 
             // If webmap specified in the URL, we can start a fetch of its data now
             if (parseConfig._isUsableString(paramsFromUrl.webmap)) {
@@ -176,12 +183,21 @@ define(['parseConfig', 'fetchConfig'], function (parseConfig, fetchConfig) {
             };
         },
 
-        _screenParams: function (supportedParameters, proposedParameters) {
-            var acceptedParameters = {};
-            $.each(supportedParameters, function (indexInArray, param) {
-                acceptedParameters[param] = proposedParameters[param];
+        /**
+         * Copies and returns only specified properties of the supplied object.
+         * @param {array} supportedProperties List of properties to return
+         * @param {object} objectToScreen Source of property data
+         * @return {object} Object composed of properties from the supportedProperties list
+         * with values assigned from the objectToScreen object; supportedProperties not
+         * found in objectToScreen are assigned 'null'
+         * @memberOf js.LGDropdownBox#
+         */
+        _screenProperties: function (supportedProperties, objectToScreen) {
+            var screenedObject = {};
+            $.each(supportedProperties, function (indexInArray, param) {
+                screenedObject[param] = objectToScreen[param];
             });
-            return acceptedParameters;
+            return screenedObject;
         }
 
     };

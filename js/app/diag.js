@@ -23,6 +23,9 @@ define(function () {
 
         //--------------------------------------------------------------------------------------------------------------------//
 
+        /**
+         * Initializes the module by creating the diagnostic modal display and its trigger button.
+         */
         init: function () {
             if (ignore) {
                 // Create the display modal box and the button to trigger it
@@ -38,17 +41,28 @@ define(function () {
             }
         },
 
+        /**
+         * Appends HTML text to the diagnostic modal display.
+         * @param {string} note Text to append; text can contain HTML
+         */
         append: function (note) {
             if (!ignore) {
                 $("#diagnosticLog").append(note);
             }
         },
 
+        /**
+         * Appends HTML text to the diagnostic modal display followed by an HTML &lt;br&gt;.
+         * @param {string} note Text to append; text can contain HTML
+         */
         appendWithLF: function (note) {
             this.append(note + "<br>");
         },
 
-        appendLine: function (note) {
+        /**
+         * Appends an HTML &lt;hr&gt; to the diagnostic modal display.
+         */
+        appendLine: function () {
             this.append("<hr>");
         }
 
