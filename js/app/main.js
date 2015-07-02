@@ -52,6 +52,10 @@ define(['lib/i18n.min!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'
     appConfigReadies.parametersReady.then(function () {
         if (appConfig.appParams.diag !== undefined) {diag.init()};  //???
 
+        // Update the page's title
+        document.title = appConfig.appParams.title;
+        $("#page-title")[0].innerHTML = appConfig.appParams.title;
+
         // If a proxy is needed, launch the test for a usable proxy
         proxyReady = $.Deferred();
         if (needProxy) {
