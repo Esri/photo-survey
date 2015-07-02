@@ -114,6 +114,12 @@ define(['parseConfig'], function (parseConfig) {
                 $.getJSON("http://www.arcgis.com/sharing/content/items/" + webmapId + "?f=json&callback=?", "jsonp",
                     function (data) {
                         var normalizedData = {}, imageUrl, iExt;
+                        if (!data || data.error) {
+                            deferreds.params.reject();
+                            deferreds.origImageUrl.resolve();
+                            return;
+                        }
+
                         normalizedData.title = data.title;
                         normalizedData.splashText = data.snippet;
                         normalizedData.helpText = data.description;
