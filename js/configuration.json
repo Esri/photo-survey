@@ -2,14 +2,14 @@
     "source": "dbd49c155bf249f79bf1e518d56dbbb2",
     "folderId": "052b07ec56b3462c943adcc6959354ec",
     "values": {
-        "webmap": "f0cee31e847047febcbe0e2fed2d4cf3",
+        "webmap": "f6a4a4c4252c44029b9f41bde775154f",
         "splashBackgroundUrl": "images/splash.jpg",
         "useWebmapOrigImg": true,
 
         "proxyProgram": "proxy/proxy.ashx",
 
-        "facebookAppId": "103782893296903",
-        "googleplusClientId": "801106938257-am9uvo6dm0ih06r7h048k7m66l6oo3v1.apps.googleusercontent.com",
+        "facebookAppId": "",
+        "googleplusClientId": "",
         "showTwitter": "true",
 
         "googleplusLogoutUrl": "https://accounts.google.com/logout",
