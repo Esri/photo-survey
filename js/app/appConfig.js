@@ -112,8 +112,8 @@ define(['parseConfig', 'fetchConfig'], function (parseConfig, fetchConfig) {
                 if (!webmapFetcher) {
                     if (paramsFromFile.webmap) {
                         webmapFetcher = "file";
-                        fetchConfig._getParamsFromWebmap(data.webmap, webmapParamsFetch, webmapOrigImageUrlReady);
-                        fetchConfig._getWebmapData(data.webmap, webmapDataFetch);
+                        fetchConfig._getParamsFromWebmap(paramsFromFile.webmap, webmapParamsFetch, webmapOrigImageUrlReady);
+                        fetchConfig._getWebmapData(paramsFromFile.webmap, webmapDataFetch);
                     } else {
                         // We've no webmap; nothing more that can be done
                         parametersReady.resolve(false);
