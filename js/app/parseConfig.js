@@ -132,7 +132,7 @@ define(function () {
             // 3. step thru lines seeking keywords
             keywordParts = ["=== access and use settings ===",
                 "contribution star levels", "0", "1", "2", "3", "4", "5",
-                "facebook", "google", "twitter", "surveyor", "photo"];
+                "surveyor", "photo"];
             iKeyword = 0;
             config = {
                 "showFacebook": false,
@@ -170,21 +170,10 @@ define(function () {
                             config.contribLevels = contribLevels;
                         }
                         break;
-                    case 8: // "Facebook app id"
-                        config.showFacebook = true;
-                        config.facebookAppId = lineParts[1].trim();
-                        break;
-                    case 9: // "Google+ client id"
-                        config.showGooglePlus = true;
-                        config.googleplusClientId = lineParts[1].trim();
-                        break;
-                    case 10: // "show Twitter"
-                        config.showTwitter = true;
-                        break;
-                    case 11: // "surveyor name field"
+                    case 8: // "surveyor name field"
                         config.surveyorNameField = lineParts[1].trim();
                         break;
-                    case 12: // "best photo field"
+                    case 9: // "best photo field"
                         config.bestPhotoField = lineParts[1].trim();
                         break;
                     }
