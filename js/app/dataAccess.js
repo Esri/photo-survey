@@ -1,4 +1,4 @@
-/*global define,$ */
+﻿/*global define,$ */
 /*jslint browser:true,sloppy:true,nomen:true,unparam:true,plusplus:true */
 /** @license
  | Copyright 2015 Esri
@@ -42,7 +42,7 @@ define(['diag'], function (diag) {
         init: function (featureServiceUrl, featureServiceLayerId, objectIdField, validCandidateCondition, proxyProgram) {
             that = this;
             that.featureServiceUrl = featureServiceUrl;
-            if (that.featureServiceUrl.lastIndexOf("/") != that.featureServiceUrl.length - 1) {
+            if (that.featureServiceUrl.lastIndexOf("/") !== that.featureServiceUrl.length - 1) {
                 that.featureServiceUrl += "/";
             }
             that.featureServiceLayerId = featureServiceLayerId;
@@ -59,9 +59,10 @@ define(['diag'], function (diag) {
          * @return {object} Deferred to provide count when it arrives; a count of -1 is used to flag an error
          */
         getObjectCount: function (condition) {
-            var deferred = $.Deferred();
+            var deferred, url;
+            deferred = $.Deferred();
 
-            var url = that.featureServiceUrl + "query?where=" + (condition || that.validCandidateCondition)
+            url = that.featureServiceUrl + "query?where=" + (condition || that.validCandidateCondition)
                 + "&objectIds=&returnIdsOnly=false&returnCountOnly=true&outFields=" + that.fixedQueryParams
                 + "&callback=?";
             $.getJSON(url, "jsonp", function (results) {
@@ -82,13 +83,16 @@ define(['diag'], function (diag) {
          * attachments contains an array containing objects each of which describes an attachment using id and url properties
          */
         getCandidate: function () {
-            var deferred = $.Deferred();
+            var deferred, url;
+            deferred = $.Deferred();
 
             // Get the ids of available unsurveyed candidates
-            var url = that.featureServiceUrl + "query?where=" + that.validCandidateCondition
+            url = that.featureServiceUrl + "query?where=" + that.validCandidateCondition
                 + "&objectIds=&returnIdsOnly=true&returnCountOnly=false&outFields=" + that.fixedQueryParams
                 + "&callback=?";
             $.getJSON(url, "jsonp", function (results) {
+                var objectId, attributesDeferred, objectAttrsUrl, attachmentsDeferred, objectAttachmentsUrl;
+
                 if (!results || results.error) {
                     deferred.reject({
                         obj: null,
@@ -105,11 +109,11 @@ define(['diag'], function (diag) {
                 }
 
                 // Pick a candidate from amongst the available
-                var objectId = results.objectIds[ Math.floor(Math.random() * results.objectIds.length)];
+                objectId = results.objectIds[Math.floor(Math.random() * results.objectIds.length)];
 
                 // Get the candidate's attributes
-                var attributesDeferred = $.Deferred();
-                var objectAttrsUrl = that.featureServiceUrl + "query?objectIds=" + objectId
+                attributesDeferred = $.Deferred();
+                objectAttrsUrl = that.featureServiceUrl + "query?objectIds=" + objectId
                     + "&returnIdsOnly=false&returnCountOnly=false&outFields=*" + that.fixedQueryParams
                     + "&callback=?";
                 $.getJSON(objectAttrsUrl, "jsonp", function (results) {
@@ -123,16 +127,17 @@ define(['diag'], function (diag) {
                 });
 
                 // Get the candidate's attachments
-                var attachmentsDeferred = $.Deferred();
-                var objectAttachmentsUrl = that.featureServiceUrl + objectId + "/attachments?f=json&callback=?";
+                attachmentsDeferred = $.Deferred();
+                objectAttachmentsUrl = that.featureServiceUrl + objectId + "/attachments?f=json&callback=?";
                 $.getJSON(objectAttachmentsUrl, "jsonp", function (results) {
+                    var attachments = [];
+
                     if (!results || results.error) {
                         attachmentsDeferred.reject();
                         return;
                     }
 
                     // Empty list of attachments is possible
-                    var attachments = [];
                     if (results && results.attachmentInfos) {
 
                         attributesDeferred.done(function (feature) {
@@ -182,11 +187,12 @@ define(['diag'], function (diag) {
          * @return {object} Deferred to provide information about success or failure of update
          */
         updateCandidate: function (candidate) {
-            var deferred = $.Deferred();
+            var deferred, url, update;
+            deferred = $.Deferred();
 
-            var update = "rollbackOnFailure=true&f=pjson&adds=&deletes=&id=" + that.featureServiceLayerId
+            update = "rollbackOnFailure=true&f=pjson&adds=&deletes=&id=" + that.featureServiceLayerId
                 + "&updates=" + that._stringifyForApplyEdits(candidate.obj);
-            var url = (that.proxyProgram ? that.proxyProgram + "?" : "") + that.featureServiceUrl + "applyEdits";
+            url = (that.proxyProgram ? that.proxyProgram + "?" : "") + that.featureServiceUrl + "applyEdits";
             $.post(url, update, function (results, status) {
                 // seek
                 //   * status === "success"
@@ -195,10 +201,10 @@ define(['diag'], function (diag) {
                 diag.append("update obj #" + candidate.obj.attributes[that.objectIdField] + " result: ");  //???
                 if (status === "success" && results && results.updateResults.length > 0) {  //???
                     if (results.updateResults[0].success === true  //???
-                        && results.updateResults[0].objectId === candidate.obj.attributes[that.objectIdField]) {  //???
+                            && results.updateResults[0].objectId === candidate.obj.attributes[that.objectIdField]) {  //???
                         diag.appendWithLF("OK");  //???
                         deferred.resolve();
-                    } else if (results.updateResults[0].error)  {  //???
+                    } else if (results.updateResults[0].error) {  //???
                         diag.appendWithLF("fail #" + results.updateResults[0].error.code  //???
                             + " (" + results.updateResults[0].error.description + ")");  //???
                         deferred.reject();
@@ -228,13 +234,13 @@ define(['diag'], function (diag) {
          * @return {string} Escaped value
          */
         _stringifyForApplyEdits: function (value) {
-            var isFirst = true;
-            var result = "";
+            var isFirst = true, result = "";
+
             if (value === null) {
-               result += 'null';
-            } else if (typeof(value) === "string") {
+                result += 'null';
+            } else if (typeof value === "string") {
                 result += '%22' + value + '%22';
-            } else if (typeof(value) === "object") {
+            } else if (typeof value === "object") {
                 result += '%7B';
                 $.each(value, function (part) {
                     if (value.hasOwnProperty(part)) {

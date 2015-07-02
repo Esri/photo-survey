@@ -1,4 +1,4 @@
-/*global define,$ */
+﻿/*global define,$ */
 /*jslint browser:true,sloppy:true,nomen:true,unparam:true,plusplus:true */
 /** @license
  | Copyright 2015 Esri
@@ -82,8 +82,8 @@ define(['parseConfig'], function (parseConfig) {
             if (parseConfig._isUsableString(appId)) {
                 $.getJSON("http://www.arcgis.com/sharing/content/items/"
                     + appId + "/data?f=json&callback=?", "jsonp", function (data) {
-                    deferred.resolve((data && data.values) || {});
-                });
+                        deferred.resolve((data && data.values) || {});
+                    });
             } else {
                 deferred.resolve({});
             }
@@ -113,32 +113,32 @@ define(['parseConfig'], function (parseConfig) {
             if (parseConfig._isUsableString(webmapId)) {
                 $.getJSON("http://www.arcgis.com/sharing/content/items/" + webmapId + "?f=json&callback=?", "jsonp",
                     function (data) {
-                    var normalizedData = {}, imageUrl, iExt;
-                    normalizedData.title = data.title;
-                    normalizedData.splashText = data.snippet;
-                    normalizedData.helpText = data.description;
-                    normalizedData = $.extend(normalizedData, parseConfig._parseAccessConfig(data.licenseInfo));
-                    deferreds.params.resolve(normalizedData);
+                        var normalizedData = {}, imageUrl, iExt;
+                        normalizedData.title = data.title;
+                        normalizedData.splashText = data.snippet;
+                        normalizedData.helpText = data.description;
+                        normalizedData = $.extend(normalizedData, parseConfig._parseAccessConfig(data.licenseInfo));
+                        deferreds.params.resolve(normalizedData);
 
-                    // See if we can get an original-size image
-                    imageUrl = data.thumbnail;
-                    if (imageUrl) {
-                        iExt = imageUrl.lastIndexOf(".");
-                        if (iExt >= 0) {
-                            imageUrl = imageUrl.substring(0, iExt) + "_orig" + imageUrl.substr(iExt);
+                        // See if we can get an original-size image
+                        imageUrl = data.thumbnail;
+                        if (imageUrl) {
+                            iExt = imageUrl.lastIndexOf(".");
+                            if (iExt >= 0) {
+                                imageUrl = imageUrl.substring(0, iExt) + "_orig" + imageUrl.substr(iExt);
+                            } else {
+                                imageUrl = imageUrl + "_orig";
+                            }
+                            imageUrl = "http://www.arcgis.com/sharing/content/items/" + webmapId + "/info/" + imageUrl;
+
+                            // Test that this URL is valid
+                            that._testURL(imageUrl, function (isOK) {
+                                deferreds.origImageUrl.resolve(isOK ? imageUrl : null);
+                            });
                         } else {
-                            imageUrl = imageUrl + "_orig";
+                            deferreds.origImageUrl.resolve();
                         }
-                        imageUrl = "http://www.arcgis.com/sharing/content/items/" + webmapId + "/info/" + imageUrl;
-
-                        // Test that this URL is valid
-                        that._testURL(imageUrl, function (isOK) {
-                            deferreds.origImageUrl.resolve(isOK ? imageUrl : null);
-                        });
-                    } else {
-                        deferreds.origImageUrl.resolve();
-                    }
-                });
+                    });
             } else {
                 deferreds.params.resolve({});
                 deferreds.origImageUrl.resolve();
@@ -163,23 +163,23 @@ define(['parseConfig'], function (parseConfig) {
             if (parseConfig._isUsableString(webmapId)) {
                 $.getJSON("http://www.arcgis.com/sharing/content/items/" + webmapId + "/data?f=json&callback=?",
                     "jsonp", function (data) {
-                    var featureSvcData = {};
+                        var featureSvcData = {};
 
-                    if (data && data.operationalLayers && data.operationalLayers.length > 0) {
-                        featureSvcData.opLayerParams = data.operationalLayers[0];
+                        if (data && data.operationalLayers && data.operationalLayers.length > 0) {
+                            featureSvcData.opLayerParams = data.operationalLayers[0];
 
-                        // Get the app's webmap's feature service's data
-                        that._getFeatureSvcData(featureSvcData.opLayerParams.url).done(function (data) {
-                            if (!data || data.error) {
-                                deferred.reject();
-                            }
-                            featureSvcData.featureSvcParams = data;
-                            deferred.resolve(featureSvcData);
-                        });
-                    } else {
-                        deferred.resolve({});
-                    }
-                });
+                            // Get the app's webmap's feature service's data
+                            that._getFeatureSvcData(featureSvcData.opLayerParams.url).done(function (data) {
+                                if (!data || data.error) {
+                                    deferred.reject();
+                                }
+                                featureSvcData.featureSvcParams = data;
+                                deferred.resolve(featureSvcData);
+                            });
+                        } else {
+                            deferred.resolve({});
+                        }
+                    });
             } else {
                 deferred.resolve({});
             }

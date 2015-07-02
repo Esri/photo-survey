@@ -1,4 +1,4 @@
-/*global define,$ */
+﻿/*global define,$ */
 /*jslint browser:true,sloppy:true,nomen:true,unparam:true,plusplus:true */
 /** @license
  | Copyright 2015 Esri
@@ -119,7 +119,7 @@ define(function () {
             //  </div><div>contribution star levels:</div><div>0: Getting Started @0</div><div>1: Beginner @5</div><div>2:
             //  Helper @10</div><div>3: Intermediate @15</div><div>4: Advanced @20</div><div>5: Wow! @25</div><div><br />
             //  </div><div>surveyor name field: SRVNAME</div><div>best photo field: BSTPHOTOID</div><div><br /></div>
-            var taggedConfigLines, descriptionSplitDiv, configLines,
+            var taggedConfigLines, descriptionSplitDiv, configLines, inConfigSection = false,
                 keywordParts, iLine, iKeyword, config, contribLevels, lineParts;
 
             // 1. split on </div> and then <br
@@ -151,56 +151,52 @@ define(function () {
                 }
             });
 
-            // 3. find the start of the configuration section
-            for (iLine = 0; iLine < configLines.length; iLine += 1) {
-                if (configLines[iLine].indexOf("=== Access and use settings ===") >= 0) {
-                    iLine += 1;
-                    break;
-                }
-            }
-
-            // 4. step thru lines seeking keywords
+            // 3. find the start of the configuration section, then step thru lines seeking keywords
             keywordParts = ["0", "1", "2", "3", "4", "5", "surveyor", "photo"];
             iKeyword = 0;
             config = {};
             contribLevels = [];
 
-            for (; iLine < configLines.length; iLine += 1) {
-                lineParts = configLines[iLine].split(':');
-                if (lineParts[0].toLowerCase().indexOf(keywordParts[iKeyword]) >= 0) {
-                    switch (iKeyword) {
-                    case 0: // "0"
-                        that._extractContribLevel(0, lineParts[1], contribLevels);
-                        break;
-                    case 1: // "1"
-                        that._extractContribLevel(1, lineParts[1], contribLevels);
-                        break;
-                    case 2: // "2"
-                        that._extractContribLevel(2, lineParts[1], contribLevels);
-                        break;
-                    case 3: // "3"
-                        that._extractContribLevel(3, lineParts[1], contribLevels);
-                        break;
-                    case 4: // "4"
-                        that._extractContribLevel(4, lineParts[1], contribLevels);
-                        break;
-                    case 5: // "5"
-                        that._extractContribLevel(5, lineParts[1], contribLevels);
-                        if (contribLevels !== null) {
-                            config.contribLevels = contribLevels;
+            for (iLine = 0; iLine < configLines.length; iLine += 1) {
+                if (!inConfigSection) {
+                    inConfigSection = configLines[iLine].indexOf("=== Access and use settings ===") >= 0;
+                } else {
+                    lineParts = configLines[iLine].split(':');
+                    if (lineParts[0].toLowerCase().indexOf(keywordParts[iKeyword]) >= 0) {
+                        switch (iKeyword) {
+                        case 0: // "0"
+                            that._extractContribLevel(0, lineParts[1], contribLevels);
+                            break;
+                        case 1: // "1"
+                            that._extractContribLevel(1, lineParts[1], contribLevels);
+                            break;
+                        case 2: // "2"
+                            that._extractContribLevel(2, lineParts[1], contribLevels);
+                            break;
+                        case 3: // "3"
+                            that._extractContribLevel(3, lineParts[1], contribLevels);
+                            break;
+                        case 4: // "4"
+                            that._extractContribLevel(4, lineParts[1], contribLevels);
+                            break;
+                        case 5: // "5"
+                            that._extractContribLevel(5, lineParts[1], contribLevels);
+                            if (contribLevels !== null) {
+                                config.contribLevels = contribLevels;
+                            }
+                            break;
+                        case 6: // "surveyor name field"
+                            config.surveyorNameField = lineParts[1].trim();
+                            break;
+                        case 7: // "best photo field"
+                            config.bestPhotoField = lineParts[1].trim();
+                            break;
                         }
-                        break;
-                    case 6: // "surveyor name field"
-                        config.surveyorNameField = lineParts[1].trim();
-                        break;
-                    case 7: // "best photo field"
-                        config.bestPhotoField = lineParts[1].trim();
-                        break;
-                    }
 
-                    iKeyword += 1;
-                    if (iKeyword >= keywordParts.length) {
-                        break;
+                        iKeyword += 1;
+                        if (iKeyword >= keywordParts.length) {
+                            break;
+                        }
                     }
                 }
             }
@@ -223,7 +219,7 @@ define(function () {
             if (contribLevels !== null && levelDescrip !== null) {
                 levelParts = levelDescrip.split('@');
                 try {
-                    minimumSurveysNeeded = iLevel === 0 ? 0 : parseInt(levelParts[1]);
+                    minimumSurveysNeeded = iLevel === 0 ? 0 : parseInt(levelParts[1], 10);
                     contribLevels.push({
                         "label": levelParts[0].trim(),
                         "minimumSurveysNeeded": minimumSurveysNeeded

@@ -1,4 +1,4 @@
-/*global define,$ */
+﻿/*global define,$ */
 /*jslint browser:true,sloppy:true,nomen:true,unparam:true,plusplus:true */
 /** @license
  | Copyright 2015 Esri
@@ -72,21 +72,24 @@ define(['parseConfig', 'fetchConfig'], function (parseConfig, fetchConfig) {
          * respectively.
          */
         init: function () {
+            var parametersReady, surveyReady, webmapOrigImageUrlReady, webmapParamsFetch, webmapDataFetch, webmapFetcher,
+                paramsFromUrl, onlineAppFetch, configFileFetch;
+
             that = this;
             fetchConfig.init();
 
             // Set up external notifications for various stages of preparation
-            var parametersReady = $.Deferred();
-            var surveyReady = $.Deferred();
-            var webmapOrigImageUrlReady = $.Deferred();
+            parametersReady = $.Deferred();
+            surveyReady = $.Deferred();
+            webmapOrigImageUrlReady = $.Deferred();
 
             // Prepare for a webmap fetch as soon as we can
-            var webmapParamsFetch = $.Deferred();
-            var webmapDataFetch = $.Deferred();
-            var webmapFetcher = null;
+            webmapParamsFetch = $.Deferred();
+            webmapDataFetch = $.Deferred();
+            webmapFetcher = null;
 
             // Get the URL parameters
-            var paramsFromUrl = that._screenProperties(["webmap", "diag"], fetchConfig._getParamsFromUrl());
+            paramsFromUrl = that._screenProperties(["webmap", "diag"], fetchConfig._getParamsFromUrl());
 
             // If webmap specified in the URL, we can start a fetch of its data now
             if (parseConfig._isUsableString(paramsFromUrl.webmap)) {
@@ -96,7 +99,7 @@ define(['parseConfig', 'fetchConfig'], function (parseConfig, fetchConfig) {
             }
 
             // If the appId is specified in the URL, fetch its parameters; resolves immediately if no appId
-            var onlineAppFetch = $.Deferred();
+            onlineAppFetch = $.Deferred();
             fetchConfig._getParamsFromOnlineApp(paramsFromUrl.appid).done(function (data) {
                 if (!webmapFetcher) {
                     if (data && data.webmap) {
@@ -110,7 +113,7 @@ define(['parseConfig', 'fetchConfig'], function (parseConfig, fetchConfig) {
             });
 
             // Get the configuration file
-            var configFileFetch = fetchConfig._getParamsFromConfigFile(configFileFetch);
+            configFileFetch = fetchConfig._getParamsFromConfigFile(configFileFetch);
 
             // Once we have config file and online app config (if any), see if we have a webmap
             $.when(configFileFetch, onlineAppFetch).done(function (paramsFromFile, paramsFromOnline) {
@@ -138,7 +141,12 @@ define(['parseConfig', 'fetchConfig'], function (parseConfig, fetchConfig) {
                     //  4. online app
                     //  5. URL
                     that.appParams = $.extend(
-                        that.appParams, paramsFromFile, paramsFromWebmap, paramsFromOnline, paramsFromUrl);
+                        that.appParams,
+                        paramsFromFile,
+                        paramsFromWebmap,
+                        paramsFromOnline,
+                        paramsFromUrl
+                    );
 
                     // Normalize booleans
                     that.appParams.showFacebook =
@@ -154,14 +162,16 @@ define(['parseConfig', 'fetchConfig'], function (parseConfig, fetchConfig) {
 
                 // Once we have the webmap's data, we can try assemble the survey
                 webmapDataFetch.done(function (data) {
+                    var dictionary;
+
                     if (data.opLayerParams && data.opLayerParams.popupInfo && data.opLayerParams.popupInfo.description
-                        && data.featureSvcParams && data.featureSvcParams.fields) {
+                            && data.featureSvcParams && data.featureSvcParams.fields) {
                         that.featureSvcParams.url = data.opLayerParams.url;
                         that.featureSvcParams.id = data.featureSvcParams.id;
                         that.featureSvcParams.objectIdField = data.featureSvcParams.objectIdField;
 
                         // Create dictionary of domains
-                        var dictionary = parseConfig._createSurveyDictionary(data.featureSvcParams.fields);
+                        dictionary = parseConfig._createSurveyDictionary(data.featureSvcParams.fields);
 
                         // Parse survey
                         that.survey = parseConfig._parseSurvey(data.opLayerParams.popupInfo.description, dictionary);
@@ -194,6 +204,7 @@ define(['parseConfig', 'fetchConfig'], function (parseConfig, fetchConfig) {
          */
         _screenProperties: function (supportedProperties, objectToScreen) {
             var screenedObject = {};
+
             $.each(supportedProperties, function (indexInArray, param) {
                 screenedObject[param] = objectToScreen[param];
             });
