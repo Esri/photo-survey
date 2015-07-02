@@ -79,7 +79,7 @@ define(['parseConfig', 'fetchConfig'], function (parseConfig, fetchConfig) {
             var webmapFetcher = null;
 
             // Get the URL parameters
-            var paramsFromUrl = fetchConfig._getParamsFromUrl();
+            var paramsFromUrl = that._screenParams(["webmap", "diag"], fetchConfig._getParamsFromUrl());
 
             // If webmap specified in the URL, we can start a fetch of its data now
             if (parseConfig._isUsableString(paramsFromUrl.webmap)) {
@@ -174,6 +174,14 @@ define(['parseConfig', 'fetchConfig'], function (parseConfig, fetchConfig) {
                 "surveyReady" : surveyReady,
                 "webmapOrigImageUrlReady": webmapOrigImageUrlReady
             };
+        },
+
+        _screenParams: function (supportedParameters, proposedParameters) {
+            var acceptedParameters = {};
+            $.each(supportedParameters, function (indexInArray, param) {
+                acceptedParameters[param] = proposedParameters[param];
+            });
+            return acceptedParameters;
         }
 
     };
