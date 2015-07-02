@@ -126,47 +126,49 @@ define(function () {
                 }
             });
 
-            // 3. step thru lines seeking keywords
-            keywordParts = ["=== access and use settings ===",
-                "contribution star levels", "0", "1", "2", "3", "4", "5",
-                "surveyor", "photo"];
+            // 3. find the start of the configuration section
+            for (iLine = 0; iLine < configLines.length; iLine += 1) {
+                if (configLines[iLine].indexOf("=== Access and use settings ===") >= 0) {
+                    iLine += 1;
+                    break;
+                }
+            }
+
+            // 4. step thru lines seeking keywords
+            keywordParts = ["0", "1", "2", "3", "4", "5", "surveyor", "photo"];
             iKeyword = 0;
             config = {};
             contribLevels = [];
 
-            for (iLine = 0; iLine < configLines.length; iLine += 1) {
+            for (; iLine < configLines.length; iLine += 1) {
                 lineParts = configLines[iLine].split(':');
                 if (lineParts[0].toLowerCase().indexOf(keywordParts[iKeyword]) >= 0) {
                     switch (iKeyword) {
-                    case 0: // "=== Access and use settings ==="
-                        break;
-                    case 1: // "contribution star levels"
-                        break;
-                    case 2: // "0"
+                    case 0: // "0"
                         that._extractContribLevel(0, lineParts[1], contribLevels);
                         break;
-                    case 3: // "1"
+                    case 1: // "1"
                         that._extractContribLevel(1, lineParts[1], contribLevels);
                         break;
-                    case 4: // "2"
+                    case 2: // "2"
                         that._extractContribLevel(2, lineParts[1], contribLevels);
                         break;
-                    case 5: // "3"
+                    case 3: // "3"
                         that._extractContribLevel(3, lineParts[1], contribLevels);
                         break;
-                    case 6: // "4"
+                    case 4: // "4"
                         that._extractContribLevel(4, lineParts[1], contribLevels);
                         break;
-                    case 7: // "5"
+                    case 5: // "5"
                         that._extractContribLevel(5, lineParts[1], contribLevels);
                         if (contribLevels !== null) {
                             config.contribLevels = contribLevels;
                         }
                         break;
-                    case 8: // "surveyor name field"
+                    case 6: // "surveyor name field"
                         config.surveyorNameField = lineParts[1].trim();
                         break;
-                    case 9: // "best photo field"
+                    case 7: // "best photo field"
                         config.bestPhotoField = lineParts[1].trim();
                         break;
                     }
