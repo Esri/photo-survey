@@ -16,7 +16,7 @@
  | limitations under the License.
  */
 //============================================================================================================================//
-define(['lib/i18n!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess', 'diag'],
+define(['lib/i18n.min!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess', 'diag'],
     function (i18n, appConfig, userConfig, dataAccess, diag) {
     var that, unsupported = false, needProxy = false, proxyReady;
 
