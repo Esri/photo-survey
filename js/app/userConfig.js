@@ -1,4 +1,4 @@
-/*global define,$ */
+﻿/*global define,$,Modernizr,FB,gapi */
 /*jslint browser:true,sloppy:true,nomen:true,unparam:true,plusplus:true */
 /** @license
  | Copyright 2015 Esri
@@ -48,16 +48,18 @@ define(['diag'], function (diag) {
          * constants notificationSignIn, notificationSignOut, notificationAvatarUpdate (above)
          */
         init: function (appParams, statusCallback) {
+            var deferred, isIE8, facebookDeferred, googlePlusDeferred, twitterDeferred;
+
             that = this;
-            var deferred = $.Deferred();
-            var isIE8 = that._createIE8Test();
+            deferred = $.Deferred();
+            isIE8 = that._createIE8Test();
             that._statusCallback = statusCallback;
             that.appParams = appParams;
 
             //................................................................................................................//
 
             // Attempt to initialize Facebook if wanted
-            var facebookDeferred = $.Deferred();
+            facebookDeferred = $.Deferred();
             setTimeout(function () {
                 if (!isIE8 && appParams.showFacebook) {
                     // Provide a startup function for when the SDK finishes loading
@@ -100,7 +102,7 @@ define(['diag'], function (diag) {
             //................................................................................................................//
 
             // Attempt to initialize Google+ if wanted
-            var googlePlusDeferred = $.Deferred();
+            googlePlusDeferred = $.Deferred();
             setTimeout(function () {
                 if (!isIE8 && appParams.showGooglePlus) {
                     // Load the SDK asynchronously; it calls window.ggAsyncInit when done
@@ -129,7 +131,7 @@ define(['diag'], function (diag) {
             //................................................................................................................//
 
             // Attempt to initialize Twitter if wanted
-            var twitterDeferred = $.Deferred();
+            twitterDeferred = $.Deferred();
             setTimeout(function () {
                 if (!isIE8 && appParams.showTwitter) {
                     that._availabilities.twitter = true;
@@ -144,12 +146,12 @@ define(['diag'], function (diag) {
             // Test if we have any initialized providers
             $.when(facebookDeferred, googlePlusDeferred, twitterDeferred)
                 .done(function (facebookAvail, googlePlusAvail, twitterAvail) {
-                if (facebookAvail || googlePlusAvail || twitterAvail) {
-                    deferred.resolve();
-                } else {
-                    deferred.reject();
-                }
-            });
+                    if (facebookAvail || googlePlusAvail || twitterAvail) {
+                        deferred.resolve();
+                    } else {
+                        deferred.reject();
+                    }
+                });
 
             return deferred;
         },
@@ -164,7 +166,9 @@ define(['diag'], function (diag) {
                     // re-authentication for this."  (https://developers.facebook.com/docs/facebook-login/reauthentication),
                     // but doesn't seem to provide a working logout function that clears its cookies if third-party
                     // cookies are blocked.
-                    FB.login(function (response) {}, {
+                    FB.login(function (response) {
+                        return null;
+                    }, {
                         auth_type: 'reauthenticate'
                     });
                 });
@@ -225,32 +229,32 @@ define(['diag'], function (diag) {
             if (that.isSignedIn()) {
                 switch (that._currentProvider) {
 
-                    case "facebook":
-                        diag.appendWithLF("FB logout");  //???
-                        // Log the user out of the app; known FB issue is that cookies are not cleared as promised if
-                        // browser set to block third-party cookies
-                        FB.logout();
-                        break;
+                case "facebook":
+                    diag.appendWithLF("FB logout");  //???
+                    // Log the user out of the app; known FB issue is that cookies are not cleared as promised if
+                    // browser set to block third-party cookies
+                    FB.logout();
+                    break;
 
-                    case "googlePlus":
-                        diag.appendWithLF("G+ logout");  //???
-                        // Log the user out of the app; known G+ issue that user is not really logged out
-                        try {
-                            that._disconnectUser(that._user.access_token);
-                            gapi.auth.signOut();
-                            that._showGooglePlusLogoutWin();
-                        } catch (ignore) {
-                        }
-                        break;
+                case "googlePlus":
+                    diag.appendWithLF("G+ logout");  //???
+                    // Log the user out of the app; known G+ issue that user is not really logged out
+                    try {
+                        that._disconnectUser(that._user.access_token);
+                        gapi.auth.signOut();
+                        that._showGooglePlusLogoutWin();
+                    } catch (ignore) {
+                    }
+                    break;
 
-                    case "twitter":
-                        diag.appendWithLF("Tw logout");  //???
-                        // Update the calling app
-                        that._statusCallback(that.notificationSignOut);
+                case "twitter":
+                    diag.appendWithLF("Tw logout");  //???
+                    // Update the calling app
+                    that._statusCallback(that.notificationSignOut);
 
-                        // Log the user out of the app
-                        that._showTwitterLoginWin(true);
-                        break;
+                    // Log the user out of the app
+                    that._showTwitterLoginWin(true);
+                    break;
                 }
             }
             that._currentProvider = "none";
@@ -354,22 +358,22 @@ define(['diag'], function (diag) {
          * Disconnects the signed-in Google+ user because the Google+ API doesn't actually sign the user out.
          * @param {string}access_token Token provided by the Google+ API when the user signs in
          */
-        _disconnectUser: function(access_token) {
+        _disconnectUser: function (access_token) {
             // From https://developers.google.com/+/web/signin/disconnect
             var revokeUrl = 'https://accounts.google.com/o/oauth2/revoke?token=' +
                 access_token;
 
             // Perform an asynchronous GET request.
-            $.ajax( {
+            $.ajax({
                 type: 'GET',
                 url: revokeUrl,
                 async: false,
                 contentType: "application/json",
                 dataType: 'jsonp',
-                success: function(nullResponse) {
+                success: function (nullResponse) {
                     that._updateGooglePlusUser();
                 },
-                error: function(e) {
+                error: function (e) {
                     that._updateGooglePlusUser();
                 }
             });
