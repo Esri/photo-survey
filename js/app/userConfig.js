@@ -39,19 +39,27 @@ define(['diag'], function (diag) {
 
         //--------------------------------------------------------------------------------------------------------------------//
 
-        init: function (appConfig, statusCallback) {
+        /**
+         * Initializes the module by initializing each of the supported and selected social medium providers.
+         * @param {object} appParams Application parameters to control and facilitate social-media setup; module uses the
+         * facebookAppId, googleplusClientId, googleplusLogoutUrl, showFacebook, showGooglePlus, showTwitter,
+         * twitterCallbackUrl, twitterSigninUrl, and twitterUserUrl properties
+         * @param {function} statusCallback Function to call with social-media status events; function receives one of the
+         * constants notificationSignIn, notificationSignOut, notificationAvatarUpdate (above)
+         */
+        init: function (appParams, statusCallback) {
             that = this;
             var deferred = $.Deferred();
             var isIE8 = that._createIE8Test();
             that._statusCallback = statusCallback;
-            that.appConfig = appConfig;
+            that.appParams = appParams;
 
             //................................................................................................................//
 
             // Attempt to initialize Facebook if wanted
             var facebookDeferred = $.Deferred();
             setTimeout(function () {
-                if (!isIE8 && appConfig.appParams.showFacebook) {
+                if (!isIE8 && appParams.showFacebook) {
                     // Provide a startup function for when the SDK finishes loading
                     window.fbAsyncInit = function () {
                         FB.Event.subscribe("auth.login", that._updateFacebookUser);
@@ -59,7 +67,7 @@ define(['diag'], function (diag) {
                         FB.Event.subscribe("auth.logout", that._updateFacebookUser);
 
                         FB.init({
-                            appId: that.appConfig.appParams.facebookAppId,
+                            appId: that.appParams.facebookAppId,
                             cookie: true,  // enable cookies to allow the server to access the session
                             xfbml: false,   // parse social plugins on this page such as Login
                             status: true,  // check login status on every page load
@@ -94,7 +102,7 @@ define(['diag'], function (diag) {
             // Attempt to initialize Google+ if wanted
             var googlePlusDeferred = $.Deferred();
             setTimeout(function () {
-                if (!isIE8 && appConfig.appParams.showGooglePlus) {
+                if (!isIE8 && appParams.showGooglePlus) {
                     // Load the SDK asynchronously; it calls window.ggAsyncInit when done
                     (function () {
                         // Don't have Google+ API scan page for button
@@ -123,7 +131,7 @@ define(['diag'], function (diag) {
             // Attempt to initialize Twitter if wanted
             var twitterDeferred = $.Deferred();
             setTimeout(function () {
-                if (!isIE8 && appConfig.appParams.showTwitter) {
+                if (!isIE8 && appParams.showTwitter) {
                     that._availabilities.twitter = true;
                     twitterDeferred.resolve(true);
                 } else {
@@ -175,7 +183,7 @@ define(['diag'], function (diag) {
                     // your website.
                     // -- https://developers.google.com/+/web/signin/reference/#button_attr_clientid
                     gapi.auth.signIn({
-                        "clientid": that.appConfig.appParams.googleplusClientId,
+                        "clientid": that.appParams.googleplusClientId,
                         "cookiepolicy": "http://" + document.location.hostname,
                         "callback": that._updateGooglePlusUser
                     });
@@ -193,7 +201,7 @@ define(['diag'], function (diag) {
 
         /**
          * Returns the signed-in state.
-         * @param {boolean} Logged in or not
+         * @return {boolean} Logged in or not
          */
         isSignedIn: function () {
             return that._loggedIn;
@@ -201,15 +209,17 @@ define(['diag'], function (diag) {
 
         /**
          * Returns the currently signed-in user name and service id.
-         * @return {JSON} Structure containing "name" and "id" parameters if a user is
+         * @return {object} Structure containing "name" and "id" parameters if a user is
          * logged in, an empty structure if a user is not logged in, and null if the
          * service is not available due to browser incompatibility or startup failure
-         * @memberOf social#
          */
         getUser: function () {
             return that._user;
         },
 
+        /**
+         * Signs the user out of the currently-active social medium provider.
+         */
         signOut: function () {
             diag.appendWithLF("signOut; believed logged in: " + that.isSignedIn());  //???
             if (that.isSignedIn()) {
@@ -238,10 +248,7 @@ define(['diag'], function (diag) {
                         // Update the calling app
                         that._statusCallback(that.notificationSignOut);
 
-                        // Log the user out of the app; known Twitter issue that it does not log the current user out
-                        // unless he/she enters a password and then clicks "cancel", and then clicks to return to the
-                        // app even though the Twitter display claims that the app continues to have access to the
-                        // user's information.
+                        // Log the user out of the app
                         that._showTwitterLoginWin(true);
                         break;
                 }
@@ -252,10 +259,8 @@ define(['diag'], function (diag) {
         //--------------------------------------------------------------------------------------------------------------------//
 
         /**
-         * Updates the information held about the signed-in user.
+         * Updates the information held about the signed-in Facebook user.
          * @param {object} [response] Service-specific response object
-         * @memberOf socialFB#
-         * @abstract
          */
         _updateFacebookUser: function (response) {
             // Events & FB.getLoginStatus return an updated authResponse object
@@ -307,10 +312,8 @@ define(['diag'], function (diag) {
         //--------------------------------------------------------------------------------------------------------------------//
 
         /**
-         * Updates the information held about the signed-in user.
+         * Updates the information held about the signed-in Google+ user.
          * @param {object} [response] Service-specific response object
-         * @memberOf socialGP#
-         * @abstract
          */
         _updateGooglePlusUser: function (response) {
             that._loggedIn = response && response.status && response.status.signed_in;
@@ -347,8 +350,12 @@ define(['diag'], function (diag) {
             }
         },
 
-        // From https://developers.google.com/+/web/signin/disconnect
+        /**
+         * Disconnects the signed-in Google+ user because the Google+ API doesn't actually sign the user out.
+         * @param {string}access_token Token provided by the Google+ API when the user signs in
+         */
         _disconnectUser: function(access_token) {
+            // From https://developers.google.com/+/web/signin/disconnect
             var revokeUrl = 'https://accounts.google.com/o/oauth2/revoke?token=' +
                 access_token;
 
@@ -368,10 +375,13 @@ define(['diag'], function (diag) {
             });
         },
 
-        _showGooglePlusLogoutWin: function (forceLogin) {
+        /**
+         * Displays the Google+ logout window, which completes the logout of the current user.
+         */
+        _showGooglePlusLogoutWin: function () {
             var baseUrl, left, top, w, h;
 
-            baseUrl = that.appConfig.appParams.googleplusLogoutUrl;
+            baseUrl = that.appParams.googleplusLogoutUrl;
             left = (screen.width / 2) - (w / 2);
             top = (screen.height / 2) - (h / 2);
             w = screen.width / 2;
@@ -384,17 +394,14 @@ define(['diag'], function (diag) {
 
         /**
          * Displays the Twitter login window.
-         * <br>N.B.: does not log the current user out unless he/she enters a password and then clicks "cancel",
-         * and then clicks to return to the app even though the Twitter display claims that the app continues to have
-         * access to the user's information.
-         * @param {boolean} [forceLogin] If true, requires a re-login
+         * @param {boolean} [forceLogin] If false or omitted, sets up for login; if true, sets up for logout
          */
         _showTwitterLoginWin: function (forceLogin) {
             var baseUrl, package_path, redirect_uri, left, top, w, h;
 
-            baseUrl = that.appConfig.appParams.twitterSigninUrl;
+            baseUrl = that.appParams.twitterSigninUrl;
             package_path = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
-            redirect_uri = encodeURIComponent(location.protocol + '//' + location.host + package_path + that.appConfig.appParams.twitterCallbackUrl);
+            redirect_uri = encodeURIComponent(location.protocol + '//' + location.host + package_path + that.appParams.twitterCallbackUrl);
             left = (screen.width / 2) - (w / 2);
             top = (screen.height / 2) - (h / 2);
             w = screen.width / 2;
@@ -403,9 +410,9 @@ define(['diag'], function (diag) {
             baseUrl += '?';
             if (forceLogin) {
                 baseUrl += 'force_login=true';
-            }
-            if (forceLogin && redirect_uri) {
-                baseUrl += '&';
+                if (redirect_uri) {
+                    baseUrl += '&';
+                }
             }
             if (redirect_uri) {
                 baseUrl += 'redirect_uri=' + redirect_uri;
@@ -418,10 +425,8 @@ define(['diag'], function (diag) {
         },
 
         /**
-         * Updates the information held about the signed-in user.
+         * Updates the information held about the signed-in Twitter user.
          * @param {object} [response] Service-specific response object
-         * @memberOf socialTW#
-         * @abstract
          */
         _updateTwitterUser: function () {
             var query = {
@@ -429,7 +434,7 @@ define(['diag'], function (diag) {
                 skip_status: true
             };
             $.ajax({
-                url: that.appConfig.appParams.twitterUserUrl,
+                url: that.appParams.twitterUserUrl,
                 data: query,
                 dataType: "jsonp",
                 timeout: 10000,
@@ -488,7 +493,7 @@ define(['diag'], function (diag) {
          * @return {boolean} Result of conditional test; note that since IE stopped supporting conditional comments with
          * IE 10, this routine only works for IE 9 and below; for IE 10 and above, it always returns "false"
          * @author Scott Jehl
-         * @see The <a href="https://gist.github.com/scottjehl/357727">detect IE and version number through injected
+         * @see <a href="https://gist.github.com/scottjehl/357727">detect IE and version number through injected
          * conditional comments.js</a>.
          */
         _isIE: function (version, comparison) {
