@@ -116,11 +116,8 @@ define(function () {
             //  6: "3: Intermediate @15"
             //  7: "4: Advanced @18"
             //  8: "5: Wow! @25"
-            //  9: "Facebook app id: 103782893296903"
-            //  10: "Google+ client id: 801106938257-am9uvo6dm0ih06r7h048k7m66l6oo3v1.apps.googleusercontent.com"
-            //  11: "show Twitter: true"
-            //  12: "surveyor name field: SRVNAME"
-            //  13: "best photo field: BSTPHOTOID"
+            //  9: "surveyor name field: SRVNAME"
+            //  10: "best photo field: BSTPHOTOID"
             configLines = [];
             $.each(taggedConfigLines, function (idx, line) {
                 var cleanedLine = that._textOnly(line).trim();
@@ -134,11 +131,7 @@ define(function () {
                 "contribution star levels", "0", "1", "2", "3", "4", "5",
                 "surveyor", "photo"];
             iKeyword = 0;
-            config = {
-                "showFacebook": false,
-                "showGooglePlus": false,
-                "showTwitter": false
-            };
+            config = {};
             contribLevels = [];
 
             for (iLine = 0; iLine < configLines.length; iLine += 1) {
