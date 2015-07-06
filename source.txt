@@ -5,10 +5,9 @@ origin	git@github.com:ArcGIS/photo-survey.git (push)
 branch 
 develop
 . 
-commit b98a951837ba4dd03998f1b8885df6bcc8a4b4b2
+commit 84ab2bf3ea60c127e5c83bf12af452fbc9d38614
+Merge: b98a951 d5fe146
 Author: MikeTschudi <mtschudi@esri.com>
-Date:   Mon Jul 6 05:51:13 2015 -0700
+Date:   Mon Jul 6 11:52:38 2015 -0700
 
-    Added option to specify random or linear selection of feature to survey
-    
-    #21
+    Merge branch 'update-side-controls' into develop

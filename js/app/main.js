@@ -279,7 +279,8 @@ define(['lib/i18n.min!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'
 
             $.each(candidate.attachments, function (indexInArray, attachment) {
                 addPhoto(carouselSlidesHolder, indexInArray, (initiallyActiveItem === indexInArray), attachment.url);
-                addPhotoIndicator(carouselIndicatorsHolder, indexInArray, (initiallyActiveItem === indexInArray), "carousel");
+                addPhotoIndicator(carouselIndicatorsHolder, indexInArray, (initiallyActiveItem === indexInArray),
+                "carousel", attachment.url);
             });
             $("#carousel").trigger('create');
 
@@ -562,11 +563,12 @@ diag.appendWithLF("block slide to " + data.direction);  //???
         });*/
     }
 
-    function addPhotoIndicator(carouselIndicatorsHolder, indexInArray, isActive, carouselId) {
+    function addPhotoIndicator(carouselIndicatorsHolder, indexInArray, isActive, carouselId, photoUrl) {
         // <li data-target='#myCarousel' data-slide-to='0' class='active'></li>
-        var content = "<li data-target='#" + carouselId + "' data-slide-to='" + indexInArray +
+        var content = "<li id='indicator-" + indexInArray + "' data-target='#" + carouselId + "' data-slide-to='" + indexInArray +
             "'" + (isActive ? " class='active'" : "") + "></li>";
         $(carouselIndicatorsHolder).append(content);
+        $("#indicator-" + indexInArray).css("background-image", "url(" + photoUrl + ")");
     }
 
     //------------------------------------------------------------------------------------------------------------------------//
