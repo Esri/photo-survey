@@ -219,8 +219,8 @@ header, section, footer, aside, nav, main, article, figure {
 .carousel-indicators li {
     border: 2px solid gray;
     background-color: white!important;
-    width: 40px!important;
-    height: 31px!important;
+    width: 50px!important;
+    height: 39px!important;
     background-size: contain;
     background-repeat: no-repeat;
 }
@@ -275,6 +275,22 @@ header, section, footer, aside, nav, main, article, figure {
     .heart {
         width: 64px;
         height: 60px;
+    }
+}
+@media screen and (min-width: 500px) and (max-width: 767px) {
+    .carousel-indicators li {
+        width: 36px!important;
+        height: 28px!important;
+    }
+}
+@media screen and (max-width: 499px) {
+    .carousel-indicators li {
+        width: 12px!important;
+        height: 12px!important;
+        background-image: none!important;
+    }
+    .carousel-indicators .active {
+        background-color: #007ac2!important;
     }
 }
 #hearts {
