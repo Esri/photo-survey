@@ -217,11 +217,16 @@ header, section, footer, aside, nav, main, article, figure {
     background-image: none;
 }
 .carousel-indicators li {
-    border: 1px solid black !important;
-    background-color: white;
+    border: 2px solid gray;
+    background-color: white!important;
+    width: 40px!important;
+    height: 31px!important;
+    background-size: contain;
+    background-repeat: no-repeat;
 }
 .carousel-indicators .active {
-    background-color: #007ac2;
+    border: 2px solid #007ac2;
+    margin: 1px;
 }
 .carousel-control.left:hover {
     opacity: 1;
