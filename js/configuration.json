@@ -8,6 +8,8 @@
 
         "proxyProgram": "proxy/proxy.ashx",
 
+        "randomizeSelection": true,
+
         "facebookAppId": "",
         "googleplusClientId": "",
         "showTwitter": "true",

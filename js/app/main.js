@@ -246,7 +246,7 @@ define(['lib/i18n.min!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'
         $("#submitBtn")[0].blur();
 
         // Get candidate property
-        dataAccess.getCandidate().then(function (candidate) {
+        dataAccess.getCandidate(appConfig.appParams.randomizeSelection).then(function (candidate) {
             // obj:feature{}
             // attachments:[{id,url},...]
 
