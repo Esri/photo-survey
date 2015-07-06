@@ -217,27 +217,32 @@ header, section, footer, aside, nav, main, article, figure {
     background-image: none;
 }
 .carousel-indicators li {
-    border: 1px solid black !important;
-    background-color: white;
+    border: 2px solid gray;
+    background-color: white!important;
+    width: 50px!important;
+    height: 39px!important;
+    background-size: contain;
+    background-repeat: no-repeat;
 }
 .carousel-indicators .active {
-    background-color: #007ac2;
+    border: 2px solid #007ac2;
+    margin: 1px;
 }
 .carousel-control.left:hover {
     opacity: 1;
-    background-image: -webkit-linear-gradient(left, rgba(0, 0, 0, .5) 0%, rgba(0, 0, 0, .0001) 100%);
-    background-image: -o-linear-gradient(left, rgba(0, 0, 0, .5) 0%, rgba(0, 0, 0, .0001) 100%);
-    background-image: -webkit-gradient(linear, left top, right top, from(rgba(0, 0, 0, .5)), to(rgba(0, 0, 0, .0001)));
-    background-image: linear-gradient(to right, rgba(0, 0, 0, .5) 0%, rgba(0, 0, 0, .0001) 100%);
+    background-image: -webkit-linear-gradient(left, rgba(0, 0, 0, .3) 0%, rgba(0, 0, 0, .0001) 100%);
+    background-image: -o-linear-gradient(left, rgba(0, 0, 0, .3) 0%, rgba(0, 0, 0, .0001) 100%);
+    background-image: -webkit-gradient(linear, left top, right top, from(rgba(0, 0, 0, .3)), to(rgba(0, 0, 0, .0001)));
+    background-image: linear-gradient(to right, rgba(0, 0, 0, .3) 0%, rgba(0, 0, 0, .0001) 100%);
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#80000000', endColorstr='#00000000', GradientType=1);
 }
 .carousel-control.right:hover {
     right: 0;
     left: auto;
-    background-image: -webkit-linear-gradient(left, rgba(0, 0, 0, .0001) 0%, rgba(0, 0, 0, .5) 100%);
-    background-image: -o-linear-gradient(left, rgba(0, 0, 0, .0001) 0%, rgba(0, 0, 0, .5) 100%);
-    background-image: -webkit-gradient(linear, left top, right top, from(rgba(0, 0, 0, .0001)), to(rgba(0, 0, 0, .5)));
-    background-image: linear-gradient(to right, rgba(0, 0, 0, .0001) 0%, rgba(0, 0, 0, .5) 100%);
+    background-image: -webkit-linear-gradient(left, rgba(0, 0, 0, .0001) 0%, rgba(0, 0, 0, .3) 100%);
+    background-image: -o-linear-gradient(left, rgba(0, 0, 0, .0001) 0%, rgba(0, 0, 0, .3) 100%);
+    background-image: -webkit-gradient(linear, left top, right top, from(rgba(0, 0, 0, .0001)), to(rgba(0, 0, 0, .3)));
+    background-image: linear-gradient(to right, rgba(0, 0, 0, .0001) 0%, rgba(0, 0, 0, .3) 100%);
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#00000000', endColorstr='#80000000', GradientType=1);
 }
 .form-group {
@@ -272,9 +277,21 @@ header, section, footer, aside, nav, main, article, figure {
         height: 60px;
     }
 }
-.carousel-control-heartTL {
-    top: 64px;
-    bottom: 64px;
+@media screen and (min-width: 500px) and (max-width: 767px) {
+    .carousel-indicators li {
+        width: 36px!important;
+        height: 28px!important;
+    }
+}
+@media screen and (max-width: 499px) {
+    .carousel-indicators li {
+        width: 12px!important;
+        height: 12px!important;
+        background-image: none!important;
+    }
+    .carousel-indicators .active {
+        background-color: #007ac2!important;
+    }
 }
 #hearts {
     position: absolute;
@@ -294,12 +311,6 @@ header, section, footer, aside, nav, main, article, figure {
 .heartsBackground:hover {
     filter: alpha(opacity=100);
     opacity: 1;
-    background-image: -webkit-linear-gradient(left,rgba(0,0,0,.5) 0,rgba(0,0,0,.0001) 100%);
-    background-image: -o-linear-gradient(left,rgba(0,0,0,.5) 0,rgba(0,0,0,.0001) 100%);
-    background-image: -webkit-gradient(linear,left top,right top,from(rgba(0,0,0,.5)),to(rgba(0,0,0,.0001)));
-    background-image: linear-gradient(to right,rgba(0,0,0,.5) 0,rgba(0,0,0,.0001) 100%);
-    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#80000000', endColorstr='#00000000', GradientType=1);
-    background-repeat: repeat-x;
 }
 .heartsBorder {
     border: 1px dotted rgba(200, 0, 0, 0.5);
