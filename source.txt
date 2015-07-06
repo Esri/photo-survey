@@ -5,10 +5,10 @@ origin	git@github.com:ArcGIS/photo-survey.git (push)
 branch 
 develop
 . 
-commit 46c66595e0836eb0d209081d118523507109346c
+commit b98a951837ba4dd03998f1b8885df6bcc8a4b4b2
 Author: MikeTschudi <mtschudi@esri.com>
-Date:   Thu Jul 2 15:33:14 2015 -0700
+Date:   Mon Jul 6 05:51:13 2015 -0700
 
-    Propagate the webmap's title to the survey page and to the browser's document title
+    Added option to specify random or linear selection of feature to survey
     
-    #19
+    #21
