@@ -25,6 +25,7 @@ define(['diag'], function (diag) {
         featureServiceLayerId: null,
         objectIdField: null,
         validCandidateCondition: null,
+        proxyProgram: null,
 
         //--------------------------------------------------------------------------------------------------------------------//
 
@@ -77,12 +78,15 @@ define(['diag'], function (diag) {
         },
 
         /**
-         * Gets a survey candidate using a random selection from the list of available unsurveyed candidates.
+         * Gets a survey candidate from the list of available unsurveyed candidates.
+         * @param {boolean} [randomizeSelection] Indicates if a feature should be selected randomly from the list of available
+         * features;  if omitted or false, the first available feature in the list of object ids returned by the feature
+         * service is used
          * @return {object} Deferred indicating when candidate is ready; successful resolution includes object with
          * obj and attachments properties; 'obj' contains an attributes property with the candidate's attributes and
          * attachments contains an array containing objects each of which describes an attachment using id and url properties
          */
-        getCandidate: function () {
+        getCandidate: function (randomizeSelection) {
             var deferred, url;
             deferred = $.Deferred();
 
@@ -109,7 +113,8 @@ define(['diag'], function (diag) {
                 }
 
                 // Pick a candidate from amongst the available
-                objectId = results.objectIds[Math.floor(Math.random() * results.objectIds.length)];
+                objectId = randomizeSelection ?
+                    results.objectIds[Math.floor(Math.random() * results.objectIds.length)] : results.objectIds[0];
 
                 // Get the candidate's attributes
                 attributesDeferred = $.Deferred();
