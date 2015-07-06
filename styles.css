@@ -277,13 +277,13 @@ header, section, footer, aside, nav, main, article, figure {
         height: 60px;
     }
 }
-@media screen and (min-width: 500px) and (max-width: 767px) {
+@media screen and (min-width: 480px) and (max-width: 767px) {
     .carousel-indicators li {
         width: 36px!important;
         height: 28px!important;
     }
 }
-@media screen and (max-width: 499px) {
+@media screen and (max-width: 479px) {
     .carousel-indicators li {
         width: 12px!important;
         height: 12px!important;
@@ -336,7 +336,7 @@ header, section, footer, aside, nav, main, article, figure {
     color: white;
     z-index: 21;
 }
-@media screen and (max-width: 767px) {
+@media screen and (min-width: 480px) (max-width: 767px) {
     .carousel-control-heartTL {
         top: 50px;
         bottom: 0px;
@@ -362,7 +362,7 @@ header, section, footer, aside, nav, main, article, figure {
         opacity: 1;
     }
 }
-@media screen and (max-width: 399px) {
+@media screen and (max-width: 479px) {
     .carousel-control-heartTL {
         top: 42px;
         bottom: 0px;
