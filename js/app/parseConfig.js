@@ -1,4 +1,4 @@
-/*global define,$ */
+﻿/*global define,$ */
 /*jslint browser:true,sloppy:true,nomen:true,unparam:true,plusplus:true */
 /** @license
  | Copyright 2015 Esri
@@ -22,14 +22,26 @@ define(function () {
 
         //--------------------------------------------------------------------------------------------------------------------//
 
+        /**
+         * Initializes the module.
+         */
         init: function () {
             that = this;
         },
 
-        //--------------------------------------------------------------------------------------------------------------------//
-
+        /**
+         * Parses HTML text such as appears in a webmap's feature layer's popup to generate a set of survey questions.
+         * @param {string} source Text from source
+         * @param {object} fieldDomains List of field domains and field required/optional state as created by function
+         * _createSurveyDictionary using the 'fields' property of a feature service
+         * @return {array} List of survey question objects, each of which contains question, field, style, domain, important
+         * properties
+         */
         _parseSurvey: function (source, fieldDomains) {
-            // e.g., <p>Is there a Structure on the Property? <b>{<font color='#0000ff'>Structure</font>} </b><b>{<span
+            // Survey is written as a series of lines in the popup. Each line is expected to have arbitrary text followed by
+            // a feature layer field name in braces followed by a question style flag also in braces.
+            // Here is a sample source:
+            //  <p>Is there a Structure on the Property? <b>{<font color='#0000ff'>Structure</font>} </b><b>{<span
             //  style='background-color:rgb(255, 0, 0);'>button</span>}</b></p><p><ul><li>Is the lot overgrown? <b>{Lot}
             //  </b><b>{button}</b><br /></li><li>Foundation type: <b>{<font color='#ffff00' style='background-color:
             //  rgb(255, 69, 0);'>FoundationType</font>} </b><b>{radio}</b><br /></li></ul></p><p><b><br /></b></p><p>Is
@@ -87,14 +99,27 @@ define(function () {
             return survey;
         },
 
+        /**
+         * Parses HTML text such as appears in an AGOL item's description to extract a set of configuration parameters.
+         * @param {string} source Text from source
+         * @return {object} Configuration properties contribLevels (an array of objects with properties label and
+         * minimumSurveysNeeded), surveyorNameField, bestPhotoField properties
+         */
         _parseAccessConfig: function (source) {
-            // e.g., <div>Copyright 2015 My City</div><div><br /></div><div>=== Access and use settings ===</div><div><br />
+            // Access information is written as a series of lines in the webmap's description. Each line is de-HTMLed, then
+            // each is checked until the text "=== Access and use settings ===" is found; this marks the start of the
+            // configuration section to permit free text in the description before the configuration. In the configuration
+            // section, each line is checked for the presence of the current tag out of the list ["0", "1", "2", "3", "4", "5",
+            // "surveyor", "photo"]; if it matches, the line is split on ':', the content to the right of the colon is
+            // considered the  parameter value, and the "current tag" becomes the next one in the list. If the current tag is
+            // not found in the line, the line is skipped. By forcing this order, the app doesn't have to check all tags for
+            // each line.
+            // Here is a sample source:
+            //  <div>Copyright 2015 My City</div><div><br /></div><div>=== Access and use settings ===</div><div><br />
             //  </div><div>contribution star levels:</div><div>0: Getting Started @0</div><div>1: Beginner @5</div><div>2:
             //  Helper @10</div><div>3: Intermediate @15</div><div>4: Advanced @20</div><div>5: Wow! @25</div><div><br />
-            //  </div><div>Facebook app id: 101991193476073</div><div>Google+ client id:
-            //  884148190980-mrcnakr5q14ura5snpcbgp85ovq7s7ea.apps.googleusercontent.com</div><div>show Twitter: true</div>
-            //  <div><br /></div><div>surveyor name field: SRVNAME</div><div>best photo field: BSTPHOTOID</div><div><br /></div>
-            var taggedConfigLines, descriptionSplitDiv, configLines,
+            //  </div><div>surveyor name field: SRVNAME</div><div>best photo field: BSTPHOTOID</div><div><br /></div>
+            var taggedConfigLines, descriptionSplitDiv, configLines, inConfigSection = false,
                 keywordParts, iLine, iKeyword, config, contribLevels, lineParts;
 
             // 1. split on </div> and then <br
@@ -126,54 +151,52 @@ define(function () {
                 }
             });
 
-            // 3. step thru lines seeking keywords
-            keywordParts = ["=== access and use settings ===",
-                "contribution star levels", "0", "1", "2", "3", "4", "5",
-                "surveyor", "photo"];
+            // 3. find the start of the configuration section, then step thru lines seeking keywords
+            keywordParts = ["0", "1", "2", "3", "4", "5", "surveyor", "photo"];
             iKeyword = 0;
             config = {};
             contribLevels = [];
 
             for (iLine = 0; iLine < configLines.length; iLine += 1) {
-                lineParts = configLines[iLine].split(':');
-                if (lineParts[0].toLowerCase().indexOf(keywordParts[iKeyword]) >= 0) {
-                    switch (iKeyword) {
-                    case 0: // "=== Access and use settings ==="
-                        break;
-                    case 1: // "contribution star levels"
-                        break;
-                    case 2: // "0"
-                        that._extractContribLevel(0, lineParts[1], contribLevels);
-                        break;
-                    case 3: // "1"
-                        that._extractContribLevel(1, lineParts[1], contribLevels);
-                        break;
-                    case 4: // "2"
-                        that._extractContribLevel(2, lineParts[1], contribLevels);
-                        break;
-                    case 5: // "3"
-                        that._extractContribLevel(3, lineParts[1], contribLevels);
-                        break;
-                    case 6: // "4"
-                        that._extractContribLevel(4, lineParts[1], contribLevels);
-                        break;
-                    case 7: // "5"
-                        that._extractContribLevel(5, lineParts[1], contribLevels);
-                        if (contribLevels !== null) {
-                            config.contribLevels = contribLevels;
+                if (!inConfigSection) {
+                    inConfigSection = configLines[iLine].indexOf("=== Access and use settings ===") >= 0;
+                } else {
+                    lineParts = configLines[iLine].split(':');
+                    if (lineParts[0].toLowerCase().indexOf(keywordParts[iKeyword]) >= 0) {
+                        switch (iKeyword) {
+                        case 0: // "0"
+                            that._extractContribLevel(0, lineParts[1], contribLevels);
+                            break;
+                        case 1: // "1"
+                            that._extractContribLevel(1, lineParts[1], contribLevels);
+                            break;
+                        case 2: // "2"
+                            that._extractContribLevel(2, lineParts[1], contribLevels);
+                            break;
+                        case 3: // "3"
+                            that._extractContribLevel(3, lineParts[1], contribLevels);
+                            break;
+                        case 4: // "4"
+                            that._extractContribLevel(4, lineParts[1], contribLevels);
+                            break;
+                        case 5: // "5"
+                            that._extractContribLevel(5, lineParts[1], contribLevels);
+                            if (contribLevels !== null) {
+                                config.contribLevels = contribLevels;
+                            }
+                            break;
+                        case 6: // "surveyor name field"
+                            config.surveyorNameField = lineParts[1].trim();
+                            break;
+                        case 7: // "best photo field"
+                            config.bestPhotoField = lineParts[1].trim();
+                            break;
                         }
-                        break;
-                    case 8: // "surveyor name field"
-                        config.surveyorNameField = lineParts[1].trim();
-                        break;
-                    case 9: // "best photo field"
-                        config.bestPhotoField = lineParts[1].trim();
-                        break;
-                    }
 
-                    iKeyword += 1;
-                    if (iKeyword >= keywordParts.length) {
-                        break;
+                        iKeyword += 1;
+                        if (iKeyword >= keywordParts.length) {
+                            break;
+                        }
                     }
                 }
             }
@@ -182,13 +205,21 @@ define(function () {
 
         //--------------------------------------------------------------------------------------------------------------------//
 
+        /**
+         * Converts a contribution description into an object for addition to a list of levels.
+         * @param {number} iLevel Level number, which is used to force the first level's minimum contribution to 0
+         * @param {string} levelDescrip Descripton of a contribution level and, separated from the description by a '@', the
+         * minimum number of contributions necessary to attain the level
+         * @param {array} contribLevels List of objects describing a contribution level; each object contains label and
+         * minimumSurveysNeeded properties. The object created from this levelDescrip is pushed onto the end of the array.
+         */
         _extractContribLevel: function (iLevel, levelDescrip, contribLevels) {
             var levelParts, minimumSurveysNeeded;
 
             if (contribLevels !== null && levelDescrip !== null) {
                 levelParts = levelDescrip.split('@');
                 try {
-                    minimumSurveysNeeded = iLevel === 0 ? 0 : parseInt(levelParts[1]);
+                    minimumSurveysNeeded = iLevel === 0 ? 0 : parseInt(levelParts[1], 10);
                     contribLevels.push({
                         "label": levelParts[0].trim(),
                         "minimumSurveysNeeded": minimumSurveysNeeded
@@ -200,8 +231,14 @@ define(function () {
             }
         },
 
+        /**
+         * Converts a list of feature service fields into a dictionary of fields with their domains and nullability;
+         * skips fields without coded-value domains.
+         * @param {array} featureSvcFields List of fields such as the one supplied by a feature service
+         * @return {object} Object containing the field names as its properties; each property's value consists of the
+         * '|'-separated coded values in the field's domain
+         */
         _createSurveyDictionary: function (featureSvcFields) {
-            // Create dictionary of fields with their domains and nullability; skip fields without domains
             var fieldDomains = {};
             $.each(featureSvcFields, function (idx, field) {
                 if (field.domain && field.domain.codedValues) {
@@ -216,29 +253,30 @@ define(function () {
             return fieldDomains;
         },
 
+        /**
+         * Extracts the text from an HTML passage.
+         * @param {string} original Text which may contain HTML
+         * @return {string} Text-only version of original
+         */
         _textOnly: function (original) {
             return $("<div>" + original + "</div>").text();
-            // By Simon Boudrias, http://stackoverflow.com/a/13140100
-            //var container = document.createElement('div');
-            //container.innerHTML = dirtyString;
-            //return container.textContent || container.innerText;
         },
 
+        /**
+         * Tests that an item is a string of length greater than zero.
+         * @param {string} item Item to test
+         * @return {boolean} True if the item is a string with length greater than zero
+         */
         _isUsableString: function (item) {
             return typeof item === "string" && item.length > 0;
         },
 
         /** Normalizes a boolean value to true or false.
-         * @param {boolean|string} boolValue A true or false
-         *        value that is returned directly or a string
-         *        "true" or "false" (case-insensitive) that
-         *        is checked and returned; if neither a
-         *        a boolean or a usable string, falls back to
-         *        defaultValue
-         * @param {boolean} [defaultValue] A true or false
-         *        that is returned if boolValue can't be
-         *        used; if not defined, true is returned
-         * @memberOf js.LGObject#
+         * @param {boolean|string} boolValue A true or false value that is returned directly or a string "true" or "false"
+         * (case-insensitive) that is interpreted and returned; if neither a a boolean or a usable string, falls back to
+         * defaultValue
+         * @param {boolean} [defaultValue] A true or false that is returned if boolValue can't be used; if not defined,
+         * true is returned
          */
         _toBoolean: function (boolValue, defaultValue) {
             var lowercaseValue;

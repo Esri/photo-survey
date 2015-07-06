@@ -5,8 +5,10 @@ origin	git@github.com:ArcGIS/photo-survey.git (push)
 branch 
 develop
 . 
-commit f721d595ab3dcd5c886a3219c570cf5d85508837
+commit 46c66595e0836eb0d209081d118523507109346c
 Author: MikeTschudi <mtschudi@esri.com>
-Date:   Wed Jul 1 21:23:56 2015 -0700
+Date:   Thu Jul 2 15:33:14 2015 -0700
 
-    Removed rest of social media from webmap
+    Propagate the webmap's title to the survey page and to the browser's document title
+    
+    #19

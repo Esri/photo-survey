@@ -52,6 +52,10 @@ define(['lib/i18n.min!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'
     appConfigReadies.parametersReady.then(function () {
         if (appConfig.appParams.diag !== undefined) {diag.init()};  //???
 
+        // Update the page's title
+        document.title = appConfig.appParams.title;
+        $("#page-title")[0].innerHTML = appConfig.appParams.title;
+
         // If a proxy is needed, launch the test for a usable proxy
         proxyReady = $.Deferred();
         if (needProxy) {
@@ -66,7 +70,7 @@ define(['lib/i18n.min!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'
         }
 
         // Start up the social media connections
-        var socialMediaReady = userConfig.init(appConfig, function (notificationType) {
+        var socialMediaReady = userConfig.init(appConfig.appParams, function (notificationType) {
             // Callback from current social medium
             switch (notificationType) {
                 case userConfig.notificationSignIn:
@@ -211,7 +215,7 @@ define(['lib/i18n.min!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'
             $("#name")[0].innerHTML = user.name;
             $("#name2")[0].innerHTML = user.name;
 
-            dataAccess.getObjectCount(appConfig.appParams.surveyorNameField + "=\'" + user.name + "\'").then(function (count) {
+            dataAccess.getObjectCount(appConfig.appParams.surveyorNameField + "='" + user.name + "'").then(function (count) {
                 if (count >= 0) {
                     that.completions = count;
                     updateCount();

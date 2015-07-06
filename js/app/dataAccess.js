@@ -1,4 +1,4 @@
-/*global define,$ */
+﻿/*global define,$ */
 /*jslint browser:true,sloppy:true,nomen:true,unparam:true,plusplus:true */
 /** @license
  | Copyright 2015 Esri
@@ -26,11 +26,23 @@ define(['diag'], function (diag) {
         objectIdField: null,
         validCandidateCondition: null,
 
+        //--------------------------------------------------------------------------------------------------------------------//
 
+        /**
+         * Initializes the module.
+         * @param {string} featureServiceUrl URL to feature service providing data
+         * @param {number} featureServiceLayerId Id that the feature layer reports as its id
+         * @param {string} objectIdField Field that the feature layer reports as its objectIdField
+         * @param {string} validCandidateCondition Query 'where' clause to use to get survey candidates, e.g.,
+         * "SRVNAME+is+null+or+SRVNAME=''", where SRVNAME is the name of the field used to store the name of the surveyor
+         * @param {string} proxyProgram Path to the app's proxy, usually defined in the js/configuration.json file, e.g.,
+         * "proxy/proxy.ashx"; use null if browser doesn't need proxy to query and update feature service (at this time,
+         * only IE9 needs the proxy)
+         */
         init: function (featureServiceUrl, featureServiceLayerId, objectIdField, validCandidateCondition, proxyProgram) {
             that = this;
             that.featureServiceUrl = featureServiceUrl;
-            if (that.featureServiceUrl.lastIndexOf("/") != that.featureServiceUrl.length - 1) {
+            if (that.featureServiceUrl.lastIndexOf("/") !== that.featureServiceUrl.length - 1) {
                 that.featureServiceUrl += "/";
             }
             that.featureServiceLayerId = featureServiceLayerId;
@@ -39,10 +51,18 @@ define(['diag'], function (diag) {
             that.proxyProgram = proxyProgram;
         },
 
+        /**
+         * Gets the number of features satisfying a condition.
+         * @param {string} [condition] Condition to test; if omitted, the validCandidateCondition provided to this module's
+         * init() function is used; a sample condition is "SRVNAME='" + username + "'", where SRVNAME is the name of the
+         * field used to store the name of the surveyor, to count how many surveys the user given by 'username' has completed
+         * @return {object} Deferred to provide count when it arrives; a count of -1 is used to flag an error
+         */
         getObjectCount: function (condition) {
-            var deferred = $.Deferred();
+            var deferred, url;
+            deferred = $.Deferred();
 
-            var url = that.featureServiceUrl + "query?where=" + (condition || that.validCandidateCondition)
+            url = that.featureServiceUrl + "query?where=" + (condition || that.validCandidateCondition)
                 + "&objectIds=&returnIdsOnly=false&returnCountOnly=true&outFields=" + that.fixedQueryParams
                 + "&callback=?";
             $.getJSON(url, "jsonp", function (results) {
@@ -56,70 +76,23 @@ define(['diag'], function (diag) {
             return deferred;
         },
 
-        updateCandidate: function (candidate) {
-            var deferred = $.Deferred();
-
-            var update = "rollbackOnFailure=true&f=pjson&adds=&deletes=&id=" + that.featureServiceLayerId
-                + "&updates=" + that.stringifyForApplyEdits(candidate.obj);
-            var url = (that.proxyProgram ? that.proxyProgram + "?" : "") + that.featureServiceUrl + "applyEdits";
-            $.post(url, update, function (results, status) {
-                // seek
-                //   * status === "success"
-                //   * results.updateResults[0].objectId === candidate.obj[that.objectIdField]
-                //   * results.updateResults[0].success === true
-                diag.append("update obj #" + candidate.obj.attributes[that.objectIdField] + " result: ");  //???
-                if (status === "success" && results && results.updateResults.length > 0) {  //???
-                    if (results.updateResults[0].success === true  //???
-                        && results.updateResults[0].objectId === candidate.obj.attributes[that.objectIdField]) {  //???
-                        diag.appendWithLF("OK");  //???
-                    } else if (results.updateResults[0].error)  {  //???
-                        diag.appendWithLF("fail #" + results.updateResults[0].error.code  //???
-                            + " (" + results.updateResults[0].error.description + ")");  //???
-                    } else {  //???
-                        diag.appendWithLF("unspecified update fail");  //???
-                    }  //???
-                } else {  //???
-                    diag.appendWithLF("overall fail: " + status);  //???
-                }  //???
-            }, "json").fail(function (err) {
-                // Unable to POST; can be IE 9 proxy problem
-                diag.appendWithLF("POST fail: " + JSON.stringify(err));  //???
-                diag.appendWithLF("failing URL: " + url);  //???
-            });
-
-            return deferred;
-        },
-
-        stringifyForApplyEdits: function (value) {
-            var isFirst = true;
-            var result = "";
-            if (value === null) {
-               result += 'null';
-            } else if (typeof(value) === "string") {
-                result += '%22' + value + '%22';
-            } else if (typeof(value) === "object") {
-                result += '%7B';
-                $.each(value, function (part) {
-                    if (value.hasOwnProperty(part)) {
-                        result += (isFirst ? '' : '%2C') + part + '%3A' + that.stringifyForApplyEdits(value[part]);
-                        isFirst = false;
-                    }
-                });
-                result += '%7D';
-            } else {
-                result += value;
-            }
-            return result;
-        },
-
+        /**
+         * Gets a survey candidate using a random selection from the list of available unsurveyed candidates.
+         * @return {object} Deferred indicating when candidate is ready; successful resolution includes object with
+         * obj and attachments properties; 'obj' contains an attributes property with the candidate's attributes and
+         * attachments contains an array containing objects each of which describes an attachment using id and url properties
+         */
         getCandidate: function () {
-            var deferred = $.Deferred();
+            var deferred, url;
+            deferred = $.Deferred();
 
-            // Get
-            var url = that.featureServiceUrl + "query?where=" + that.validCandidateCondition
+            // Get the ids of available unsurveyed candidates
+            url = that.featureServiceUrl + "query?where=" + that.validCandidateCondition
                 + "&objectIds=&returnIdsOnly=true&returnCountOnly=false&outFields=" + that.fixedQueryParams
                 + "&callback=?";
             $.getJSON(url, "jsonp", function (results) {
+                var objectId, attributesDeferred, objectAttrsUrl, attachmentsDeferred, objectAttachmentsUrl;
+
                 if (!results || results.error) {
                     deferred.reject({
                         obj: null,
@@ -136,11 +109,11 @@ define(['diag'], function (diag) {
                 }
 
                 // Pick a candidate from amongst the available
-                var objectId = results.objectIds[ Math.floor(Math.random() * results.objectIds.length)];
+                objectId = results.objectIds[Math.floor(Math.random() * results.objectIds.length)];
 
                 // Get the candidate's attributes
-                var attributesDeferred = $.Deferred();
-                var objectAttrsUrl = that.featureServiceUrl + "query?objectIds=" + objectId
+                attributesDeferred = $.Deferred();
+                objectAttrsUrl = that.featureServiceUrl + "query?objectIds=" + objectId
                     + "&returnIdsOnly=false&returnCountOnly=false&outFields=*" + that.fixedQueryParams
                     + "&callback=?";
                 $.getJSON(objectAttrsUrl, "jsonp", function (results) {
@@ -154,16 +127,17 @@ define(['diag'], function (diag) {
                 });
 
                 // Get the candidate's attachments
-                var attachmentsDeferred = $.Deferred();
-                var objectAttachmentsUrl = that.featureServiceUrl + objectId + "/attachments?f=json&callback=?";
+                attachmentsDeferred = $.Deferred();
+                objectAttachmentsUrl = that.featureServiceUrl + objectId + "/attachments?f=json&callback=?";
                 $.getJSON(objectAttachmentsUrl, "jsonp", function (results) {
+                    var attachments = [];
+
                     if (!results || results.error) {
                         attachmentsDeferred.reject();
                         return;
                     }
 
                     // Empty list of attachments is possible
-                    var attachments = [];
                     if (results && results.attachmentInfos) {
 
                         attributesDeferred.done(function (feature) {
@@ -205,17 +179,88 @@ define(['diag'], function (diag) {
             return deferred;
         },
 
+        /**
+         * Updates a candidate to its feature service.
+         * @param {object} candidate Candidate to write to its feature service; contains object with obj property; 'obj'
+         * contains an attributes property with the candidate's attributes; only the 'obj' property is used; any other
+         * properties in 'candidate' are ignored
+         * @return {object} Deferred to provide information about success or failure of update
+         */
+        updateCandidate: function (candidate) {
+            var deferred, url, update;
+            deferred = $.Deferred();
+
+            update = "rollbackOnFailure=true&f=pjson&adds=&deletes=&id=" + that.featureServiceLayerId
+                + "&updates=" + that._stringifyForApplyEdits(candidate.obj);
+            url = (that.proxyProgram ? that.proxyProgram + "?" : "") + that.featureServiceUrl + "applyEdits";
+            $.post(url, update, function (results, status) {
+                // seek
+                //   * status === "success"
+                //   * results.updateResults[0].objectId === candidate.obj[that.objectIdField]
+                //   * results.updateResults[0].success === true
+                diag.append("update obj #" + candidate.obj.attributes[that.objectIdField] + " result: ");  //???
+                if (status === "success" && results && results.updateResults.length > 0) {  //???
+                    if (results.updateResults[0].success === true  //???
+                            && results.updateResults[0].objectId === candidate.obj.attributes[that.objectIdField]) {  //???
+                        diag.appendWithLF("OK");  //???
+                        deferred.resolve();
+                    } else if (results.updateResults[0].error) {  //???
+                        diag.appendWithLF("fail #" + results.updateResults[0].error.code  //???
+                            + " (" + results.updateResults[0].error.description + ")");  //???
+                        deferred.reject();
+                    } else {  //???
+                        diag.appendWithLF("unspecified update fail");  //???
+                        deferred.reject();
+                    }  //???
+                } else {  //???
+                    diag.appendWithLF("overall fail: " + status);  //???
+                    deferred.reject();
+                }  //???
+            }, "json").fail(function (err) {
+                // Unable to POST; can be IE 9 proxy problem
+                diag.appendWithLF("POST fail: " + JSON.stringify(err));  //???
+                diag.appendWithLF("failing URL: " + url);  //???
+                deferred.reject();
+            });
+
+            return deferred;
+        },
+
+        //--------------------------------------------------------------------------------------------------------------------//
+
+        /**
+         * Converts a value into the escaped form required by updates to a feature service.
+         * @param {null|string|object} value Value to escape
+         * @return {string} Escaped value
+         */
+        _stringifyForApplyEdits: function (value) {
+            var isFirst = true, result = "";
+
+            if (value === null) {
+                result += 'null';
+            } else if (typeof value === "string") {
+                result += '%22' + value + '%22';
+            } else if (typeof value === "object") {
+                result += '%7B';
+                $.each(value, function (part) {
+                    if (value.hasOwnProperty(part)) {
+                        result += (isFirst ? '' : '%2C') + part + '%3A' + that._stringifyForApplyEdits(value[part]);
+                        isFirst = false;
+                    }
+                });
+                result += '%7D';
+            } else {
+                result += value;
+            }
+            return result;
+        },
+
         /** Normalizes a boolean value to true or false.
-         * @param {boolean|string} boolValue A true or false
-         *        value that is returned directly or a string
-         *        "true" or "false" (case-insensitive) that
-         *        is checked and returned; if neither a
-         *        a boolean or a usable string, falls back to
-         *        defaultValue
-         * @param {boolean} [defaultValue] A true or false
-         *        that is returned if boolValue can't be
-         *        used; if not defined, true is returned
-         * @memberOf js.LGObject#
+         * @param {boolean|string} boolValue A true or false value that is returned directly or a string
+         * "true", "t", "yes", "y", "false", "f", "no", "n" (case-insensitive) or a number (0 for false; non-zero for true)
+         * that is interpreted and returned; if neither a boolean nor a usable string nor a number, falls back to defaultValue
+         * @param {boolean} [defaultValue] A true or false that is returned if boolValue can't be used; if not defined, true
+         * is returned
          */
         _toBoolean: function (boolValue, defaultValue) {
             var lowercaseValue;
