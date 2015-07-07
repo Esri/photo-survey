@@ -10,6 +10,7 @@
 
         "randomizeSelection": true,
 
+        "showGuest": "true",
         "facebookAppId": "101991193476073",
         "googleplusClientId": "884148190980-mrcnakr5q14ura5snpcbgp85ovq7s7ea.apps.googleusercontent.com",
         "showTwitter": "true",
