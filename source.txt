@@ -5,9 +5,8 @@ origin	git@github.com:ArcGIS/photo-survey.git (push)
 branch 
 develop
 . 
-commit 84ab2bf3ea60c127e5c83bf12af452fbc9d38614
-Merge: b98a951 d5fe146
+commit e0b43dbf630fb0b3cfadacc6338cc37d76b0e45a
 Author: MikeTschudi <mtschudi@esri.com>
-Date:   Mon Jul 6 11:52:38 2015 -0700
+Date:   Tue Jul 7 13:25:55 2015 -0700
 
-    Merge branch 'update-side-controls' into develop
+    Added another threshold for carousel indicators
