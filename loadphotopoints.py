@@ -12,8 +12,13 @@
 
 import arcpy
 import math
+import ast
 import sys, os, datetime
 from os.path import dirname, join, exists, splitext, isfile
+try:
+	import ConfigParser
+except ImportError:
+	import configparser
 
 arcpy.env.overwriteOutput = True
 
@@ -25,6 +30,7 @@ AngleField = arcpy.GetParameterAsText(2)
 Geodatabase = arcpy.GetParameterAsText(3)
 Parcels = arcpy.GetParameterAsText(4)
 ParcelPIN = arcpy.GetParameterAsText(5)
+config_file = arcpy.GetParameterAsText(6)
 
 arcpy.AddMessage("Step 1:  Loading input parameters")
 
@@ -188,32 +194,11 @@ arcpy.Append_management(PhotoFeatureClass2, PhotoFeatureClass3, "NO_TEST", "", "
 
 #Create Photo Attachments
 
+ParcelPointClassHelper = """{}\\PointsTemp""".format(Geodatabase)
 ParcelPointHelper = """{}\\ParcelPoints""".format(Geodatabase)
-arcpy.FeatureToPoint_management(ParcelsFeatureClass, ParcelPointHelper, "INSIDE")
-arcpy.AddField_management(ParcelPointHelper, "REVERSE", "TEXT", "", "", "5", "", "NULLABLE", "NON_REQUIRED", "")
-arcpy.JoinField_management(ParcelPointHelper, ParcelPIN, PhotoFeatureClass3, ParcelPIN)
-arcpy.CalculateField_management(ParcelPointHelper, "REVERSE", "!REVERSE_1!", "PYTHON", "")
-arcpy.EnableAttachments_management(ParcelPointHelper)
-arcpy.AddAttachments_management(ParcelPointHelper, ParcelPIN, PhotoFeatureClass3, ParcelPIN, "Path2", "")
-arcpy.AddMessage("Step 8:  Creating photo attachments")
-
-#______________________________________________________________________________#
-#
-# Cleanup Staging GeoDatabase
-#______________________________________________________________________________#
-
-arcpy.Delete_management(PhotoFeatureClass2)
-arcpy.Delete_management(PhotoFeatureClass3)
-arcpy.Delete_management(ParcelsFeatureClass)
-arcpy.DeleteField_management(ParcelPointHelper, "ORIG_FID")
-arcpy.DeleteField_management(ParcelPointHelper, "REVERSE_1")
-arcpy.DeleteField_management(ParcelPointHelper, "PIN_1")
-arcpy.DeleteField_management(ParcelPointHelper, "PATH2")
-
-arcpy.MakeFeatureLayer_management(ParcelPointHelper, "PARCELSFORSELECTION", "Name is NULL")
-arcpy.DeleteRows_management("PARCELSFORSELECTION")
-
-arcpy.AddMessage("Step 9:  Cleaning up staging geodatabase")
+arcpy.CreateFeatureclass_management(Geodatabase, "ParcelPoints", "POINT", "", "", "", Parcels)
+arcpy.AddField_management(ParcelPointHelper, "PIN", "TEXT", "", "", "50", "PIN", "NULLABLE", "NON_REQUIRED")
+arcpy.FeatureToPoint_management(ParcelsFeatureClass, ParcelPointClassHelper, "INSIDE")
 
 #______________________________________________________________________________#
 #
@@ -230,37 +215,201 @@ if dmCount > 0:
 else:
 	pass
 
-arcpy.AddMessage("Step 10: Adding survey questions")
-arcpy.CreateDomain_management(Geodatabase, "YesNoMaybe", "YesNoMaybe", "TEXT", "CODED")
-DomainDict1 = {"Yes": "Yes", "No": "No", "Maybe": "Maybe"}
-for code in DomainDict1:
-	arcpy.AddCodedValueToDomain_management(Geodatabase, "YesNoMaybe", code, DomainDict1[code])
+arcpy.AddMessage("Step 8:  Adding survey questions")
 
-arcpy.CreateDomain_management(Geodatabase, "FoundationType", "FoundationType", "TEXT", "CODED")
-DomainDict2 = {"Crawlspace": "Crawlspace", "Raised": "Raised", "Elevated": "Elevated", "Slab on Grade": "Slab on Grade"}
-for codex in DomainDict2:
-	arcpy.AddCodedValueToDomain_management(Geodatabase, "FoundationType", codex, DomainDict2[codex])
+try:
+	config = ConfigParser.ConfigParser()
+except NameError:
+	config = configparser.ConfigParser()
 
-arcpy.AddField_management(ParcelPointHelper, "STRUCT", "TEXT", "", "", "5", "Structure", "NULLABLE", "REQUIRED", "")
-arcpy.AssignDomainToField_management(ParcelPointHelper, "STRUCT", "YesNoMaybe")
+config.read(config_file)
 
-arcpy.AddField_management(ParcelPointHelper, "OVERGROWTH", "TEXT", "", "", "5", "Overgrown Lot", "NULLABLE", "REQUIRED", "")
-arcpy.AssignDomainToField_management(ParcelPointHelper, "OVERGROWTH", "YesNoMaybe")
+Domain1 = config.get('DOMAINS', "Domain1")
+Domain2 = config.get('DOMAINS', "Domain2")
+Domain3 = config.get('DOMAINS', "Domain3")
+Domain4 = config.get('DOMAINS', "Domain4")
+Domain5 = config.get('DOMAINS', "Domain5")
 
-arcpy.AddField_management(ParcelPointHelper, "FOUNDTYPE", "TEXT", "", "", "25", "Foundation Type", "NULLABLE", "NON_REQUIRED", "")
-arcpy.AssignDomainToField_management(ParcelPointHelper, "FOUNDTYPE", "FoundationType")
+if Domain1 == "":
+	pass
+else:
+	arcpy.CreateDomain_management(Geodatabase, Domain1, Domain1, "TEXT", "CODED")
+if Domain2 == "":
+	pass
+else:
+	arcpy.CreateDomain_management(Geodatabase, Domain2, Domain2, "TEXT", "CODED")
+if Domain3 == "":
+	pass
+else:
+	arcpy.CreateDomain_management(Geodatabase, Domain3, Domain3, "TEXT", "CODED")
+if Domain4 == "":
+	pass
+else:
+	arcpy.CreateDomain_management(Geodatabase, Domain4, Domain4, "TEXT", "CODED")
+if Domain5 == "":
+	pass
+else:
+	arcpy.CreateDomain_management(Geodatabase, Domain5, Domain5, "TEXT", "CODED")
 
-arcpy.AddField_management(ParcelPointHelper, "RFDMG", "TEXT", "", "", "5", "Roof Damage", "NULLABLE", "NON_REQUIRED", "")
-arcpy.AssignDomainToField_management(ParcelPointHelper, "RFDMG", "YesNoMaybe")
+Domain1Values = config.get('DOMAIN_VALUES', "Domain1")
+Domain2Values = config.get('DOMAIN_VALUES', "Domain2")
+Domain3Values = config.get('DOMAIN_VALUES', "Domain3")
+Domain4Values = config.get('DOMAIN_VALUES', "Domain4")
+Domain5Values = config.get('DOMAIN_VALUES', "Domain5")
 
-arcpy.AddField_management(ParcelPointHelper, "EXTDMG", "TEXT", "", "", "5", "Exterior Damage", "NULLABLE", "NON_REQUIRED", "")
-arcpy.AssignDomainToField_management(ParcelPointHelper, "EXTDMG", "YesNoMaybe")
+if Domain1Values == "":
+	pass
+else:
+	DomainDict1 = ast.literal_eval(Domain1Values)
+	for codex in DomainDict1:
+		arcpy.AddCodedValueToDomain_management(Geodatabase, Domain1, codex, DomainDict1[codex])
+if Domain2Values == "":
+	pass
+else:
+	DomainDict2 = ast.literal_eval(Domain2Values)
+	for codex in DomainDict2:
+		arcpy.AddCodedValueToDomain_management(Geodatabase, Domain2, codex, DomainDict2[codex])
+if Domain3Values == "":
+	pass
+else:
+	DomainDict3 = ast.literal_eval(Domain3Values)
+	for codex in DomainDict3:
+		arcpy.AddCodedValueToDomain_management(Geodatabase, Domain3, codex, DomainDict3[codex])
+if Domain4Values == "":
+	pass
+else:
+	DomainDict4 = ast.literal_eval(Domain4Values)
+	for codex in DomainDict4:
+		arcpy.AddCodedValueToDomain_management(Geodatabase, Domain4, codex, DomainDict4[codex])
+if Domain5Values == "":
+	pass
+else:
+	DomainDict5 = ast.literal_eval(Domain5Values)
+	for codex in DomainDict5:
+		arcpy.AddCodedValueToDomain_management(Geodatabase, Domain5, codex, DomainDict5[codex])
 
-arcpy.AddField_management(ParcelPointHelper, "GRAFDMG", "TEXT", "", "", "5", "Graffiti Damage", "NULLABLE", "NON_REQUIRED", "")
-arcpy.AssignDomainToField_management(ParcelPointHelper, "GRAFDMG", "YesNoMaybe")
+Field1  = config.get('FIELDS', "Field1")
+Field2  = config.get('FIELDS', "Field2")
+Field3  = config.get('FIELDS', "Field3")
+Field4  = config.get('FIELDS', "Field4")
+Field5  = config.get('FIELDS', "Field5")
+Field6  = config.get('FIELDS', "Field6")
+Field7  = config.get('FIELDS', "Field7")
+Field8  = config.get('FIELDS', "Field8")
+Field9  = config.get('FIELDS', "Field9")
+Field10 = config.get('FIELDS', "Field10")
 
-arcpy.AddField_management(ParcelPointHelper, "BOARDED", "TEXT", "", "", "5", "Boarded", "NULLABLE", "NON_REQUIRED", "")
-arcpy.AssignDomainToField_management(ParcelPointHelper, "BOARDED", "YesNoMaybe")
+Field1Alias = config.get('FIELDS_ALIAS', "Field1")
+Field2Alias = config.get('FIELDS_ALIAS', "Field2")
+Field3Alias = config.get('FIELDS_ALIAS', "Field3")
+Field4Alias = config.get('FIELDS_ALIAS', "Field4")
+Field5Alias = config.get('FIELDS_ALIAS', "Field5")
+Field6Alias = config.get('FIELDS_ALIAS', "Field6")
+Field7Alias = config.get('FIELDS_ALIAS', "Field7")
+Field8Alias = config.get('FIELDS_ALIAS', "Field8")
+Field9Alias = config.get('FIELDS_ALIAS', "Field9")
+Field10Alias = config.get('FIELDS_ALIAS', "Field10")
+
+ValueRequired1 = config.get('VALUE_REQUIRED', "Field1")
+ValueRequired2 = config.get('VALUE_REQUIRED', "Field2")
+ValueRequired3 = config.get('VALUE_REQUIRED', "Field3")
+ValueRequired4 = config.get('VALUE_REQUIRED', "Field4")
+ValueRequired5 = config.get('VALUE_REQUIRED', "Field5")
+ValueRequired6 = config.get('VALUE_REQUIRED', "Field6")
+ValueRequired7 = config.get('VALUE_REQUIRED', "Field7")
+ValueRequired8 = config.get('VALUE_REQUIRED', "Field8")
+ValueRequired9 = config.get('VALUE_REQUIRED', "Field9")
+ValueRequired10 = config.get('VALUE_REQUIRED', "Field10")
+
+DomainSet1 = config.get('FIELD_DOMAIN', "Field1")
+DomainSet2 = config.get('FIELD_DOMAIN', "Field2")
+DomainSet3 = config.get('FIELD_DOMAIN', "Field3")
+DomainSet4 = config.get('FIELD_DOMAIN', "Field4")
+DomainSet5 = config.get('FIELD_DOMAIN', "Field5")
+DomainSet6 = config.get('FIELD_DOMAIN', "Field6")
+DomainSet7 = config.get('FIELD_DOMAIN', "Field7")
+DomainSet8 = config.get('FIELD_DOMAIN', "Field8")
+DomainSet9 = config.get('FIELD_DOMAIN', "Field9")
+DomainSet10 = config.get('FIELD_DOMAIN', "Field10")
+
+if Field1 == "":
+	pass
+else:
+	arcpy.AddField_management(ParcelPointHelper, Field1, "TEXT", "", "", "25", Field1Alias, ValueRequired1, "REQUIRED", "")
+	arcpy.AssignDomainToField_management(ParcelPointHelper, Field1, DomainSet1)
+if Field2 == "":
+	pass
+else:
+	arcpy.AddField_management(ParcelPointHelper, Field2, "TEXT", "", "", "25", Field2Alias, ValueRequired2)
+	arcpy.AssignDomainToField_management(ParcelPointHelper, Field2, DomainSet2)
+if Field3 == "":
+	pass
+else:
+	arcpy.AddField_management(ParcelPointHelper, Field3, "TEXT", "", "", "25", Field3Alias, ValueRequired3)
+	arcpy.AssignDomainToField_management(ParcelPointHelper, Field3, DomainSet3)
+if Field4 == "":
+	pass
+else:
+	arcpy.AddField_management(ParcelPointHelper, Field4, "TEXT", "", "", "25", Field4Alias, ValueRequired4)
+	arcpy.AssignDomainToField_management(ParcelPointHelper, Field4, DomainSet4)
+if Field5 == "":
+	pass
+else:
+	arcpy.AddField_management(ParcelPointHelper, Field5, "TEXT", "", "", "25", Field5Alias, ValueRequired5)
+	arcpy.AssignDomainToField_management(ParcelPointHelper, Field5, DomainSet5)
+if Field6 == "":
+	pass
+else:
+	arcpy.AddField_management(ParcelPointHelper, Field6, "TEXT", "", "", "25", Field6Alias, ValueRequired6)
+	arcpy.AssignDomainToField_management(ParcelPointHelper, Field6, DomainSet6)
+if Field7 == "":
+	pass
+else:
+	arcpy.AddField_management(ParcelPointHelper, Field7, "TEXT", "", "", "25", Field7Alias, ValueRequired7)
+	arcpy.AssignDomainToField_management(ParcelPointHelper, Field7, DomainSet7)
+if Field8 == "":
+	pass
+else:
+	arcpy.AddField_management(ParcelPointHelper, Field8, "TEXT", "", "", "25", Field8Alias, ValueRequired8)
+	arcpy.AssignDomainToField_management(ParcelPointHelper, Field8, DomainSet8)
+if Field9 == "":
+	pass
+else:
+	arcpy.AddField_management(ParcelPointHelper, Field9, "TEXT", "", "", "25", Field9Alias, ValueRequired9)
+	arcpy.AssignDomainToField_management(ParcelPointHelper, Field9, DomainSet9)
+if Field10 == "":
+	pass
+else:
+	arcpy.AddField_management(ParcelPointHelper, Field10, "TEXT", "", "", "25", Field10Alias, ValueRequired10)
+	arcpy.AssignDomainToField_management(ParcelPointHelper, Field10, DomainSet10)
+
+arcpy.Append_management(ParcelPointClassHelper, ParcelPointHelper, "NO_TEST")
+arcpy.AddField_management(ParcelPointHelper, "REVERSE", "TEXT", "", "", "5", "", "NULLABLE", "NON_REQUIRED", "")
+arcpy.JoinField_management(ParcelPointHelper, ParcelPIN, PhotoFeatureClass3, ParcelPIN)
+arcpy.CalculateField_management(ParcelPointHelper, "REVERSE", "!REVERSE_1!", "PYTHON", "")
+arcpy.EnableAttachments_management(ParcelPointHelper)
+arcpy.AddAttachments_management(ParcelPointHelper, ParcelPIN, PhotoFeatureClass3, ParcelPIN, "Path2", "")
+arcpy.AddMessage("Step 9:  Creating photo attachments")
+
+#______________________________________________________________________________#
+#
+# Cleanup Staging GeoDatabase
+#______________________________________________________________________________#
+
+arcpy.Delete_management(PhotoFeatureClass2)
+arcpy.Delete_management(PhotoFeatureClass3)
+arcpy.Delete_management(ParcelsFeatureClass)
+arcpy.Delete_management(ParcelPointClassHelper)
+arcpy.DeleteField_management(ParcelPointHelper, "ORIG_FID")
+arcpy.DeleteField_management(ParcelPointHelper, "REVERSE_1")
+arcpy.DeleteField_management(ParcelPointHelper, "PIN_1")
+arcpy.DeleteField_management(ParcelPointHelper, "PATH2")
+
+arcpy.MakeFeatureLayer_management(ParcelPointHelper, "PARCELSFORSELECTION", "Name is NULL")
+arcpy.DeleteRows_management("PARCELSFORSELECTION")
+
+
+arcpy.AddMessage("Step 10: Cleaning up staging geodatabase")
 
 arcpy.AddMessage("Step 11: Adding application required fields")
 arcpy.AddField_management(ParcelPointHelper, "BSTPHOTOID", "TEXT", "", "", "5", "Best Photo Identifier", "NULLABLE", "NON_REQUIRED", "")
