@@ -219,11 +219,14 @@ header, section, footer, aside, nav, main, article, figure {
 .carousel-control.left, .carousel-control.right {
     background-image: none;
 }
+.carousel-indicators {
+  bottom: -5px;
+}
 .carousel-indicators li {
     border: 2px solid gray;
     background-color: white!important;
-    width: 66px!important;
-    height: 51px!important;
+    width: 80px!important;
+    height: 61px!important;
     background-size: contain;
     background-repeat: no-repeat;
 }
