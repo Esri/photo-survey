@@ -149,10 +149,11 @@ define(['parseConfig', 'fetchConfig'], function (parseConfig, fetchConfig) {
                     );
 
                     // Normalize booleans
+                    that.appParams.showGuest = parseConfig._toBoolean(that.appParams.showGuest);
                     that.appParams.showFacebook =
-                        that.appParams.facebookAppId && that.appParams.facebookAppId.length > 0;
+                        that.appParams.facebookAppId !== null && that.appParams.facebookAppId.length > 0;
                     that.appParams.showGooglePlus =
-                        that.appParams.googleplusClientId && that.appParams.googleplusClientId.length > 0;
+                        that.appParams.googleplusClientId !== null && that.appParams.googleplusClientId.length > 0;
                     that.appParams.showTwitter = parseConfig._toBoolean(that.appParams.showTwitter);
 
                     parametersReady.resolve(true);

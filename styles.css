@@ -185,6 +185,9 @@ header, section, footer, aside, nav, main, article, figure {
     background-repeat: no-repeat;
     background-position: center;
 }
+.guestOfficialColor {
+    color: black;
+}
 .facebookOfficialColor {
     color: #3b579d;
 }
