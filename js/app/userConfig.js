@@ -32,6 +32,7 @@ define(['diag'], function (diag) {
         _statusCallback: null,
         _currentProvider: null,
         _availabilities: {
+            guest: false,
             facebook: false,
             googleplus: false,
             twitter: false
@@ -55,6 +56,12 @@ define(['diag'], function (diag) {
             isIE8 = that._createIE8Test();
             that._statusCallback = statusCallback;
             that.appParams = appParams;
+
+            //................................................................................................................//
+
+            // Do we offer guest access?
+            that._availabilities.guest = appParams.showGuest;
+                //???|| (!appParams.showFacebook && !appParams.showGooglePlus && !appParams.showTwitter);
 
             //................................................................................................................//
 
@@ -146,7 +153,7 @@ define(['diag'], function (diag) {
             // Test if we have any initialized providers
             $.when(facebookDeferred, googlePlusDeferred, twitterDeferred)
                 .done(function (facebookAvail, googlePlusAvail, twitterAvail) {
-                    if (facebookAvail || googlePlusAvail || twitterAvail) {
+                    if (that._availabilities.guest || facebookAvail || googlePlusAvail || twitterAvail) {
                         deferred.resolve();
                     } else {
                         deferred.reject();
@@ -157,6 +164,24 @@ define(['diag'], function (diag) {
         },
 
         initUI: function (buttonContainer) {
+
+            if (that._availabilities.guest) {  //??? i18n
+                $('<div id="guestSignin" class="socialMediaButton guestOfficialColor" style="background-image:url(\'images/guest-user_29.png\')">Guest</div>').appendTo(buttonContainer);
+                $('#guestSignin').on('click', function () {
+                    that._loggedIn = true;
+                    that._currentProvider = "guest";
+                    diag.appendWithLF("guest login");  //???
+
+                    that._user = {
+                        "name": "Guest",  //??? i18n
+                        "id": "",
+                        "canSubmit": false
+                    };
+
+                    // Update the calling app
+                    that._statusCallback(that.notificationSignIn);
+                });
+            }
 
             if (that._availabilities.facebook) {
                 $('<div id="facebookSignin" class="socialMediaButton facebookOfficialColor" style="background-image:url(\'images/FB-f-Logo__blue_29.png\')">Facebook</div>').appendTo(buttonContainer);
@@ -229,6 +254,14 @@ define(['diag'], function (diag) {
             if (that.isSignedIn()) {
                 switch (that._currentProvider) {
 
+                case "guest":
+                    diag.appendWithLF("guest logout");  //???
+                    that._user = {};
+
+                    // Update the calling app
+                    that._statusCallback(that.notificationSignOut);
+                    break;
+
                 case "facebook":
                     diag.appendWithLF("FB logout");  //???
                     // Log the user out of the app; known FB issue is that cookies are not cleared as promised if
@@ -290,7 +323,8 @@ define(['diag'], function (diag) {
                     if (that._loggedIn) {
                         that._user = {
                             "name": apiResponse.name,
-                            "id": apiResponse.id
+                            "id": apiResponse.id,
+                            "canSubmit": true
                         };
                         // Update the calling app
                         that._statusCallback(that.notificationSignIn);
@@ -332,7 +366,8 @@ define(['diag'], function (diag) {
                     that._user = {
                         "name": apiResponse.result.displayName,
                         "id": apiResponse.result.id,
-                        "access_token": response.access_token
+                        "access_token": response.access_token,
+                        "canSubmit": true
                     };
 
                     // Update the calling app
@@ -450,7 +485,8 @@ define(['diag'], function (diag) {
                     if (that._loggedIn) {
                         that._user = {
                             "name": data.name,
-                            "id": data.id_str
+                            "id": data.id_str,
+                            "canSubmit": true
                         };
 
                         // Update the calling app

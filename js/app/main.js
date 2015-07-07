@@ -296,6 +296,9 @@ define(['lib/i18n.min!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'
         });
         $(".btn-group").trigger('create');
 
+        // Can submit?
+        $("#submitBtn").attr("disabled", !userConfig.getUser().canSubmit);
+
         // Show the content
         $("#contentPage").fadeIn("fast");
     });
@@ -324,7 +327,7 @@ define(['lib/i18n.min!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'
         $(document).triggerHandler('hide:profile');
     });
     $("#skipBtn").on('click', function () {
-        $(document).triggerHandler('show:newSurvey', userConfig.getUser().name);
+        $(document).triggerHandler('show:newSurvey');
     });
     $("#submitBtn").on('click', function () {
         var surveyContainer, msg, iQuestionResult, hasImportants = true;
