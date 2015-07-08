@@ -223,15 +223,16 @@ header, section, footer, aside, nav, main, article, figure {
   bottom: -5px;
 }
 .carousel-indicators li {
-    border: 2px solid gray;
+    border: medium solid gray;
     background-color: white!important;
     width: 80px!important;
-    height: 61px!important;
+    height: 62px!important;
     background-size: contain;
     background-repeat: no-repeat;
+    border-radius: 0px;
 }
 .carousel-indicators .active {
-    border: 2px solid #007ac2;
+    border: medium solid #007ac2;
     margin: 1px;
 }
 .carousel-control.left:hover {
@@ -292,7 +293,7 @@ header, section, footer, aside, nav, main, article, figure {
 @media screen and (min-width: 481px) and (max-width: 768px) {
     .carousel-indicators li {
         width: 36px!important;
-        height: 28px!important;
+        height: 29px!important;
     }
 }
 @media screen and (max-width: 480px) {
@@ -300,9 +301,13 @@ header, section, footer, aside, nav, main, article, figure {
         width: 12px!important;
         height: 12px!important;
         background-image: none!important;
+        border-width: thin;
+        border-radius: 10px;
     }
     .carousel-indicators .active {
         background-color: #007ac2!important;
+        border-width: thin;
+        border-radius: 10px;
     }
 }
 #hearts {
