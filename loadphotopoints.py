@@ -47,6 +47,7 @@ SRHelper = SR.spatialReference
 PhotoFeatureClass2 = """{}\\PointAttachments""".format(Geodatabase)
 
 arcpy.Project_management(PhotoFeatureClass, PhotoFeatureClass2, SRHelper)
+arcpy.DeleteIdentical_management(PhotoFeatureClass2, "Shape")
 arcpy.Delete_management(PhotoFeatureClass)
 
 EntGDB = arcpy.Describe(Geodatabase)
@@ -130,6 +131,7 @@ SRHelper = SR.spatialReference
 PhotoFeatureClass3 = """{}\\PointAttachments2""".format(Geodatabase)
 
 arcpy.Project_management(PhotoFeatureClass, PhotoFeatureClass3, SRHelper)
+arcpy.DeleteIdentical_management(PhotoFeatureClass3, "Shape")
 arcpy.Delete_management(PhotoFeatureClass)
 arcpy.MakeFeatureLayer_management(ParcelsFeatureClass, "PARCELSFL")
 arcpy.SelectLayerByLocation_management("PARCELSFL", "INTERSECT", PhotoFeatureClass2, "", "NEW_SELECTION", "INVERT")
