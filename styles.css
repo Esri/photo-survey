@@ -221,6 +221,8 @@ header, section, footer, aside, nav, main, article, figure {
 }
 .carousel-indicators {
   bottom: -5px;
+  width: 95%;
+  margin-left: -48%;
 }
 .carousel-indicators li {
     border: medium solid gray;
