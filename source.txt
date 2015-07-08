@@ -5,9 +5,9 @@ origin	git@github.com:ArcGIS/photo-survey.git (push)
 branch 
 develop
 . 
-commit 590175e6baf1942438ef70ea85c1ceada4383f05
-Merge: 5714f16 9aacdf4
+commit 8745d1508515c4e61f00f404b7f5276216ce5ab8
+Merge: c2c5025 596d5e2
 Author: MikeTschudi <mtschudi@esri.com>
-Date:   Tue Jul 7 16:18:32 2015 -0700
+Date:   Wed Jul 8 09:41:56 2015 -0700
 
-    Merge branch 'additional-access' into develop
+    Merge branch 'master' into develop
