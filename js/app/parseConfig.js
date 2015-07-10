@@ -122,6 +122,11 @@ define(function () {
             var taggedConfigLines, descriptionSplitDiv, configLines, inConfigSection = false,
                 keywordParts, iLine, iKeyword, config, contribLevels, lineParts;
 
+            config = {};
+            if (!source) {
+                return;
+            }
+
             // 1. split on </div> and then <br
             taggedConfigLines = [];
             descriptionSplitDiv = source.split("</div>");
@@ -154,7 +159,6 @@ define(function () {
             // 3. find the start of the configuration section, then step thru lines seeking keywords
             keywordParts = ["0", "1", "2", "3", "4", "5", "surveyor", "photo"];
             iKeyword = 0;
-            config = {};
             contribLevels = [];
 
             for (iLine = 0; iLine < configLines.length; iLine += 1) {
