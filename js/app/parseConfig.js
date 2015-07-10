@@ -48,13 +48,17 @@ define(function () {
             //  there roof damage? <b>{RoofDamage} </b><b>{button}</b></p><p>Is the exterior damaged? <b>{ExteriorDamage}
             //  </b><b>{button}</b></p><p></p><ol><li>Is there graffiti? <b>{Graffiti} </b><b>{button}</b><br /></li><li>
             //  Are there boarded windows/doors? <b>{Boarded} </b><b>{button}</b><br /></li></ol>
-            var survey = [], taggedSurveyLines, descriptionSplitP, surveyLines;
+            var survey = [], descriptionSplit1, descriptionSplit2, taggedSurveyLines, surveyLines;
 
-            // 1. split on </p> and then </li> (lists are enclosed in <p></p> sets)
+            // 1. split on <div>, <p>, and <li>, all of which could be used to separate lines
+            descriptionSplit2 = [];
             taggedSurveyLines = [];
-            descriptionSplitP = source.split("</p>");
-            $.each(descriptionSplitP, function (idx, line) {
-                $.merge(taggedSurveyLines, line.split("</li>"));
+            descriptionSplit1 = source.split("<div>");
+            $.each(descriptionSplit1, function (idx, line) {
+                $.merge(descriptionSplit2, line.split("<p>"));
+            });
+            $.each(descriptionSplit2, function (idx, line) {
+                $.merge(taggedSurveyLines, line.split("<li>"));
             });
 
             // 2. remove all html tags (could have <b>, <i>, <u>, <ol>, <ul>, <li>, <a>, <font>, <span>, <br>,
