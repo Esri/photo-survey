@@ -5,8 +5,8 @@ origin	git@github.com:ArcGIS/photo-survey.git (push)
 branch 
 develop
 . 
-commit 1f2cf73c0e562927bb720637aec2d54b7befb0ba
+commit 0963d7843963cdef1d0d34ce2989a5adb2778cf2
 Author: MikeTschudi <mtschudi@esri.com>
-Date:   Wed Jul 8 12:22:54 2015 -0700
+Date:   Fri Jul 10 13:54:45 2015 -0700
 
-    Expanded indicators holder to full width
+    Adapted to another popup HTML internal variant

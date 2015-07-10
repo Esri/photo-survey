@@ -159,7 +159,7 @@ define(['diag'], function (diag) {
                             $.each(results.attachmentInfos, function (idx, attachment) {
                                 attachments.push({
                                     id: attachment.id,
-                                    url: that.featureServiceUrl + objectId + "/attachment/" + attachment.id
+                                    url: that.featureServiceUrl + objectId + "/attachments/" + attachment.id
                                 });
                             });
                             attachmentsDeferred.resolve(attachments);

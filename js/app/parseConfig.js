@@ -48,13 +48,21 @@ define(function () {
             //  there roof damage? <b>{RoofDamage} </b><b>{button}</b></p><p>Is the exterior damaged? <b>{ExteriorDamage}
             //  </b><b>{button}</b></p><p></p><ol><li>Is there graffiti? <b>{Graffiti} </b><b>{button}</b><br /></li><li>
             //  Are there boarded windows/doors? <b>{Boarded} </b><b>{button}</b><br /></li></ol>
-            var survey = [], taggedSurveyLines, descriptionSplitP, surveyLines;
+            var survey = [], descriptionSplit1, descriptionSplit2, descriptionSplit3, taggedSurveyLines, surveyLines;
 
-            // 1. split on </p> and then </li> (lists are enclosed in <p></p> sets)
+            // 1. split on <div>, <p>, <br />, and <li>, all of which could be used to separate lines
+            descriptionSplit2 = [];
+            descriptionSplit3 = [];
             taggedSurveyLines = [];
-            descriptionSplitP = source.split("</p>");
-            $.each(descriptionSplitP, function (idx, line) {
-                $.merge(taggedSurveyLines, line.split("</li>"));
+            descriptionSplit1 = source.split("<div>");
+            $.each(descriptionSplit1, function (idx, line) {
+                $.merge(descriptionSplit2, line.split("<p>"));
+            });
+            $.each(descriptionSplit2, function (idx, line) {
+                $.merge(descriptionSplit3, line.split("<br />"));
+            });
+            $.each(descriptionSplit3, function (idx, line) {
+                $.merge(taggedSurveyLines, line.split("<li>"));
             });
 
             // 2. remove all html tags (could have <b>, <i>, <u>, <ol>, <ul>, <li>, <a>, <font>, <span>, <br>,
@@ -122,6 +130,11 @@ define(function () {
             var taggedConfigLines, descriptionSplitDiv, configLines, inConfigSection = false,
                 keywordParts, iLine, iKeyword, config, contribLevels, lineParts;
 
+            config = {};
+            if (!source) {
+                return;
+            }
+
             // 1. split on </div> and then <br
             taggedConfigLines = [];
             descriptionSplitDiv = source.split("</div>");
@@ -154,7 +167,6 @@ define(function () {
             // 3. find the start of the configuration section, then step thru lines seeking keywords
             keywordParts = ["0", "1", "2", "3", "4", "5", "surveyor", "photo"];
             iKeyword = 0;
-            config = {};
             contribLevels = [];
 
             for (iLine = 0; iLine < configLines.length; iLine += 1) {
