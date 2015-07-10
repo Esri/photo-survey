@@ -330,7 +330,7 @@ define(['lib/i18n.min!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'
         $(document).triggerHandler('show:newSurvey');
     });
     $("#submitBtn").on('click', function () {
-        var surveyContainer, msg, iQuestionResult, hasImportants = true;
+        var surveyContainer, msg, iQuestionResult, hasImportants = true, firstMissing;
 
         surveyContainer = $('#surveyContainer');
         $.each(appConfig.survey, function (iQuestion, questionInfo) {
@@ -350,6 +350,9 @@ define(['lib/i18n.min!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'
                 } else {
                     $("#qg" + iQuestion).addClass("flag-error");
                     hasImportants = false;
+                    if (firstMissing === undefined) {
+                        firstMissing = $("#qg" + iQuestion)[0];
+                    }
                 }
             }
         });
@@ -367,6 +370,13 @@ define(['lib/i18n.min!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'
             updateCount();
 
             $(document).triggerHandler('show:newSurvey');
+
+        // Jump to the first missing important question otherwise
+        // From http://stackoverflow.com/a/6677069
+        } else {
+            $("#sidebarContent").animate({
+                scrollTop: firstMissing.offsetTop - 5
+            }, 500);
         }
     });
 
