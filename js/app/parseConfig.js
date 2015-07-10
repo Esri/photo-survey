@@ -48,16 +48,20 @@ define(function () {
             //  there roof damage? <b>{RoofDamage} </b><b>{button}</b></p><p>Is the exterior damaged? <b>{ExteriorDamage}
             //  </b><b>{button}</b></p><p></p><ol><li>Is there graffiti? <b>{Graffiti} </b><b>{button}</b><br /></li><li>
             //  Are there boarded windows/doors? <b>{Boarded} </b><b>{button}</b><br /></li></ol>
-            var survey = [], descriptionSplit1, descriptionSplit2, taggedSurveyLines, surveyLines;
+            var survey = [], descriptionSplit1, descriptionSplit2, descriptionSplit3, taggedSurveyLines, surveyLines;
 
-            // 1. split on <div>, <p>, and <li>, all of which could be used to separate lines
+            // 1. split on <div>, <p>, <br />, and <li>, all of which could be used to separate lines
             descriptionSplit2 = [];
+            descriptionSplit3 = [];
             taggedSurveyLines = [];
             descriptionSplit1 = source.split("<div>");
             $.each(descriptionSplit1, function (idx, line) {
                 $.merge(descriptionSplit2, line.split("<p>"));
             });
             $.each(descriptionSplit2, function (idx, line) {
+                $.merge(descriptionSplit3, line.split("<br />"));
+            });
+            $.each(descriptionSplit3, function (idx, line) {
                 $.merge(taggedSurveyLines, line.split("<li>"));
             });
 
