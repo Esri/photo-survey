@@ -199,7 +199,7 @@ arcpy.Append_management(PhotoFeatureClass2, PhotoFeatureClass3, "NO_TEST", "", "
 ParcelPointClassHelper = """{}\\PointsTemp""".format(Geodatabase)
 ParcelPointHelper = """{}\\ParcelPoints""".format(Geodatabase)
 arcpy.CreateFeatureclass_management(Geodatabase, "ParcelPoints", "POINT", "", "", "", Parcels)
-arcpy.AddField_management(ParcelPointHelper, "PIN", "TEXT", "", "", "50", "PIN", "NULLABLE", "NON_REQUIRED")
+arcpy.AddField_management(ParcelPointHelper, ParcelPIN, "TEXT", "", "", "50", ParcelPIN, "NULLABLE", "NON_REQUIRED")
 arcpy.FeatureToPoint_management(ParcelsFeatureClass, ParcelPointClassHelper, "INSIDE")
 
 #______________________________________________________________________________#
