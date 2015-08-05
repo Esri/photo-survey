@@ -5,8 +5,10 @@ origin	git@github.com:ArcGIS/photo-survey.git (push)
 branch 
 develop
 . 
-commit 0963d7843963cdef1d0d34ce2989a5adb2778cf2
+commit d0210469ffa8ba71c08b80e991e3816f2c0cc389
 Author: MikeTschudi <mtschudi@esri.com>
-Date:   Fri Jul 10 13:54:45 2015 -0700
+Date:   Wed Aug 5 10:59:11 2015 -0700
 
-    Adapted to another popup HTML internal variant
+    Added brackets for update call to satisfy SQL Server
+    
+    #22
