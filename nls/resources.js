@@ -24,8 +24,24 @@ define({
             h2_additionalInfo: "Additional information"
         },
         tooltips: {
-            button_tip_additionalInfo: "Additional information",
-            button_tip_close: "Close additional information panel"
+            button_additionalInfo: "Additional information",
+            button_close: "Close additional information panel",
+            flag_important_question: "Please answer this question",
+            button_previous_image: "Previous image",
+            button_next_image: "Next image",
+            button_best_image: "This is the best photo for the property",
+            button_click_if_best_image: "Click if this is the best photo for the property",
+            button_skip: "Skip",
+            button_submit: "Submit survey"
+        },
+        labels: {
+            menuItem_profile: "Profile",
+            menuItem_signout: "Sign out",
+            button_close: "Close",
+            label_surveys_completed: "surveys completed",
+            label_level: "level ${0}",
+            label_remaining_surveys: "${0} surveys left until next level",
+            button_returnToSurvey: "&lt; Back to survey"
         },
         signin: {
             checkingServer: "Checking availability of the server...",
@@ -33,13 +49,14 @@ define({
             needProxy: "This version of Internet Explorer is not supported by our server. Please use Internet Explorer 10 or newer.",
             signinFetching: "Checking availability of login possibilities...",
             signinLoginPrompt: "Please sign in to get started",
-            noMoreSurveys: "There are no surveys available at this time; thank you for your participation."
+            noMoreSurveys: "There are no surveys available at this time; thank you for your participation.",
+            guestLabel: "Guest"
         }
     }),
     "ar": 0,
     "cs": 0,
     "da": 0,
-    "de": 0,
+    "de": 1,
     "el": 0,
     "es": 0,
     "et": 0,
