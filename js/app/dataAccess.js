@@ -195,8 +195,7 @@ define(['diag'], function (diag) {
             var deferred, url, update;
             deferred = $.Deferred();
 
-            update = "rollbackOnFailure=true&f=pjson&adds=&deletes=&id=" + that.featureServiceLayerId
-                + "&updates=" + that._stringifyForApplyEdits(candidate.obj);
+            update = "f=json&id=" + that.featureServiceLayerId + "&updates=%5B" + that._stringifyForApplyEdits(candidate.obj) + "%5D";
             url = (that.proxyProgram ? that.proxyProgram + "?" : "") + that.featureServiceUrl + "applyEdits";
             $.post(url, update, function (results, status) {
                 // seek
