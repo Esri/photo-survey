@@ -16,7 +16,7 @@
  | limitations under the License.
  */
 //============================================================================================================================//
-define(['diag'], function (diag) {
+define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
     var that;
     return {
 
@@ -166,14 +166,15 @@ define(['diag'], function (diag) {
         initUI: function (buttonContainer) {
 
             if (that._availabilities.guest) {  //??? i18n
-                $('<div id="guestSignin" class="socialMediaButton guestOfficialColor" style="background-image:url(\'images/guest-user_29.png\')">Guest</div>').appendTo(buttonContainer);
+                $('<div id="guestSignin" class="socialMediaButton guestOfficialColor" style="background-image:url(\'images/guest-user_29.png\')">'
+                    + i18n.signin.guestLabel + '</div>').appendTo(buttonContainer);
                 $('#guestSignin').on('click', function () {
                     that._loggedIn = true;
                     that._currentProvider = "guest";
                     diag.appendWithLF("guest login");  //???
 
                     that._user = {
-                        "name": "Guest",  //??? i18n
+                        "name": i18n.signin.guestLabel,
                         "id": "",
                         "canSubmit": false
                     };

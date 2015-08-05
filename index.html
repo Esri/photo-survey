@@ -45,11 +45,11 @@
 
                   <!-- Left and right controls -->
                   <a id="leftCarouselCtl" class="left carousel-control carousel-control-heartTL" href="#carousel" role="button" data-slide="prev">
-                    <img src="images/left-arrow.png" class="glyphicon glyphicon-chevron-right" aria-hidden="true"></img>
+                    <img id="previousImageBtn" src="images/left-arrow.png" class="glyphicon glyphicon-chevron-right" aria-hidden="true"></img>
                     <span class="sr-only">Previous</span>
                   </a>
                   <a id="rightCarouselCtl" class="right carousel-control carousel-control-heartTL" href="#carousel" role="button" data-slide="next">
-                    <img src="images/right-arrow.png" class="glyphicon glyphicon-chevron-right" aria-hidden="true"></img>
+                    <img id="nextImageBtn" src="images/right-arrow.png" class="glyphicon glyphicon-chevron-right" aria-hidden="true"></img>
                     <span class="sr-only">Next</span>
                   </a>
                 </div>
@@ -69,8 +69,8 @@
                         <span id="score" class="badge"></span><span class="caret"></span>
                     </span>
                     <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
-                        <li id="userProfileSelection"><span role="menuitem" tabindex="-1">Profile</span></li>
-                        <li id="userSignoutSelection"><span role="menuitem" tabindex="-1">Sign out</span></li>
+                        <li id="userProfileSelection"><span id="userProfileSelectionText" role="menuitem" tabindex="-1">Profile</span></li>
+                        <li id="userSignoutSelection"><span id="userSignoutSelectionText" role="menuitem" tabindex="-1">Sign out</span></li>
                     </ul>
                 </div>
                 <div id="page-title" class="page-title"></div>
@@ -90,7 +90,7 @@
                         <div id="name2" class="profileName"></div>
                         <div id="profileCount" class="profileCount transparent">
                             <div id="score2" class="profileCountNum"></div>
-                            <div class="profileCountLabel">surveys completed</div>
+                            <div id="surveysCompleted" class="profileCountLabel">surveys completed</div>
                         </div>
                         <div id="ranking" class="ranking transparent">
                             <div id="rankLabel" class="profileRankLabel"></div>
@@ -119,12 +119,12 @@
             <!-- Modal content-->
             <div class="modal-content">
                 <div class="modal-header">
-                    <button aria-label="close help" class="close" data-dismiss="modal">&times;</button>
+                    <button id="modalCloseBtn1" aria-label="close help" class="close" data-dismiss="modal">&times;</button>
                     <span id="helpTitle" class="modal-title"></span>
                 </div>
                 <div id="helpBody" class="modal-body"></div>
                 <div class="modal-footer">
-                    <button aria-label="close help" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button id="modalCloseBtn2" aria-label="close help" class="btn btn-default" data-dismiss="modal">Close</button>
                 </div>
             </div>
 
