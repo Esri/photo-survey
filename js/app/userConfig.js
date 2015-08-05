@@ -176,7 +176,7 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
                     that._user = {
                         "name": i18n.signin.guestLabel,
                         "id": "",
-                        "canSubmit": false
+                        "canSubmit": that.appParams.allowGuestSubmissions
                     };
 
                     // Update the calling app
