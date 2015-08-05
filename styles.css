@@ -232,10 +232,12 @@ header, section, footer, aside, nav, main, article, figure {
     background-size: contain;
     background-repeat: no-repeat;
     border-radius: 0px;
+    opacity: 0.7;
 }
 .carousel-indicators .active {
     border: medium solid #007ac2;
     margin: 1px;
+    opacity: 1.0;
 }
 .carousel-control.left:hover {
     opacity: 1;
