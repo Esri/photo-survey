@@ -1,0 +1,11 @@
+Proxy program is from repository https://github.com/Esri/resource-proxy, DotNet version
+From git branch
+master
+commit c1d1385eac8c68405459599d71fc5655adf8efe6
+Merge: 8def87d ad19d1b
+Author: Bjorn Svensson <bsvensson@esri.com>
+Date:   Mon Mar 2 22:26:28 2015 -0800
+
+    Merge pull request #211 from esoekianto/question-mark-password
+
+    fixed question mark in password
