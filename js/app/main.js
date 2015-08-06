@@ -265,9 +265,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         $("#submitBtn")[0].blur();
 
         // Provide some visual feedback for the switch to a new survey
-        $("#surveyContainer").fadeOut("slow", function () {
-            $("#surveyContainer").fadeIn("fast");
-        });
+        $("#surveyContainer").fadeTo(100, 0.0);
 
         // Get candidate property
         dataAccess.getCandidate(prepareAppConfigInfo.appParams.randomizeSelection).then(function (candidate) {
@@ -309,6 +307,9 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
             $("#carousel").trigger('create');
 
             updatePhotoSelectionDisplay();
+
+            // Provide some visual feedback for the switch to a new survey
+            $("#surveyContainer").fadeTo(1000, 1.0);
         }).fail(function (error) {
         });
 
