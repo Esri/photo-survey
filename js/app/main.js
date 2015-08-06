@@ -316,7 +316,8 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         $(".btn-group").trigger('create');
 
         // Can submit?
-        $("#submitBtn").attr("disabled", !handleUserSignin.getUser().canSubmit);
+        $("#submitBtn").attr("disabled",
+            !(prepareAppConfigInfo.featureSvcParams.canBeUpdated && handleUserSignin.getUser().canSubmit));
 
         // Show the content
         $("#contentPage").fadeIn("fast");

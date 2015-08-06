@@ -172,6 +172,7 @@ define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchC
                         that.featureSvcParams.url = data.opLayerParams.url;
                         that.featureSvcParams.id = data.featureSvcParams.id;
                         that.featureSvcParams.objectIdField = data.featureSvcParams.objectIdField;
+                        that.featureSvcParams.canBeUpdated = data.featureSvcParams.canBeUpdated;
 
                         // Create dictionary of domains
                         dictionary = parseConfigInfo._createSurveyDictionary(data.featureSvcParams.fields);
