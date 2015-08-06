@@ -159,7 +159,7 @@ define(['parseConfigInfo'], function (parseConfigInfo) {
          * @param {object} [deferred] Deferred to use for fetch notification; if not supplied, function
          * creates one
          * @return {object} Deferred indicating when service information is ready; successful resolution includes object with
-         * opLayerParams and featuerSvcParams
+         * opLayerParams and featureSvcParams
          */
         _getWebmapData: function (webmapId, deferred) {
             if (!deferred) {
@@ -209,6 +209,7 @@ define(['parseConfigInfo'], function (parseConfigInfo) {
 
             if (parseConfigInfo._isUsableString(featureSvcUrl)) {
                 $.getJSON(featureSvcUrl + "?f=json&callback=?", "jsonp", function (data) {
+                    data.canBeUpdated = data.capabilities && data.capabilities.indexOf("Update") >= 0;
                     deferred.resolve(data);
                 });
             } else {
