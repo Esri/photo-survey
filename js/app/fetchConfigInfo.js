@@ -16,18 +16,18 @@
  | limitations under the License.
  */
 //============================================================================================================================//
-define(['parseConfig'], function (parseConfig) {
+define(['parseConfigInfo'], function (parseConfigInfo) {
     var that;
     return {
 
         //--------------------------------------------------------------------------------------------------------------------//
 
         /**
-         * Initializes the module and its dependency 'parseConfig'.
+         * Initializes the module and its dependency 'parseConfigInfo'.
          */
         init: function () {
             that = this;
-            parseConfig.init();
+            parseConfigInfo.init();
         },
 
         //--------------------------------------------------------------------------------------------------------------------//
@@ -79,7 +79,7 @@ define(['parseConfig'], function (parseConfig) {
                 deferred = $.Deferred();
             }
 
-            if (parseConfig._isUsableString(appId)) {
+            if (parseConfigInfo._isUsableString(appId)) {
                 $.getJSON("http://www.arcgis.com/sharing/content/items/"
                     + appId + "/data?f=json&callback=?", "jsonp", function (data) {
                         deferred.resolve((data && data.values) || {});
@@ -110,7 +110,7 @@ define(['parseConfig'], function (parseConfig) {
             deferreds.params = paramsDeferred || $.Deferred();
             deferreds.origImageUrl = origImageUrlDeferred || $.Deferred();
 
-            if (parseConfig._isUsableString(webmapId)) {
+            if (parseConfigInfo._isUsableString(webmapId)) {
                 $.getJSON("http://www.arcgis.com/sharing/content/items/" + webmapId + "?f=json&callback=?", "jsonp",
                     function (data) {
                         var normalizedData = {}, imageUrl, iExt;
@@ -123,7 +123,7 @@ define(['parseConfig'], function (parseConfig) {
                         normalizedData.title = data.title;
                         normalizedData.splashText = data.snippet;
                         normalizedData.helpText = data.description;
-                        normalizedData = $.extend(normalizedData, parseConfig._parseAccessConfig(data.licenseInfo));
+                        normalizedData = $.extend(normalizedData, parseConfigInfo._parseAccessConfig(data.licenseInfo));
                         deferreds.params.resolve(normalizedData);
 
                         // See if we can get an original-size image
@@ -159,14 +159,14 @@ define(['parseConfig'], function (parseConfig) {
          * @param {object} [deferred] Deferred to use for fetch notification; if not supplied, function
          * creates one
          * @return {object} Deferred indicating when service information is ready; successful resolution includes object with
-         * opLayerParams and featuerSvcParams
+         * opLayerParams and featureSvcParams
          */
         _getWebmapData: function (webmapId, deferred) {
             if (!deferred) {
                 deferred = $.Deferred();
             }
 
-            if (parseConfig._isUsableString(webmapId)) {
+            if (parseConfigInfo._isUsableString(webmapId)) {
                 $.getJSON("http://www.arcgis.com/sharing/content/items/" + webmapId + "/data?f=json&callback=?",
                     "jsonp", function (data) {
                         var featureSvcData = {};
@@ -207,8 +207,9 @@ define(['parseConfig'], function (parseConfig) {
                 deferred = $.Deferred();
             }
 
-            if (parseConfig._isUsableString(featureSvcUrl)) {
+            if (parseConfigInfo._isUsableString(featureSvcUrl)) {
                 $.getJSON(featureSvcUrl + "?f=json&callback=?", "jsonp", function (data) {
+                    data.canBeUpdated = data.capabilities && data.capabilities.indexOf("Update") >= 0;
                     deferred.resolve(data);
                 });
             } else {

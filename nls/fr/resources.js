@@ -24,8 +24,24 @@ define(
             h2_additionalInfo: "Informations complémentaires"
         },
         tooltips: {
-            button_tip_additionalInfo: "Informations complémentaires",
-            button_tip_close: "Fermez le panneau de informations complémentaires"
+            button_additionalInfo: "Informations complémentaires",
+            button_close: "Fermez le panneau de informations complémentaires",
+            flag_important_question: "S'il vous plaît répondre à cette question",
+            button_previous_image: "Image précédente",
+            button_next_image: "Image suivante",
+            button_best_image: "Ceci est la meilleure photo pour la propriété",
+            button_click_if_best_image: "Cliquez si cela est la meilleure photo pour la propriété",
+            button_skip: "Sauter",
+            button_submit: "Soumettre le questionnaire"
+        },
+        labels: {
+            menuItem_profile: "Votre profil",
+            menuItem_signout: "Se déconnecter",
+            button_close: "Fermez",
+            label_surveys_completed: "questionnaires remplis",
+            label_level: "niveau ${0}",
+            label_remaining_surveys: "${0} questionnaires pour atteindre le prochain niveau",
+            button_returnToSurvey: "&lt; Retourner au questionnaire"
         },
         signin: {
             checkingServer: "Vérification de la disponibilité du serveur...",
@@ -33,7 +49,8 @@ define(
             needProxy: "Cette version d'Internet Explorer ne sont pas pris en charge par notre serveur. S'il vous plaît utiliser Internet Explorer 10 ou plus récent.",
             signinFetching: "Vérification de la disponibilité des possibilités de connexion...",
             signinLoginPrompt: "S'il vous plaît vous connecter pour commencer",
-            noMoreSurveys: "Il n'y a pas de sondages disponibles à ce moment. Merci pour votre participation."
+            noMoreSurveys: "Il n'y a pas de sondages disponibles à ce moment. Merci pour votre participation.",
+            guestLabel: "Invité"
         }
     })
 );
