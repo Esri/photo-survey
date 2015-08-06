@@ -16,8 +16,8 @@
  | limitations under the License.
  */
 //============================================================================================================================//
-define(['lib/i18n.min!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess', 'diag'],
-    function (i18n, appConfig, userConfig, dataAccess, diag) {
+define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSignin', 'dataAccess', 'diag'],
+    function (i18n, prepareAppConfigInfo, handleUserSignin, dataAccess, diag) {
     var that, unsupported = false, needProxy = false, proxyReady;
 
     that = {
@@ -46,34 +46,34 @@ define(['lib/i18n.min!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'
     $('.carousel').bcSwipe({ threshold: 50 });
 
     // Get app, webmap, feature service
-    var appConfigReadies = appConfig.init();
+    var appConfigReadies = prepareAppConfigInfo.init();
 
     // When we have the app parameters, we can continue setting up the app
     appConfigReadies.parametersReady.then(function () {
-        if (appConfig.appParams.diag !== undefined) {diag.init()};  //???
+        if (prepareAppConfigInfo.appParams.diag !== undefined) {diag.init()};  //???
 
         // Update the page's title
-        document.title = appConfig.appParams.title;
-        $("#page-title")[0].innerHTML = appConfig.appParams.title;
+        document.title = prepareAppConfigInfo.appParams.title;
+        $("#page-title")[0].innerHTML = prepareAppConfigInfo.appParams.title;
 
         // If a proxy is needed, launch the test for a usable proxy
         proxyReady = $.Deferred();
         if (needProxy) {
-            $.getJSON(appConfig.appParams.proxyProgram + "?ping", function () {
+            $.getJSON(prepareAppConfigInfo.appParams.proxyProgram + "?ping", function () {
                 proxyReady.resolve();
             }).fail(function () {
                 proxyReady.reject();
             });
         } else {
-            appConfig.appParams.proxyProgram = null;
+            prepareAppConfigInfo.appParams.proxyProgram = null;
             proxyReady.resolve();
         }
 
         // Start up the social media connections
-        var socialMediaReady = userConfig.init(appConfig.appParams, function (notificationType) {
+        var socialMediaReady = handleUserSignin.init(prepareAppConfigInfo.appParams, function (notificationType) {
             // Callback from current social medium
             switch (notificationType) {
-                case userConfig.notificationSignIn:
+                case handleUserSignin.notificationSignIn:
                     diag.appendWithLF("sign-in callback; believed logged in: " + that.signedIn);  //???
                     if (!that.signedIn) {
                         that.signedIn = true;
@@ -81,7 +81,7 @@ define(['lib/i18n.min!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'
                         $(document).triggerHandler('signedIn:user');
                     }
                     break;
-                case userConfig.notificationSignOut:
+                case handleUserSignin.notificationSignOut:
                     diag.appendWithLF("sign-out callback; believed logged in: " + that.signedIn);  //???
                     if (that.signedIn) {
                         that.signedIn = false;
@@ -92,8 +92,8 @@ define(['lib/i18n.min!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'
                         $("#profileAvatar").css("display", "none");
                     }
                     break;
-                case userConfig.notificationAvatarUpdate:
-                    var avatar = userConfig.getUser().avatar;
+                case handleUserSignin.notificationAvatarUpdate:
+                    var avatar = handleUserSignin.getUser().avatar;
                     diag.appendWithLF("avatar callback; believed logged in: " + that.signedIn);  //???
                     if (avatar) {
                         $("#profileAvatar").css("backgroundImage", "url(" + avatar + ")");
@@ -109,19 +109,19 @@ define(['lib/i18n.min!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'
         $().ready(function () {
 
             // Populate the splash UI
-            $("#signinTitle")[0].innerHTML = appConfig.appParams.title;
-            $("#signinParagraph")[0].innerHTML = appConfig.appParams.splashText;
+            $("#signinTitle")[0].innerHTML = prepareAppConfigInfo.appParams.title;
+            $("#signinParagraph")[0].innerHTML = prepareAppConfigInfo.appParams.splashText;
 
             // If we're not going to wait for the webmap's original image, just set the splash
-            if (appConfig.appParams.useWebmapOrigImg) {
+            if (prepareAppConfigInfo.appParams.useWebmapOrigImg) {
                 appConfigReadies.webmapOrigImageUrlReady.then(function (url) {
                     if (url) {
-                        appConfig.appParams.splashBackgroundUrl = url;
+                        prepareAppConfigInfo.appParams.splashBackgroundUrl = url;
                     }
-                    $("#signinPageBkgd").css("background-image", "url(" + appConfig.appParams.splashBackgroundUrl + ")").fadeIn(2000);
+                    $("#signinPageBkgd").css("background-image", "url(" + prepareAppConfigInfo.appParams.splashBackgroundUrl + ")").fadeIn(2000);
                 });
             } else {
-                $("#signinPageBkgd").css("background-image", "url(" + appConfig.appParams.splashBackgroundUrl + ")").fadeIn(2000);
+                $("#signinPageBkgd").css("background-image", "url(" + prepareAppConfigInfo.appParams.splashBackgroundUrl + ")").fadeIn(2000);
             }
 
             // Show the splash UI
@@ -145,10 +145,10 @@ define(['lib/i18n.min!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'
 
                 // When the feature service and survey are ready, we can set up the module that reads from and writes to the service
                 appConfigReadies.surveyReady.done(function () {
-                    dataAccess.init(appConfig.featureSvcParams.url, appConfig.featureSvcParams.id,
-                        appConfig.featureSvcParams.objectIdField,
-                        appConfig.appParams.surveyorNameField + "+is+null+or+"
-                            + appConfig.appParams.surveyorNameField + "=''", appConfig.appParams.proxyProgram);
+                    dataAccess.init(prepareAppConfigInfo.featureSvcParams.url, prepareAppConfigInfo.featureSvcParams.id,
+                        prepareAppConfigInfo.featureSvcParams.objectIdField,
+                        prepareAppConfigInfo.appParams.surveyorNameField + "+is+null+or+"
+                            + prepareAppConfigInfo.appParams.surveyorNameField + "=''", prepareAppConfigInfo.appParams.proxyProgram);
 
                     // Test if there are any surveys remaining to be done
                     dataAccess.getObjectCount().done(function (countRemaining) {
@@ -158,7 +158,7 @@ define(['lib/i18n.min!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'
                             $("#signinLoginPrompt").fadeIn();
                             socialMediaReady.then(function () {
                                 // Add the sign-in buttons
-                                userConfig.initUI($("#socialMediaButtonArea")[0]);
+                                handleUserSignin.initUI($("#socialMediaButtonArea")[0]);
 
                                 // Switch to the sign-in prompt
                                 $("#signinLoginPrompt").fadeOut("fast", function () {
@@ -187,12 +187,12 @@ define(['lib/i18n.min!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'
                 });
 
                 // Don't need help button if there's no help to display
-                if (appConfig.appParams.helpText.length === 0) {
+                if (prepareAppConfigInfo.appParams.helpText.length === 0) {
                     $("#helpButton").css("display", "none");
                 } else {
                     $("#helpButton")[0].title = i18n.tooltips.button_additionalInfo;
-                    $("#helpTitle")[0].innerHTML = appConfig.appParams.title;
-                    $("#helpBody")[0].innerHTML = appConfig.appParams.helpText;
+                    $("#helpTitle")[0].innerHTML = prepareAppConfigInfo.appParams.title;
+                    $("#helpBody")[0].innerHTML = prepareAppConfigInfo.appParams.helpText;
                 }
 
             }).fail(function () {
@@ -228,13 +228,13 @@ define(['lib/i18n.min!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'
     // Using colons for custom event names as recommended by https://learn.jquery.com/events/introduction-to-custom-events/#naming-custom-events
     $(document).on('signedIn:user', function (e) {
         appConfigReadies.surveyReady.then(function () {
-            var user = userConfig.getUser();
+            var user = handleUserSignin.getUser();
 
             // Heading on survey/profile page
             $("#name")[0].innerHTML = user.name;
             $("#name2")[0].innerHTML = user.name;
 
-            dataAccess.getObjectCount(appConfig.appParams.surveyorNameField + "='" + user.name + "'").then(function (count) {
+            dataAccess.getObjectCount(prepareAppConfigInfo.appParams.surveyorNameField + "='" + user.name + "'").then(function (count) {
                 if (count >= 0) {
                     that.completions = count;
                     updateCount();
@@ -258,14 +258,14 @@ define(['lib/i18n.min!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'
     });
 
     $(document).on('signedOut:user', function (e) {
-        userConfig.signOut();
+        handleUserSignin.signOut();
     });
 
     $(document).on('show:newSurvey', function (e) {
         $("#submitBtn")[0].blur();
 
         // Get candidate property
-        dataAccess.getCandidate(appConfig.appParams.randomizeSelection).then(function (candidate) {
+        dataAccess.getCandidate(prepareAppConfigInfo.appParams.randomizeSelection).then(function (candidate) {
             // obj:feature{}
             // attachments:[{id,url},...]
 
@@ -275,7 +275,7 @@ define(['lib/i18n.min!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'
                 return;
             } else if (that.numPhotos === 0) {
                 diag.appendWithLF("no photos for property <i>" + JSON.stringify(candidate.obj.attributes) + "</i>");  //???
-                candidate.obj.attributes[appConfig.appParams.surveyorNameField] = "no photos";
+                candidate.obj.attributes[prepareAppConfigInfo.appParams.surveyorNameField] = "no photos";
                 dataAccess.updateCandidate(candidate);
                 $(document).triggerHandler('show:newSurvey');
                 return;
@@ -310,13 +310,14 @@ define(['lib/i18n.min!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'
         // Survey
         var surveyContainer = $("#surveyContainer")[0];
         $(surveyContainer).children().remove();  // remove children and their events
-        $.each(appConfig.survey, function (indexInArray, questionInfo) {
+        $.each(prepareAppConfigInfo.survey, function (indexInArray, questionInfo) {
             addQuestion(surveyContainer, indexInArray, questionInfo);
         });
         $(".btn-group").trigger('create');
 
         // Can submit?
-        $("#submitBtn").attr("disabled", !userConfig.getUser().canSubmit);
+        $("#submitBtn").attr("disabled",
+            !(prepareAppConfigInfo.featureSvcParams.canBeUpdated && handleUserSignin.getUser().canSubmit));
 
         // Show the content
         $("#contentPage").fadeIn("fast");
@@ -352,7 +353,7 @@ define(['lib/i18n.min!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'
         var surveyContainer, msg, iQuestionResult, hasImportants = true, firstMissing;
 
         surveyContainer = $('#surveyContainer');
-        $.each(appConfig.survey, function (iQuestion, questionInfo) {
+        $.each(prepareAppConfigInfo.survey, function (iQuestion, questionInfo) {
             if (questionInfo.style === "button") {
                 iQuestionResult = $('#q' + iQuestion + ' .active', surveyContainer).val();
             } else {
@@ -378,9 +379,9 @@ define(['lib/i18n.min!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'
 
         // Submit the survey if it has the important responses
         if (hasImportants) {
-            that.candidate.obj.attributes[appConfig.appParams.surveyorNameField] = userConfig.getUser().name;
+            that.candidate.obj.attributes[prepareAppConfigInfo.appParams.surveyorNameField] = handleUserSignin.getUser().name;
             if (that.iSelectedPhoto >= 0) {
-                that.candidate.obj.attributes[appConfig.appParams.bestPhotoField] = that.candidate.attachments[that.iSelectedPhoto].id;
+                that.candidate.obj.attributes[prepareAppConfigInfo.appParams.bestPhotoField] = that.candidate.attachments[that.iSelectedPhoto].id;
             }
             diag.appendWithLF("saving survey for property <i>" + JSON.stringify(that.candidate.obj.attributes) + "</i>");  //???
             dataAccess.updateCandidate(that.candidate);
@@ -456,17 +457,17 @@ diag.appendWithLF("block slide to " + data.direction);  //???
         $("#score2")[0].innerHTML = that.completions;
         $("#profileCount").fadeIn();
 
-        if (appConfig.appParams.contribLevels.length > 0) {
+        if (prepareAppConfigInfo.appParams.contribLevels.length > 0) {
             // Find the user's level
-            var level = appConfig.appParams.contribLevels.length - 1;
+            var level = prepareAppConfigInfo.appParams.contribLevels.length - 1;
             var surveysForNextLevel = -1;
-            while (appConfig.appParams.contribLevels[level].minimumSurveysNeeded > that.completions) {
-                surveysForNextLevel = appConfig.appParams.contribLevels[level].minimumSurveysNeeded;
+            while (prepareAppConfigInfo.appParams.contribLevels[level].minimumSurveysNeeded > that.completions) {
+                surveysForNextLevel = prepareAppConfigInfo.appParams.contribLevels[level].minimumSurveysNeeded;
                 level -= 1;
             }
 
             // Show ranking via text and stars
-            $("#rankLabel")[0].innerHTML = appConfig.appParams.contribLevels[level].label;
+            $("#rankLabel")[0].innerHTML = prepareAppConfigInfo.appParams.contribLevels[level].label;
             $("#level")[0].innerHTML = i18n.labels.label_level.replace("${0}", level);
             if (level === 0) {
                 $("img", ".profileRankStars").attr("src", "images/empty-star.png");
@@ -477,7 +478,7 @@ diag.appendWithLF("block slide to " + data.direction);  //???
             }
 
             // If below top level, show how far to next level
-            var doneThisLevel = that.completions - appConfig.appParams.contribLevels[level].minimumSurveysNeeded;
+            var doneThisLevel = that.completions - prepareAppConfigInfo.appParams.contribLevels[level].minimumSurveysNeeded;
             var remainingToNextLevel = Math.max(0, surveysForNextLevel - that.completions);
             var surveysThisLevel = doneThisLevel + remainingToNextLevel;
             if (surveysForNextLevel >= 0 && surveysThisLevel > 0) {
