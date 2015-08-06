@@ -37,7 +37,7 @@ define(
         labels: {
             menuItem_profile: "Dein Profil",
             menuItem_signout: "Abmelden",
-            button_close: "Abschließen",
+            button_close: "Schließen",
             label_surveys_completed: "Fragebögen abgeschlossen",
             label_level: "niveau ${0}",
             label_remaining_surveys: "${0} Fragebögen das nächste Niveau zu erreichen",
