@@ -40,6 +40,7 @@ define(['parseConfig', 'fetchConfig'], function (parseConfig, fetchConfig) {
             twitterSigninUrl: "",
             twitterUserUrl: "",
             twitterCallbackUrl: "",
+            allowGuestSubmissions: false,
 
             surveyorNameField: "",
             bestPhotoField: "",
@@ -155,6 +156,7 @@ define(['parseConfig', 'fetchConfig'], function (parseConfig, fetchConfig) {
                     that.appParams.showGooglePlus =
                         that.appParams.googleplusClientId !== null && that.appParams.googleplusClientId.length > 0;
                     that.appParams.showTwitter = parseConfig._toBoolean(that.appParams.showTwitter);
+                    that.appParams.allowGuestSubmissions = parseConfig._toBoolean(that.appParams.allowGuestSubmissions, false);
 
                     parametersReady.resolve(true);
                 }).fail(function () {

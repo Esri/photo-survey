@@ -190,6 +190,7 @@ define(['lib/i18n.min!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'
                 if (appConfig.appParams.helpText.length === 0) {
                     $("#helpButton").css("display", "none");
                 } else {
+                    $("#helpButton")[0].title = i18n.tooltips.button_additionalInfo;
                     $("#helpTitle")[0].innerHTML = appConfig.appParams.title;
                     $("#helpBody")[0].innerHTML = appConfig.appParams.helpText;
                 }
@@ -202,8 +203,26 @@ define(['lib/i18n.min!nls/resources.js', 'appConfig', 'userConfig', 'dataAccess'
                 });
             });
 
+            // i18n updates
+            $("#previousImageBtn")[0].title = i18n.tooltips.button_previous_image;
+            $("#nextImageBtn")[0].title = i18n.tooltips.button_next_image;
+
+            $("#skipBtn")[0].innerHTML = i18n.tooltips.button_skip;
+            $("#submitBtn")[0].innerHTML = i18n.tooltips.button_submit;
+
+            $("#userProfileSelectionText")[0].innerHTML = i18n.labels.menuItem_profile;
+            $("#userSignoutSelectionText")[0].innerHTML = i18n.labels.menuItem_signout;
+
+            $("#modalCloseBtn1")[0].title = i18n.tooltips.button_close;
+            $("#modalCloseBtn2")[0].title = i18n.tooltips.button_close;
+            $("#modalCloseBtn2")[0].innerHTML = i18n.labels.button_close;
+
+            $("#surveysCompleted")[0].innerHTML = i18n.labels.label_surveys_completed;
+            $("#closeProfileBtn")[0].innerHTML = i18n.labels.button_returnToSurvey;
+
         });
     });
+
 
 
     // Using colons for custom event names as recommended by https://learn.jquery.com/events/introduction-to-custom-events/#naming-custom-events
@@ -427,7 +446,8 @@ diag.appendWithLF("block slide to " + data.direction);  //???
         that.photoSelected = that.iVisiblePhoto === that.iSelectedPhoto;
         showHeart('emptyHeart', !that.photoSelected);
         showHeart('filledHeart', that.photoSelected);
-        $("#hearts").attr("title", (that.photoSelected ? "This is the best photo for the property" : "Click if this is the best photo for the property"));
+        $("#hearts").attr("title",
+            (that.photoSelected ? i18n.tooltips.button_best_image : i18n.tooltips.button_click_if_best_image));
         $("#hearts")[0].style.display = "block";
     }
 
@@ -447,7 +467,7 @@ diag.appendWithLF("block slide to " + data.direction);  //???
 
             // Show ranking via text and stars
             $("#rankLabel")[0].innerHTML = appConfig.appParams.contribLevels[level].label;
-            $("#level")[0].innerHTML = "level $(level)".replace("$(level)", level);
+            $("#level")[0].innerHTML = i18n.labels.label_level.replace("${0}", level);
             if (level === 0) {
                 $("img", ".profileRankStars").attr("src", "images/empty-star.png");
             } else {
@@ -466,7 +486,7 @@ diag.appendWithLF("block slide to " + data.direction);  //???
                 $("#profileRankBar").css("display", "block");
 
                 $("#remainingToNextLevel")[0].innerHTML =
-                    "$(remainingToNextLevel) surveys left until next level".replace("$(remainingToNextLevel)", remainingToNextLevel);
+                    i18n.labels.label_remaining_surveys.replace("${0}", remainingToNextLevel);
             } else {
                 $("#remainingToNextLevel")[0].innerHTML = "";
                 $("#profileRankBar").css("display", "none");
@@ -490,7 +510,8 @@ diag.appendWithLF("block slide to " + data.direction);  //???
         var start =
             "<div id='qg" + iQuestion + "' class='form-group'>"
             + "<label for='q" + iQuestion + "'>" + questionInfo.question
-            + (questionInfo.important ? "&nbsp;<span class='glyphicon glyphicon-star' title='" + "Please answer this question" + "'></span>" : "")
+            + (questionInfo.important ? "&nbsp;<span class='glyphicon glyphicon-star' title=\""
+            + i18n.tooltips.flag_important_question + "\"></span>" : "")
             + "</label><br>";
         return start;
     }
