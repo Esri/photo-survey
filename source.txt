@@ -5,10 +5,8 @@ origin	git@github.com:ArcGIS/photo-survey.git (push)
 branch 
 develop
 . 
-commit b1d6ee9a28917b150973100c1edf5a1ecb0dcb63
+commit e898c702f3b197db1b66f14dc744c7c6d59a0bdd
 Author: MikeTschudi <mtschudi@esri.com>
-Date:   Thu Aug 6 12:51:48 2015 -0700
+Date:   Thu Aug 6 14:50:08 2015 -0700
 
-    Constrained submit button based on updatability of feature service
-    
-    #20
+    Provided some visual feedback for the switch to a new survey

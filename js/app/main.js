@@ -264,6 +264,11 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
     $(document).on('show:newSurvey', function (e) {
         $("#submitBtn")[0].blur();
 
+        // Provide some visual feedback for the switch to a new survey
+        $("#surveyContainer").fadeOut("slow", function () {
+            $("#surveyContainer").fadeIn("fast");
+        });
+
         // Get candidate property
         dataAccess.getCandidate(prepareAppConfigInfo.appParams.randomizeSelection).then(function (candidate) {
             // obj:feature{}
