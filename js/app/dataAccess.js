@@ -114,7 +114,7 @@ define(['diag'], function (diag) {
 
                 // Pick a candidate from amongst the available
                 objectId = randomizeSelection ?
-                    results.objectIds[Math.floor(Math.random() * results.objectIds.length)] : results.objectIds[0];
+                        results.objectIds[Math.floor(Math.random() * results.objectIds.length)] : results.objectIds[0];
 
                 // Get the candidate's attributes
                 attributesDeferred = $.Deferred();
