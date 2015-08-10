@@ -5,8 +5,8 @@ origin	git@github.com:ArcGIS/photo-survey.git (push)
 branch 
 develop
 . 
-commit bf49c71a372b2fc2f7a56ef32ba36a1690ab13cf
+commit b938b559532fb03f016d54626a990a3acaa418c8
 Author: MikeTschudi <mtschudi@esri.com>
-Date:   Thu Aug 6 15:04:51 2015 -0700
+Date:   Mon Aug 10 07:40:54 2015 -0700
 
-    Revised survey-switch feedback
+    Removed unnecessary end tags
