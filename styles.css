@@ -501,6 +501,7 @@ header, section, footer, aside, nav, main, article, figure {
     font-size: 28px;
     color: #333;
     text-align: center;
+    overflow-x: hidden;
 }
 h1 {
     font-size: 30px;
