@@ -197,8 +197,8 @@ arcpy.Append_management(PhotoFeatureClass2, PhotoFeatureClass3, "NO_TEST", "", "
 #Create Photo Attachments
 
 ParcelPointClassHelper = """{}\\PointsTemp""".format(Geodatabase)
-ParcelPointHelper = """{}\\ParcelPoints""".format(Geodatabase)
-arcpy.CreateFeatureclass_management(Geodatabase, "ParcelPoints", "POINT", "", "", "", Parcels)
+ParcelPointHelper = """{}\\PhotoPoints""".format(Geodatabase)
+arcpy.CreateFeatureclass_management(Geodatabase, "PhotoPoints", "POINT", "", "", "", Parcels)
 arcpy.AddField_management(ParcelPointHelper, ParcelPIN, "TEXT", "", "", "50", ParcelPIN, "NULLABLE", "NON_REQUIRED")
 arcpy.FeatureToPoint_management(ParcelsFeatureClass, ParcelPointClassHelper, "INSIDE")
 
