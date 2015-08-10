@@ -5,8 +5,10 @@ origin	git@github.com:ArcGIS/photo-survey.git (push)
 branch 
 develop
 . 
-commit b938b559532fb03f016d54626a990a3acaa418c8
+commit e1d657d82db0df333998820d89d744da9fbec1d8
 Author: MikeTschudi <mtschudi@esri.com>
-Date:   Mon Aug 10 07:40:54 2015 -0700
+Date:   Mon Aug 10 08:41:30 2015 -0700
 
-    Removed unnecessary end tags
+    Chopped off extra-long no-break title rather than have whole survey area have horizontal scroll
+    
+    #31
