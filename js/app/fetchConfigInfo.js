@@ -1,5 +1,5 @@
-﻿/*global define,$ */
-/*jslint browser:true,sloppy:true,nomen:true,unparam:true,plusplus:true */
+﻿/*global define,$,window */
+/*jslint browser:true */
 /** @license
  | Copyright 2015 Esri
  |
@@ -17,8 +17,8 @@
  */
 //============================================================================================================================//
 define(['parseConfigInfo'], function (parseConfigInfo) {
-    var that;
-    return {
+    'use strict';
+    var fetchConfigInfo = {
 
         //--------------------------------------------------------------------------------------------------------------------//
 
@@ -26,7 +26,6 @@ define(['parseConfigInfo'], function (parseConfigInfo) {
          * Initializes the module and its dependency 'parseConfigInfo'.
          */
         init: function () {
-            that = this;
             parseConfigInfo.init();
         },
 
@@ -36,11 +35,11 @@ define(['parseConfigInfo'], function (parseConfigInfo) {
          * Extracts parameters from app's location URL.
          * @return {object} Parameters and values; a value is null if the parameter does not have a value assignment in the URL
          */
-        _getParamsFromUrl: function () {
+        getParamsFromUrl: function () {
             var params = {}, paramsString = window.location.search;
             if (paramsString.length > 0 && paramsString[0] === "?") {
                 paramsString = paramsString.substring(1).split("&");
-                $.map(paramsString, function (item, index) {
+                $.map(paramsString, function (item) {
                     var paramParts = item.split("=");
                     params[paramParts[0].toLowerCase()] = paramParts[1] || null;
                 });
@@ -54,7 +53,7 @@ define(['parseConfigInfo'], function (parseConfigInfo) {
          * @return {object} Deferred indicating when parameters are ready; successful resolution includes object with
          * file's contents
          */
-        _getParamsFromConfigFile: function (deferred) {
+        getParamsFromConfigFile: function (deferred) {
             var filename = "js/configuration.json";
             if (!deferred) {
                 deferred = $.Deferred();
@@ -74,16 +73,16 @@ define(['parseConfigInfo'], function (parseConfigInfo) {
          * @return {object} Deferred indicating when parameters are ready; successful resolution includes object with
          * app's data section contents
          */
-        _getParamsFromOnlineApp: function (appId, deferred) {
+        getParamsFromOnlineApp: function (appId, deferred) {
             if (!deferred) {
                 deferred = $.Deferred();
             }
 
-            if (parseConfigInfo._isUsableString(appId)) {
+            if (parseConfigInfo.isUsableString(appId)) {
                 $.getJSON("http://www.arcgis.com/sharing/content/items/"
-                    + appId + "/data?f=json&callback=?", "jsonp", function (data) {
-                        deferred.resolve((data && data.values) || {});
-                    });
+                        + appId + "/data?f=json&callback=?", "jsonp", function (data) {
+                    deferred.resolve((data && data.values) || {});
+                });
             } else {
                 deferred.resolve({});
             }
@@ -105,46 +104,47 @@ define(['parseConfigInfo'], function (parseConfigInfo) {
          * surveyorNameField, bestPhotoField; successful resolution of 'origImageUrl' contains the URL of the original-size
          * image.
          */
-        _getParamsFromWebmap: function (webmapId, paramsDeferred, origImageUrlDeferred) {
+        getParamsFromWebmap: function (webmapId, paramsDeferred, origImageUrlDeferred) {
             var deferreds = {};
             deferreds.params = paramsDeferred || $.Deferred();
             deferreds.origImageUrl = origImageUrlDeferred || $.Deferred();
 
-            if (parseConfigInfo._isUsableString(webmapId)) {
-                $.getJSON("http://www.arcgis.com/sharing/content/items/" + webmapId + "?f=json&callback=?", "jsonp",
-                    function (data) {
-                        var normalizedData = {}, imageUrl, iExt;
-                        if (!data || data.error) {
-                            deferreds.params.reject();
-                            deferreds.origImageUrl.resolve();
-                            return;
-                        }
+            if (parseConfigInfo.isUsableString(webmapId)) {
+                $.getJSON("http://www.arcgis.com/sharing/content/items/" + webmapId + "?f=json&callback=?", "jsonp", function (data) {
+                    var normalizedData = {}, imageUrl, iExt;
+                    if (!data || data.error) {
+                        deferreds.params.reject();
+                        deferreds.origImageUrl.resolve();
+                        return;
+                    }
 
-                        normalizedData.title = data.title;
-                        normalizedData.splashText = data.snippet;
-                        normalizedData.helpText = data.description;
-                        normalizedData = $.extend(normalizedData, parseConfigInfo._parseAccessConfig(data.licenseInfo));
-                        deferreds.params.resolve(normalizedData);
+                    normalizedData.title = data.title;
+                    normalizedData.splashText = data.snippet;
+                    normalizedData.helpText = data.description;
+                    normalizedData = $.extend(normalizedData, parseConfigInfo.parseAccessConfig(data.licenseInfo));
+                    deferreds.params.resolve(normalizedData);
 
-                        // See if we can get an original-size image
-                        imageUrl = data.thumbnail;
-                        if (imageUrl) {
-                            iExt = imageUrl.lastIndexOf(".");
-                            if (iExt >= 0) {
-                                imageUrl = imageUrl.substring(0, iExt) + "_orig" + imageUrl.substr(iExt);
-                            } else {
-                                imageUrl = imageUrl + "_orig";
-                            }
-                            imageUrl = "http://www.arcgis.com/sharing/content/items/" + webmapId + "/info/" + imageUrl;
-
-                            // Test that this URL is valid
-                            that._testURL(imageUrl, function (isOK) {
-                                deferreds.origImageUrl.resolve(isOK ? imageUrl : null);
-                            });
+                    // See if we can get an original-size image
+                    imageUrl = data.thumbnail;
+                    if (imageUrl) {
+                        iExt = imageUrl.lastIndexOf(".");
+                        if (iExt >= 0) {
+                            imageUrl = imageUrl.substring(0, iExt) + "_orig" + imageUrl.substr(iExt);
                         } else {
-                            deferreds.origImageUrl.resolve();
+                            imageUrl = imageUrl + "_orig";
                         }
-                    });
+                        imageUrl = "http://www.arcgis.com/sharing/content/items/" + webmapId + "/info/" + imageUrl;
+
+                        // Test that this URL is valid
+                        fetchConfigInfo.testURL(imageUrl, function (isOK) {
+                            deferreds.origImageUrl.resolve(isOK
+                                ? imageUrl
+                                : null);
+                        });
+                    } else {
+                        deferreds.origImageUrl.resolve();
+                    }
+                });
             } else {
                 deferreds.params.resolve({});
                 deferreds.origImageUrl.resolve();
@@ -161,31 +161,30 @@ define(['parseConfigInfo'], function (parseConfigInfo) {
          * @return {object} Deferred indicating when service information is ready; successful resolution includes object with
          * opLayerParams and featureSvcParams
          */
-        _getWebmapData: function (webmapId, deferred) {
+        getWebmapData: function (webmapId, deferred) {
             if (!deferred) {
                 deferred = $.Deferred();
             }
 
-            if (parseConfigInfo._isUsableString(webmapId)) {
-                $.getJSON("http://www.arcgis.com/sharing/content/items/" + webmapId + "/data?f=json&callback=?",
-                    "jsonp", function (data) {
-                        var featureSvcData = {};
+            if (parseConfigInfo.isUsableString(webmapId)) {
+                $.getJSON("http://www.arcgis.com/sharing/content/items/" + webmapId + "/data?f=json&callback=?", "jsonp", function (data) {
+                    var featureSvcData = {};
 
-                        if (data && data.operationalLayers && data.operationalLayers.length > 0) {
-                            featureSvcData.opLayerParams = data.operationalLayers[0];
+                    if (data && data.operationalLayers && data.operationalLayers.length > 0) {
+                        featureSvcData.opLayerParams = data.operationalLayers[0];
 
-                            // Get the app's webmap's feature service's data
-                            that._getFeatureSvcData(featureSvcData.opLayerParams.url).done(function (data) {
-                                if (!data || data.error) {
-                                    deferred.reject();
-                                }
-                                featureSvcData.featureSvcParams = data;
-                                deferred.resolve(featureSvcData);
-                            });
-                        } else {
-                            deferred.resolve({});
-                        }
-                    });
+                        // Get the app's webmap's feature service's data
+                        fetchConfigInfo.getFeatureSvcData(featureSvcData.opLayerParams.url).done(function (data) {
+                            if (!data || data.error) {
+                                deferred.reject();
+                            }
+                            featureSvcData.featureSvcParams = data;
+                            deferred.resolve(featureSvcData);
+                        });
+                    } else {
+                        deferred.resolve({});
+                    }
+                });
             } else {
                 deferred.resolve({});
             }
@@ -202,12 +201,12 @@ define(['parseConfigInfo'], function (parseConfigInfo) {
          * @return {object} Deferred indicating when service information is ready; successful resolution includes object with
          * data from feature service's main section
          */
-        _getFeatureSvcData: function (featureSvcUrl, deferred) {
+        getFeatureSvcData: function (featureSvcUrl, deferred) {
             if (!deferred) {
                 deferred = $.Deferred();
             }
 
-            if (parseConfigInfo._isUsableString(featureSvcUrl)) {
+            if (parseConfigInfo.isUsableString(featureSvcUrl)) {
                 $.getJSON(featureSvcUrl + "?f=json&callback=?", "jsonp", function (data) {
                     data.canBeUpdated = data.capabilities && data.capabilities.indexOf("Update") >= 0;
                     deferred.resolve(data);
@@ -225,7 +224,7 @@ define(['parseConfigInfo'], function (parseConfigInfo) {
          * @param {function} callback Function to call upon response from test; function gets boolean parameter indicating
          * if the HEAD call succeeded or not
          */
-        _testURL: function (url, callback) {
+        testURL: function (url, callback) {
             // Shield the call--a cross-domain call in IE9 sporadically breaks with "Access refused"
             try {
                 $.ajax({
@@ -234,14 +233,15 @@ define(['parseConfigInfo'], function (parseConfigInfo) {
                     success: function () {
                         callback(true);
                     },
-                    error: function (err) {
+                    error: function () {
                         callback(false);
                     }
                 });
-            } catch (err) {
+            } catch (ignore) {
                 callback(false);
             }
         }
 
     };
+    return fetchConfigInfo;
 });

@@ -1,5 +1,5 @@
 ﻿/*global define,$ */
-/*jslint browser:true,sloppy:true,nomen:true,unparam:true,plusplus:true */
+/*jslint browser:true */
 /** @license
  | Copyright 2015 Esri
  |
@@ -17,9 +17,8 @@
  */
 //============================================================================================================================//
 define(['lib/barcode.min'], function (barcode) {
-    var showDiag = false, showTest = false;
-
-    return {
+    'use strict';
+    var showDiag = false, showTest = false, diag = {
 
         //--------------------------------------------------------------------------------------------------------------------//
 
@@ -35,12 +34,12 @@ define(['lib/barcode.min'], function (barcode) {
             if (showDiag) {
                 // Create the display modal box and the button to trigger it
                 $("body").append("<button id='diagnosticButton' style='z-index:2000;position:absolute;left:0;top:0;width:32px;"
-                    + "height:32px;background-color:transparent' data-toggle='modal' data-target='#diagnosticPanel' class='iconButton'></button>"
-                    + "<div id='diagnosticPanel' class='modal fade' role='dialog'>"
-                    + "  <div class='modal-dialog'>"
-                    + "    <div id='diagnosticLog' class='modal-content' style='padding:8px;word-wrap:break-word;'></div>"
-                    + "  </div>"
-                    + "</div>");
+                        + "height:32px;background-color:transparent' data-toggle='modal' data-target='#diagnosticPanel' class='iconButton'></button>"
+                        + "<div id='diagnosticPanel' class='modal fade' role='dialog'>"
+                        + "  <div class='modal-dialog'>"
+                        + "    <div id='diagnosticLog' class='modal-content' style='padding:8px;word-wrap:break-word;'></div>"
+                        + "  </div>"
+                        + "</div>");
                 $("#diagnosticPanel").modal({show: false});
             }
 
@@ -69,14 +68,14 @@ define(['lib/barcode.min'], function (barcode) {
          * @param {string} note Text to append; text can contain HTML
          */
         appendWithLF: function (note) {
-            this.append(note + "<br>");
+            diag.append(note + "<br>");
         },
 
         /**
          * Appends an HTML &lt;hr&gt; to the diagnostic modal display.
          */
         appendLine: function () {
-            this.append("<hr>");
+            diag.append("<hr>");
         },
 
         /**
@@ -103,4 +102,5 @@ define(['lib/barcode.min'], function (barcode) {
         }
 
     };
+    return diag;
 });
