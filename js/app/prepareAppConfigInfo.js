@@ -90,7 +90,7 @@ define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchC
             webmapFetcher = null;
 
             // Get the URL parameters
-            paramsFromUrl = that._screenProperties(["webmap", "diag"], fetchConfigInfo._getParamsFromUrl());
+            paramsFromUrl = that._screenProperties(["webmap", "diag", "test"], fetchConfigInfo._getParamsFromUrl());
 
             // If webmap specified in the URL, we can start a fetch of its data now
             if (parseConfigInfo._isUsableString(paramsFromUrl.webmap)) {
