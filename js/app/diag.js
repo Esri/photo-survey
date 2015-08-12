@@ -27,6 +27,8 @@ define(['lib/barcode.min'], function (barcode) {
          * Initializes the module by creating the diagnostic modal display and its trigger button.
          */
         init: function (appParams) {
+            var barcodeDir = "h";
+
             showDiag = appParams.diag !== undefined;
             showTest = appParams.test !== undefined;
 
@@ -43,9 +45,12 @@ define(['lib/barcode.min'], function (barcode) {
             }
 
             if (showTest) {
+                if (appParams.test === "v") {
+                    barcodeDir = "v";
+                }
                 // Create the barcode display box
                 $("head").append("<link href='js/lib/barcode.min.css' rel='stylesheet'>");
-                $("body").append("<span class='barcode128h' id='barcode'></span>");
+                $("body").append("<span class='barcode128" + barcodeDir + "' id='barcode'></span>");
             }
         },
 
