@@ -1,3 +1,4 @@
+https://itlearnings.wordpress.com/2011/01/08/javascript-code128-barcode/
 https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js
 https://raw.githubusercontent.com/requirejs/i18n/latest/i18n.js
 https://github.com/maaaaark/bcSwipe
