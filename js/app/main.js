@@ -585,25 +585,15 @@ diag.appendWithLF("block slide to " + data.direction);  //???
         //    "'><img src='" + photoUrl + "'></div>";
         // $(carouselSlidesHolder).append(content);
 
-        // var content = $("<div id='c" + indexInArray + "' class='item" + (isActive ? " active" : "") + "'></div>");
         var content = "<div id='c" + indexInArray + "' class='item" + (isActive ? " active" : "") + "'><img /></div>";
         $(carouselSlidesHolder).append(content);
 
-        if (indexInArray === -1) {  //???
-            loadImage(photoUrl, $("#c" + indexInArray + " img")[0]);  //???
-        } else {
-            var img = $("#c" + indexInArray + " img")[0];
-            img.src = photoUrl;
-            $(img).on('error', function (err) {
-                img.src = "images/noPhoto.png";
-                $(img).css("margin", "auto");
-            });
-        }
-
-        /*loadImage(photoUrl).then(function (imgElement) {
-            $(content).append(imgElement);
-            $(carouselSlidesHolder).append(content);
-        });*/
+        var img = $("#c" + indexInArray + " img")[0];
+        img.src = photoUrl;
+        $(img).on('error', function (err) {
+            img.src = "images/noPhoto.png";
+            $(img).css("margin", "auto");
+        });
     }
 
     function addPhotoIndicator(carouselIndicatorsHolder, indexInArray, isActive, carouselId, photoUrl) {
@@ -615,7 +605,6 @@ diag.appendWithLF("block slide to " + data.direction);  //???
     }
 
     //------------------------------------------------------------------------------------------------------------------------//
-
 
     function testURL(url, callback) {
         $.ajax( {
@@ -629,92 +618,5 @@ diag.appendWithLF("block slide to " + data.direction);  //???
             }
         });
     }
-
-    function startPhotoSet(numPhotos) {
-        // Init shared progress bar
-    }
-
-    // https://gist.github.com/jafstar/3395525
-    // with mods to anonymous functions
-    var progressBar;
-
-    function loadImage(imageURI, context)
-    {
-        var request;
-        //var deferred = $.Deferred();
-        //var imageElement = document.createElement("img");
-
-        request = new XMLHttpRequest();
-        request.onloadstart = function () {
-            progressBar = document.createElement("progress");
-            progressBar.value = 0;
-            progressBar.max = 100;
-            progressBar.removeAttribute("value");
-            document.body.appendChild(progressBar);
-        };
-        request.onprogress = function (e) {
-            if (e.lengthComputable)
-                progressBar.value = e.loaded / e.total * 100;
-            else
-                progressBar.removeAttribute("value");
-        };
-        request.onload = function () {
-            //imageElement.src = "data:image/jpeg;base64," + base64Encode(request.responseText);
-            //deferred.resolve(imageElement);
-
-            context.src = "data:image/jpeg;base64," + base64Encode(request.responseText);
-        };
-        request.onloadend = function () {
-            document.body.removeChild(progressBar);
-        };
-        request.open("GET", imageURI, true);
-        request.overrideMimeType('text/plain; charset=x-user-defined');
-        request.send(null);
-
-        //return deferred;
-    }
-
-    // This encoding function is from Philippe Tenenhaus's example at http://www.philten.com/us-xmlhttprequest-image/
-    function base64Encode(inputStr)
-    {
-       var b64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-       var outputStr = "";
-       var i = 0;
-
-       while (i < inputStr.length)
-       {
-           //all three "& 0xff" added below are there to fix a known bug
-           //with bytes returned by xhr.responseText
-           var byte1 = inputStr.charCodeAt(i++) & 0xff;
-           var byte2 = inputStr.charCodeAt(i++) & 0xff;
-           var byte3 = inputStr.charCodeAt(i++) & 0xff;
-
-           var enc1 = byte1 >> 2;
-           var enc2 = ((byte1 & 3) << 4) | (byte2 >> 4);
-
-           var enc3, enc4;
-           if (isNaN(byte2))
-           {
-               enc3 = enc4 = 64;
-           }
-           else
-           {
-               enc3 = ((byte2 & 15) << 2) | (byte3 >> 6);
-               if (isNaN(byte3))
-               {
-                   enc4 = 64;
-               }
-               else
-               {
-                   enc4 = byte3 & 63;
-               }
-           }
-
-           outputStr += b64.charAt(enc1) + b64.charAt(enc2) + b64.charAt(enc3) + b64.charAt(enc4);
-        }
-
-        return outputStr;
-    }
-
 
 });
