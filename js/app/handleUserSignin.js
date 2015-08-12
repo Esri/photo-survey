@@ -1,5 +1,28 @@
-﻿/*global define,$,Modernizr,FB,gapi */
-/*jslint browser:true,sloppy:true,nomen:true,unparam:true,plusplus:true */
+﻿/*global define,$,Modernizr,FB,gapi,window */
+/*jslint browser:true */
+/*property
+    Deferred, Event, ___gcfg, access_token, ajax, allowGuestSubmissions, api,
+    appId, appParams, appendChild, appendTo, appendWithLF, async, auth,
+    auth_type, availabilities, avatar, callback, canSubmit, client, clientid,
+    complete, contentType, cookie, cookiepolicy, createElement, createIE8Test,
+    currentProvider, data, dataType, default_profile_image, disconnectUser,
+    displayName, documentElement, done, error, facebook, facebookAppId,
+    fbAsyncInit, fields, getElementById, getElementsByTagName, getLoginStatus,
+    getUser, googleplus, googleplusClientId, googleplusLogoutUrl, guest,
+    guestLabel, hasOwnProperty, height, host, hostname, id, id_str, image,
+    include_entities, init, initUI, innerHTML, insertBefore, isDefault, isIE,
+    isSignedIn, is_silhouette, lastIndexOf, load, location, loggedIn, login,
+    logout, name, notificationAvatarUpdate, notificationSignIn,
+    notificationSignOut, oAuthCallback, on, open, parentNode, parsetags, path,
+    pathname, profile_image_url_https, protocol, reject, removeChild, request,
+    resolve, result, showFacebook, showGooglePlus, showGooglePlusLogoutWin,
+    showGuest, showTwitter, showTwitterLoginWin, signIn, signOut, signedIn,
+    signed_in, signin, skip_status, src, status, statusCallback, subscribe,
+    substring, success, then, timeout, twitter, twitterCallbackUrl,
+    twitterSigninUrl, twitterUserUrl, type, updateFacebookUser,
+    updateGooglePlusUser, updateTwitterUser, url, user, version, when, width,
+    xfbml
+*/
 /** @license
  | Copyright 2015 Esri
  |
@@ -17,8 +40,8 @@
  */
 //============================================================================================================================//
 define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
-    var that;
-    return {
+    'use strict';
+    var handleUserSignin = {
 
         // Constants for callback to app
         notificationSignIn: 0,
@@ -27,11 +50,11 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
 
         //--------------------------------------------------------------------------------------------------------------------//
 
-        _loggedIn: null,
-        _user: null,
-        _statusCallback: null,
-        _currentProvider: null,
-        _availabilities: {
+        loggedIn: null,
+        user: null,
+        statusCallback: null,
+        currentProvider: null,
+        availabilities: {
             guest: false,
             facebook: false,
             googleplus: false,
@@ -51,16 +74,15 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
         init: function (appParams, statusCallback) {
             var deferred, isIE8, facebookDeferred, googlePlusDeferred, twitterDeferred;
 
-            that = this;
             deferred = $.Deferred();
-            isIE8 = that._createIE8Test();
-            that._statusCallback = statusCallback;
-            that.appParams = appParams;
+            isIE8 = handleUserSignin.createIE8Test();
+            handleUserSignin.statusCallback = statusCallback;
+            handleUserSignin.appParams = appParams;
 
             //................................................................................................................//
 
             // Do we offer guest access?
-            that._availabilities.guest = appParams.showGuest;
+            handleUserSignin.availabilities.guest = appParams.showGuest;
                 //???|| (!appParams.showFacebook && !appParams.showGooglePlus && !appParams.showTwitter);
 
             //................................................................................................................//
@@ -71,12 +93,12 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
                 if (!isIE8 && appParams.showFacebook) {
                     // Provide a startup function for when the SDK finishes loading
                     window.fbAsyncInit = function () {
-                        FB.Event.subscribe("auth.login", that._updateFacebookUser);
-                        FB.Event.subscribe("auth.statusChange", that._updateFacebookUser);
-                        FB.Event.subscribe("auth.logout", that._updateFacebookUser);
+                        FB.Event.subscribe("auth.login", handleUserSignin.updateFacebookUser);
+                        FB.Event.subscribe("auth.statusChange", handleUserSignin.updateFacebookUser);
+                        FB.Event.subscribe("auth.logout", handleUserSignin.updateFacebookUser);
 
                         FB.init({
-                            appId: that.appParams.facebookAppId,
+                            appId: handleUserSignin.appParams.facebookAppId,
                             cookie: true,  // enable cookies to allow the server to access the session
                             xfbml: false,   // parse social plugins on this page such as Login
                             status: true,  // check login status on every page load
@@ -84,7 +106,7 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
                         });
 
                         // Update UI based on whether or not the user is currently logged in to FB
-                        FB.getLoginStatus(that._updateFacebookUser);
+                        FB.getLoginStatus(handleUserSignin.updateFacebookUser);
                     };
 
                     // Load the SDK asynchronously; it calls window.fbAsyncInit when done
@@ -99,7 +121,7 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
                         fjs.parentNode.insertBefore(js, fjs);
                     }(document, "script", "facebook-jssdk"));
 
-                    that._availabilities.facebook = true;
+                    handleUserSignin.availabilities.facebook = true;
                     facebookDeferred.resolve(true);
                 } else {
                     facebookDeferred.resolve(false);
@@ -123,7 +145,7 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
                             complete: function () {
                                 gapi.load('auth2', function () {
                                     gapi.client.load('plus', 'v1').then(function () {
-                                        that._availabilities.googleplus = true;
+                                        handleUserSignin.availabilities.googleplus = true;
                                         googlePlusDeferred.resolve(true);
                                     });
                                 });
@@ -141,7 +163,7 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
             twitterDeferred = $.Deferred();
             setTimeout(function () {
                 if (!isIE8 && appParams.showTwitter) {
-                    that._availabilities.twitter = true;
+                    handleUserSignin.availabilities.twitter = true;
                     twitterDeferred.resolve(true);
                 } else {
                     twitterDeferred.resolve(false);
@@ -153,7 +175,7 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
             // Test if we have any initialized providers
             $.when(facebookDeferred, googlePlusDeferred, twitterDeferred)
                 .done(function (facebookAvail, googlePlusAvail, twitterAvail) {
-                    if (that._availabilities.guest || facebookAvail || googlePlusAvail || twitterAvail) {
+                    if (handleUserSignin.availabilities.guest || facebookAvail || googlePlusAvail || twitterAvail) {
                         deferred.resolve();
                     } else {
                         deferred.reject();
@@ -165,26 +187,26 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
 
         initUI: function (buttonContainer) {
 
-            if (that._availabilities.guest) {  //??? i18n
+            if (handleUserSignin.availabilities.guest) {  //??? i18n
                 $('<div id="guestSignin" class="socialMediaButton guestOfficialColor" style="background-image:url(\'images/guest-user_29.png\')">'
-                    + i18n.signin.guestLabel + '</div>').appendTo(buttonContainer);
+                        + i18n.signin.guestLabel + '</div>').appendTo(buttonContainer);
                 $('#guestSignin').on('click', function () {
-                    that._loggedIn = true;
-                    that._currentProvider = "guest";
+                    handleUserSignin.loggedIn = true;
+                    handleUserSignin.currentProvider = "guest";
                     diag.appendWithLF("guest login");  //???
 
-                    that._user = {
-                        "name": i18n.signin.guestLabel,
-                        "id": "",
-                        "canSubmit": that.appParams.allowGuestSubmissions
+                    handleUserSignin.user = {
+                        name: i18n.signin.guestLabel,
+                        id: "",
+                        canSubmit: handleUserSignin.appParams.allowGuestSubmissions
                     };
 
                     // Update the calling app
-                    that._statusCallback(that.notificationSignIn);
+                    handleUserSignin.statusCallback(handleUserSignin.notificationSignIn);
                 });
             }
 
-            if (that._availabilities.facebook) {
+            if (handleUserSignin.availabilities.facebook) {
                 $('<div id="facebookSignin" class="socialMediaButton facebookOfficialColor" style="background-image:url(\'images/FB-f-Logo__blue_29.png\')">Facebook</div>').appendTo(buttonContainer);
                 $('#facebookSignin').on('click', function () {
                     // Force reauthorization. FB says, "Apps should build their own mechanisms for allowing switching
@@ -192,7 +214,7 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
                     // re-authentication for this."  (https://developers.facebook.com/docs/facebook-login/reauthentication),
                     // but doesn't seem to provide a working logout function that clears its cookies if third-party
                     // cookies are blocked.
-                    FB.login(function (response) {
+                    FB.login(function () {
                         return null;
                     }, {
                         auth_type: 'reauthenticate'
@@ -200,7 +222,7 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
                 });
             }
 
-            if (that._availabilities.googleplus) {
+            if (handleUserSignin.availabilities.googleplus) {
                 $('<div id="googlePlusSignin" class="socialMediaButton googlePlusOfficialColor" style="background-image:url(\'images/gp-29.png\')">Google+</div>').appendTo(buttonContainer);
                 $('#googlePlusSignin').on('click', function () {
                     // Google caveat for setting cookiepolicy to "none":
@@ -213,17 +235,17 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
                     // your website.
                     // -- https://developers.google.com/+/web/signin/reference/#button_attr_clientid
                     gapi.auth.signIn({
-                        "clientid": that.appParams.googleplusClientId,
-                        "cookiepolicy": "http://" + document.location.hostname,
-                        "callback": that._updateGooglePlusUser
+                        clientid: handleUserSignin.appParams.googleplusClientId,
+                        cookiepolicy: "http://" + document.location.hostname,
+                        callback: handleUserSignin.updateGooglePlusUser
                     });
                 });
             }
 
-            if (that._availabilities.twitter) {
+            if (handleUserSignin.availabilities.twitter) {
                 $('<div id="twitterSignin" class="socialMediaButton twitterOfficialColor" style="background-image:url(\'images/Twitter_logo_blue_29.png\')">Twitter</div>').appendTo(buttonContainer);
                 $('#twitterSignin').on('click', function () {
-                    that._showTwitterLoginWin(false);
+                    handleUserSignin.showTwitterLoginWin(false);
                 });
             }
 
@@ -234,7 +256,7 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
          * @return {boolean} Logged in or not
          */
         isSignedIn: function () {
-            return that._loggedIn;
+            return handleUserSignin.loggedIn;
         },
 
         /**
@@ -244,23 +266,23 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
          * service is not available due to browser incompatibility or startup failure
          */
         getUser: function () {
-            return that._user;
+            return handleUserSignin.user;
         },
 
         /**
          * Signs the user out of the currently-active social medium provider.
          */
         signOut: function () {
-            diag.appendWithLF("signOut; believed logged in: " + that.isSignedIn());  //???
-            if (that.isSignedIn()) {
-                switch (that._currentProvider) {
+            diag.appendWithLF("signOut; believed logged in: " + handleUserSignin.isSignedIn());  //???
+            if (handleUserSignin.isSignedIn()) {
+                switch (handleUserSignin.currentProvider) {
 
                 case "guest":
                     diag.appendWithLF("guest logout");  //???
-                    that._user = {};
+                    handleUserSignin.user = {};
 
                     // Update the calling app
-                    that._statusCallback(that.notificationSignOut);
+                    handleUserSignin.statusCallback(handleUserSignin.notificationSignOut);
                     break;
 
                 case "facebook":
@@ -274,9 +296,9 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
                     diag.appendWithLF("G+ logout");  //???
                     // Log the user out of the app; known G+ issue that user is not really logged out
                     try {
-                        that._disconnectUser(that._user.access_token);
+                        handleUserSignin.disconnectUser(handleUserSignin.user.access_token);
                         gapi.auth.signOut();
-                        that._showGooglePlusLogoutWin();
+                        handleUserSignin.showGooglePlusLogoutWin();
                     } catch (ignore) {
                     }
                     break;
@@ -284,14 +306,14 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
                 case "twitter":
                     diag.appendWithLF("Tw logout");  //???
                     // Update the calling app
-                    that._statusCallback(that.notificationSignOut);
+                    handleUserSignin.statusCallback(handleUserSignin.notificationSignOut);
 
                     // Log the user out of the app
-                    that._showTwitterLoginWin(true);
+                    handleUserSignin.showTwitterLoginWin(true);
                     break;
                 }
             }
-            that._currentProvider = "none";
+            handleUserSignin.currentProvider = "none";
         },
 
         //--------------------------------------------------------------------------------------------------------------------//
@@ -300,7 +322,7 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
          * Updates the information held about the signed-in Facebook user.
          * @param {object} [response] Service-specific response object
          */
-        _updateFacebookUser: function (response) {
+        updateFacebookUser: function (response) {
             // Events & FB.getLoginStatus return an updated authResponse object
             // {
             //     status: 'connected',
@@ -313,38 +335,40 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
             // }
 
             // that response may not be true; we'll find out for sure when we call FB.api
-            that._loggedIn = response && response.status === "connected";
-            that._currentProvider = that._loggedIn ? "facebook" : "";
+            handleUserSignin.loggedIn = response && response.status === "connected";
+            handleUserSignin.currentProvider = handleUserSignin.loggedIn
+                ? "facebook"
+                : "";
 
             // If logged in, update info from the account
-            that._user = {};
-            if (that._loggedIn) {
+            handleUserSignin.user = {};
+            if (handleUserSignin.loggedIn) {
                 FB.api("/me", {fields: "name,id"}, function (apiResponse) {
-                    that._loggedIn = apiResponse.name !== undefined;
-                    if (that._loggedIn) {
-                        that._user = {
-                            "name": apiResponse.name,
-                            "id": apiResponse.id,
-                            "canSubmit": true
+                    handleUserSignin.loggedIn = apiResponse.name !== undefined;
+                    if (handleUserSignin.loggedIn) {
+                        handleUserSignin.user = {
+                            name: apiResponse.name,
+                            id: apiResponse.id,
+                            canSubmit: true
                         };
                         // Update the calling app
-                        that._statusCallback(that.notificationSignIn);
+                        handleUserSignin.statusCallback(handleUserSignin.notificationSignIn);
 
                         // Update the avatar
-                        FB.api("/" + that._user.id + "/picture", function (picResponse) {
+                        FB.api("/" + handleUserSignin.user.id + "/picture", function (picResponse) {
                             if (picResponse && !picResponse.error && picResponse.data && !picResponse.data.is_silhouette && picResponse.data.url) {
-                                that._user.avatar = picResponse.data.url;
+                                handleUserSignin.user.avatar = picResponse.data.url;
                             }
                             // Update the calling app
-                            that._statusCallback(that.notificationAvatarUpdate);
+                            handleUserSignin.statusCallback(handleUserSignin.notificationAvatarUpdate);
                         });
                     }
-                    that._statusCallback(that.notificationAvatarUpdate);
+                    handleUserSignin.statusCallback(handleUserSignin.notificationAvatarUpdate);
                 });
 
             } else {
                 // Update the calling app
-                that._statusCallback(that.notificationSignOut);
+                handleUserSignin.statusCallback(handleUserSignin.notificationSignOut);
             }
         },
 
@@ -354,39 +378,41 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
          * Updates the information held about the signed-in Google+ user.
          * @param {object} [response] Service-specific response object
          */
-        _updateGooglePlusUser: function (response) {
-            that._loggedIn = response && response.status && response.status.signed_in;
-            that._currentProvider = that._loggedIn ? "googlePlus" : "";
+        updateGooglePlusUser: function (response) {
+            handleUserSignin.loggedIn = response && response.status && response.status.signed_in;
+            handleUserSignin.currentProvider = handleUserSignin.loggedIn
+                ? "googlePlus"
+                : "";
 
             // If logged in, update info from the account
-            that._user = {};
-            if (that._loggedIn) {
+            handleUserSignin.user = {};
+            if (handleUserSignin.loggedIn) {
                 gapi.client.request({
-                    "path": "/plus/v1/people/me"
+                    path: "/plus/v1/people/me"
                 }).then(function (apiResponse) {
-                    that._user = {
-                        "name": apiResponse.result.displayName,
-                        "id": apiResponse.result.id,
-                        "access_token": response.access_token,
-                        "canSubmit": true
+                    handleUserSignin.user = {
+                        name: apiResponse.result.displayName,
+                        id: apiResponse.result.id,
+                        access_token: response.access_token,
+                        canSubmit: true
                     };
 
                     // Update the calling app
-                    that._statusCallback(that.notificationSignIn);
+                    handleUserSignin.statusCallback(handleUserSignin.notificationSignIn);
 
                     // Update the avatar
                     if (apiResponse.result.image && !apiResponse.result.image.isDefault && apiResponse.result.image.url) {
-                        that._user.avatar = apiResponse.result.image.url;
-                        that._statusCallback(that.notificationAvatarUpdate);
+                        handleUserSignin.user.avatar = apiResponse.result.image.url;
+                        handleUserSignin.statusCallback(handleUserSignin.notificationAvatarUpdate);
                     }
-                }, function (reason) {
+                }, function () {
                     // Update the calling app
-                    that._statusCallback(that.notificationSignOut);
+                    handleUserSignin.statusCallback(handleUserSignin.notificationSignOut);
                 });
 
             // Report not-logged-in state
             } else {
-                that._statusCallback(that.notificationSignOut);
+                handleUserSignin.statusCallback(handleUserSignin.notificationSignOut);
             }
         },
 
@@ -394,10 +420,9 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
          * Disconnects the signed-in Google+ user because the Google+ API doesn't actually sign the user out.
          * @param {string}access_token Token provided by the Google+ API when the user signs in
          */
-        _disconnectUser: function (access_token) {
+        disconnectUser: function (access_token) {
             // From https://developers.google.com/+/web/signin/disconnect
-            var revokeUrl = 'https://accounts.google.com/o/oauth2/revoke?token=' +
-                access_token;
+            var revokeUrl = 'https://accounts.google.com/o/oauth2/revoke?token=' + access_token;
 
             // Perform an asynchronous GET request.
             $.ajax({
@@ -406,11 +431,11 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
                 async: false,
                 contentType: "application/json",
                 dataType: 'jsonp',
-                success: function (nullResponse) {
-                    that._updateGooglePlusUser();
+                success: function () {
+                    handleUserSignin.updateGooglePlusUser();
                 },
-                error: function (e) {
-                    that._updateGooglePlusUser();
+                error: function () {
+                    handleUserSignin.updateGooglePlusUser();
                 }
             });
         },
@@ -418,10 +443,10 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
         /**
          * Displays the Google+ logout window, which completes the logout of the current user.
          */
-        _showGooglePlusLogoutWin: function () {
+        showGooglePlusLogoutWin: function () {
             var baseUrl, left, top, w, h;
 
-            baseUrl = that.appParams.googleplusLogoutUrl;
+            baseUrl = handleUserSignin.appParams.googleplusLogoutUrl;
             left = (screen.width / 2) - (w / 2);
             top = (screen.height / 2) - (h / 2);
             w = screen.width / 2;
@@ -436,12 +461,12 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
          * Displays the Twitter login window.
          * @param {boolean} [forceLogin] If false or omitted, sets up for login; if true, sets up for logout
          */
-        _showTwitterLoginWin: function (forceLogin) {
+        showTwitterLoginWin: function (forceLogin) {
             var baseUrl, package_path, redirect_uri, left, top, w, h;
 
-            baseUrl = that.appParams.twitterSigninUrl;
+            baseUrl = handleUserSignin.appParams.twitterSigninUrl;
             package_path = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
-            redirect_uri = encodeURIComponent(location.protocol + '//' + location.host + package_path + that.appParams.twitterCallbackUrl);
+            redirect_uri = encodeURIComponent(location.protocol + '//' + location.host + package_path + handleUserSignin.appParams.twitterCallbackUrl);
             left = (screen.width / 2) - (w / 2);
             top = (screen.height / 2) - (h / 2);
             w = screen.width / 2;
@@ -460,7 +485,7 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
 
             window.open(baseUrl, "twoAuth", "scrollbars=yes, resizable=yes, left=" + left + ", top=" + top + ", width=" + w + ", height=" + h, true);
             window.oAuthCallback = function () {
-                that._updateTwitterUser();
+                handleUserSignin.updateTwitterUser();
             };
         },
 
@@ -468,49 +493,51 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
          * Updates the information held about the signed-in Twitter user.
          * @param {object} [response] Service-specific response object
          */
-        _updateTwitterUser: function () {
+        updateTwitterUser: function () {
             var query = {
                 include_entities: true,
                 skip_status: true
             };
             $.ajax({
-                url: that.appParams.twitterUserUrl,
+                url: handleUserSignin.appParams.twitterUserUrl,
                 data: query,
                 dataType: "jsonp",
                 timeout: 10000,
-                success: function (data, textStatus, jqXHR) {
+                success: function (data) {
 
-                    that._loggedIn = data && !data.hasOwnProperty("signedIn") && !data.signedIn;
-                    that._currentProvider = that._loggedIn ? "twitter" : "";
+                    handleUserSignin.loggedIn = data && !data.hasOwnProperty("signedIn") && !data.signedIn;
+                    handleUserSignin.currentProvider = handleUserSignin.loggedIn
+                        ? "twitter"
+                        : "";
 
-                    if (that._loggedIn) {
-                        that._user = {
-                            "name": data.name,
-                            "id": data.id_str,
-                            "canSubmit": true
+                    if (handleUserSignin.loggedIn) {
+                        handleUserSignin.user = {
+                            name: data.name,
+                            id: data.id_str,
+                            canSubmit: true
                         };
 
                         // Update the calling app
-                        that._statusCallback(that.notificationSignIn);
+                        handleUserSignin.statusCallback(handleUserSignin.notificationSignIn);
 
                         // Update the avatar
                         if (!data.default_profile_image && data.profile_image_url_https) {
-                            that._user.avatar = data.profile_image_url_https;
-                            that._statusCallback(that.notificationAvatarUpdate);
+                            handleUserSignin.user.avatar = data.profile_image_url_https;
+                            handleUserSignin.statusCallback(handleUserSignin.notificationAvatarUpdate);
                         }
                     } else {
-                        that._user = {};
+                        handleUserSignin.user = {};
 
                         // Update the calling app
-                        that._statusCallback(that.notificationSignOut);
+                        handleUserSignin.statusCallback(handleUserSignin.notificationSignOut);
                     }
                 },
-                error: function (jqXHR, textStatus, errorThrown) {
+                error: function () {
                     // handle an error condition
-                    that._loggedIn = false;
+                    handleUserSignin.loggedIn = false;
 
                     // Update the calling app
-                    that._statusCallback(that.notificationSignOut);
+                    handleUserSignin.statusCallback(handleUserSignin.notificationSignOut);
                 }
             }, "json");
         },
@@ -521,8 +548,8 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
          * Tests if the browser is IE 8 or lower.
          * @return {boolean} True if the browser is IE 8 or lower
          */
-        _createIE8Test: function () {
-            return that._isIE(8, "lte");
+        createIE8Test: function () {
+            return handleUserSignin.isIE(8, "lte");
         },
 
         /**
@@ -537,15 +564,17 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
          * @see <a href="https://gist.github.com/scottjehl/357727">detect IE and version number through injected
          * conditional comments.js</a>.
          */
-        _isIE: function (version, comparison) {
-            var cc      = 'IE',
-                b       = document.createElement('B'),
+        isIE: function (version, comparison) {
+            var cc = 'IE',
+                b = document.createElement('B'),
                 docElem = document.documentElement,
                 isIE;
 
             if (version) {
                 cc += ' ' + version;
-                if (comparison) { cc = comparison + ' ' + cc; }
+                if (comparison) {
+                    cc = comparison + ' ' + cc;
+                }
             }
 
             b.innerHTML = '<!--[if ' + cc + ']><b id="iecctest"></b><![endif]-->';
@@ -556,4 +585,5 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
         }
 
     };
+    return handleUserSignin;
 });

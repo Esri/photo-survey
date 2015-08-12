@@ -1,5 +1,5 @@
 ﻿/*global define,$ */
-/*jslint browser:true,sloppy:true,nomen:true,unparam:true,plusplus:true */
+/*jslint browser:true */
 /** @license
  | Copyright 2015 Esri
  |
@@ -17,8 +17,8 @@
  */
 //============================================================================================================================//
 define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchConfigInfo) {
-    var that;
-    return {
+    'use strict';
+    var prepareAppConfigInfo = {
 
         //--------------------------------------------------------------------------------------------------------------------//
 
@@ -74,9 +74,8 @@ define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchC
          */
         init: function () {
             var parametersReady, surveyReady, webmapOrigImageUrlReady, webmapParamsFetch, webmapDataFetch, webmapFetcher,
-                paramsFromUrl, onlineAppFetch, configFileFetch;
+                    paramsFromUrl, onlineAppFetch, configFileFetch;
 
-            that = this;
             fetchConfigInfo.init();
 
             // Set up external notifications for various stages of preparation
@@ -90,31 +89,31 @@ define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchC
             webmapFetcher = null;
 
             // Get the URL parameters
-            paramsFromUrl = that._screenProperties(["webmap", "diag", "test"], fetchConfigInfo._getParamsFromUrl());
+            paramsFromUrl = prepareAppConfigInfo.screenProperties(["webmap", "diag", "test"], fetchConfigInfo.getParamsFromUrl());
 
             // If webmap specified in the URL, we can start a fetch of its data now
-            if (parseConfigInfo._isUsableString(paramsFromUrl.webmap)) {
+            if (parseConfigInfo.isUsableString(paramsFromUrl.webmap)) {
                 webmapFetcher = "url";
-                fetchConfigInfo._getParamsFromWebmap(paramsFromUrl.webmap, webmapParamsFetch, webmapOrigImageUrlReady);
-                fetchConfigInfo._getWebmapData(paramsFromUrl.webmap, webmapDataFetch);
+                fetchConfigInfo.getParamsFromWebmap(paramsFromUrl.webmap, webmapParamsFetch, webmapOrigImageUrlReady);
+                fetchConfigInfo.getWebmapData(paramsFromUrl.webmap, webmapDataFetch);
             }
 
             // If the appId is specified in the URL, fetch its parameters; resolves immediately if no appId
             onlineAppFetch = $.Deferred();
-            fetchConfigInfo._getParamsFromOnlineApp(paramsFromUrl.appid).done(function (data) {
+            fetchConfigInfo.getParamsFromOnlineApp(paramsFromUrl.appid).done(function (data) {
                 if (!webmapFetcher) {
                     if (data && data.webmap) {
                         // Use webmap specified in online app
                         webmapFetcher = "online";
-                        fetchConfigInfo._getParamsFromWebmap(data.webmap, webmapParamsFetch, webmapOrigImageUrlReady);
-                        fetchConfigInfo._getWebmapData(data.webmap, webmapDataFetch);
+                        fetchConfigInfo.getParamsFromWebmap(data.webmap, webmapParamsFetch, webmapOrigImageUrlReady);
+                        fetchConfigInfo.getWebmapData(data.webmap, webmapDataFetch);
                     }
                 }
                 onlineAppFetch.resolve(data);
             });
 
             // Get the configuration file
-            configFileFetch = fetchConfigInfo._getParamsFromConfigFile(configFileFetch);
+            configFileFetch = fetchConfigInfo.getParamsFromConfigFile(configFileFetch);
 
             // Once we have config file and online app config (if any), see if we have a webmap
             $.when(configFileFetch, onlineAppFetch).done(function (paramsFromFile, paramsFromOnline) {
@@ -123,8 +122,8 @@ define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchC
                 if (!webmapFetcher) {
                     if (paramsFromFile.webmap) {
                         webmapFetcher = "file";
-                        fetchConfigInfo._getParamsFromWebmap(paramsFromFile.webmap, webmapParamsFetch, webmapOrigImageUrlReady);
-                        fetchConfigInfo._getWebmapData(paramsFromFile.webmap, webmapDataFetch);
+                        fetchConfigInfo.getParamsFromWebmap(paramsFromFile.webmap, webmapParamsFetch, webmapOrigImageUrlReady);
+                        fetchConfigInfo.getWebmapData(paramsFromFile.webmap, webmapDataFetch);
                     } else {
                         // We've no webmap; nothing more that can be done
                         parametersReady.resolve(false);
@@ -141,8 +140,8 @@ define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchC
                     //  3. webmap
                     //  4. online app
                     //  5. URL
-                    that.appParams = $.extend(
-                        that.appParams,
+                    prepareAppConfigInfo.appParams = $.extend(
+                        prepareAppConfigInfo.appParams,
                         paramsFromFile,
                         paramsFromWebmap,
                         paramsFromOnline,
@@ -150,13 +149,13 @@ define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchC
                     );
 
                     // Normalize booleans
-                    that.appParams.showGuest = parseConfigInfo._toBoolean(that.appParams.showGuest);
-                    that.appParams.showFacebook =
-                        that.appParams.facebookAppId !== null && that.appParams.facebookAppId.length > 0;
-                    that.appParams.showGooglePlus =
-                        that.appParams.googleplusClientId !== null && that.appParams.googleplusClientId.length > 0;
-                    that.appParams.showTwitter = parseConfigInfo._toBoolean(that.appParams.showTwitter);
-                    that.appParams.allowGuestSubmissions = parseConfigInfo._toBoolean(that.appParams.allowGuestSubmissions, false);
+                    prepareAppConfigInfo.appParams.showGuest = parseConfigInfo.toBoolean(prepareAppConfigInfo.appParams.showGuest);
+                    prepareAppConfigInfo.appParams.showFacebook =
+                            prepareAppConfigInfo.appParams.facebookAppId !== null && prepareAppConfigInfo.appParams.facebookAppId.length > 0;
+                    prepareAppConfigInfo.appParams.showGooglePlus =
+                            prepareAppConfigInfo.appParams.googleplusClientId !== null && prepareAppConfigInfo.appParams.googleplusClientId.length > 0;
+                    prepareAppConfigInfo.appParams.showTwitter = parseConfigInfo.toBoolean(prepareAppConfigInfo.appParams.showTwitter);
+                    prepareAppConfigInfo.appParams.allowGuestSubmissions = parseConfigInfo.toBoolean(prepareAppConfigInfo.appParams.allowGuestSubmissions, false);
 
                     parametersReady.resolve(true);
                 }).fail(function () {
@@ -169,20 +168,20 @@ define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchC
 
                     if (data.opLayerParams && data.opLayerParams.popupInfo && data.opLayerParams.popupInfo.description
                             && data.featureSvcParams && data.featureSvcParams.fields) {
-                        that.featureSvcParams.url = data.opLayerParams.url;
-                        that.featureSvcParams.id = data.featureSvcParams.id;
-                        that.featureSvcParams.objectIdField = data.featureSvcParams.objectIdField;
-                        that.featureSvcParams.canBeUpdated = data.featureSvcParams.canBeUpdated;
+                        prepareAppConfigInfo.featureSvcParams.url = data.opLayerParams.url;
+                        prepareAppConfigInfo.featureSvcParams.id = data.featureSvcParams.id;
+                        prepareAppConfigInfo.featureSvcParams.objectIdField = data.featureSvcParams.objectIdField;
+                        prepareAppConfigInfo.featureSvcParams.canBeUpdated = data.featureSvcParams.canBeUpdated;
 
                         // Create dictionary of domains
-                        dictionary = parseConfigInfo._createSurveyDictionary(data.featureSvcParams.fields);
+                        dictionary = parseConfigInfo.createSurveyDictionary(data.featureSvcParams.fields);
 
                         // Parse survey
-                        that.survey = parseConfigInfo._parseSurvey(data.opLayerParams.popupInfo.description, dictionary);
+                        prepareAppConfigInfo.survey = parseConfigInfo.parseSurvey(data.opLayerParams.popupInfo.description, dictionary);
                         surveyReady.resolve();
                     } else {
-                        that.featureSvcParams = {};
-                        that.survey = {};
+                        prepareAppConfigInfo.featureSvcParams = {};
+                        prepareAppConfigInfo.survey = {};
                         surveyReady.reject();
                     }
                 }).fail(function () {
@@ -191,9 +190,9 @@ define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchC
             });
 
             return {
-                "parametersReady": parametersReady,
-                "surveyReady" : surveyReady,
-                "webmapOrigImageUrlReady": webmapOrigImageUrlReady
+                parametersReady: parametersReady,
+                surveyReady: surveyReady,
+                webmapOrigImageUrlReady: webmapOrigImageUrlReady
             };
         },
 
@@ -206,14 +205,15 @@ define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchC
          * found in objectToScreen are assigned 'null'
          * @memberOf js.LGDropdownBox#
          */
-        _screenProperties: function (supportedProperties, objectToScreen) {
+        screenProperties: function (supportedProperties, objectToScreen) {
             var screenedObject = {};
 
-            $.each(supportedProperties, function (indexInArray, param) {
+            $.each(supportedProperties, function (ignore, param) {
                 screenedObject[param] = objectToScreen[param];
             });
             return screenedObject;
         }
 
     };
+    return prepareAppConfigInfo;
 });
