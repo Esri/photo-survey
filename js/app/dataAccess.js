@@ -238,6 +238,7 @@ define(['diag'], function (diag) {
          * Converts a value into the escaped form required by updates to a feature service.
          * @param {null|string|object} value Value to escape
          * @return {string} Escaped value
+         * @private
          */
         stringifyForApplyEdits: function (value) {
             var isFirst = true, result = "";
@@ -269,6 +270,7 @@ define(['diag'], function (diag) {
          * that is interpreted and returned; if neither a boolean nor a usable string nor a number, falls back to defaultValue
          * @param {boolean} [defaultValue] A true or false that is returned if boolValue can't be used; if not defined, true
          * is returned
+         * @private
          */
         toBoolean: function (boolValue, defaultValue) {
             var lowercaseValue;

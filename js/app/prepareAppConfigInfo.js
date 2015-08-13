@@ -149,13 +149,13 @@ define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchC
                     );
 
                     // Normalize booleans
-                    prepareAppConfigInfo.appParams.showGuest = parseConfigInfo.toBoolean(prepareAppConfigInfo.appParams.showGuest);
+                    prepareAppConfigInfo.appParams.showGuest = prepareAppConfigInfo.toBoolean(prepareAppConfigInfo.appParams.showGuest);
                     prepareAppConfigInfo.appParams.showFacebook =
                             prepareAppConfigInfo.appParams.facebookAppId !== null && prepareAppConfigInfo.appParams.facebookAppId.length > 0;
                     prepareAppConfigInfo.appParams.showGooglePlus =
                             prepareAppConfigInfo.appParams.googleplusClientId !== null && prepareAppConfigInfo.appParams.googleplusClientId.length > 0;
-                    prepareAppConfigInfo.appParams.showTwitter = parseConfigInfo.toBoolean(prepareAppConfigInfo.appParams.showTwitter);
-                    prepareAppConfigInfo.appParams.allowGuestSubmissions = parseConfigInfo.toBoolean(prepareAppConfigInfo.appParams.allowGuestSubmissions, false);
+                    prepareAppConfigInfo.appParams.showTwitter = prepareAppConfigInfo.toBoolean(prepareAppConfigInfo.appParams.showTwitter);
+                    prepareAppConfigInfo.appParams.allowGuestSubmissions = prepareAppConfigInfo.toBoolean(prepareAppConfigInfo.appParams.allowGuestSubmissions, false);
 
                     parametersReady.resolve(true);
                 }).fail(function () {
@@ -203,7 +203,7 @@ define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchC
          * @return {object} Object composed of properties from the supportedProperties list
          * with values assigned from the objectToScreen object; supportedProperties not
          * found in objectToScreen are assigned 'null'
-         * @memberOf js.LGDropdownBox#
+         * @private
          */
         screenProperties: function (supportedProperties, objectToScreen) {
             var screenedObject = {};
@@ -212,6 +212,42 @@ define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchC
                 screenedObject[param] = objectToScreen[param];
             });
             return screenedObject;
+        },
+
+        /** Normalizes a boolean value to true or false.
+         * @param {boolean|string} boolValue A true or false value that is returned directly or a string "true" or "false"
+         * (case-insensitive) that is interpreted and returned; if neither a a boolean or a usable string, falls back to
+         * defaultValue
+         * @param {boolean} [defaultValue] A true or false that is returned if boolValue can't be used; if not defined,
+         * true is returned
+         * @private
+         */
+        toBoolean: function (boolValue, defaultValue) {
+            var lowercaseValue;
+
+            // Shortcut true|false
+            if (boolValue === true) {
+                return true;
+            }
+            if (boolValue === false) {
+                return false;
+            }
+
+            // Handle a true|false string
+            if (typeof boolValue === "string") {
+                lowercaseValue = boolValue.toLowerCase();
+                if (lowercaseValue === "true") {
+                    return true;
+                }
+                if (lowercaseValue === "false") {
+                    return false;
+                }
+            }
+            // Fall back to default
+            if (defaultValue === undefined) {
+                return true;
+            }
+            return defaultValue;
         }
 
     };

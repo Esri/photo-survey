@@ -321,6 +321,7 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
         /**
          * Updates the information held about the signed-in Facebook user.
          * @param {object} [response] Service-specific response object
+         * @private
          */
         updateFacebookUser: function (response) {
             // Events & FB.getLoginStatus return an updated authResponse object
@@ -377,6 +378,7 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
         /**
          * Updates the information held about the signed-in Google+ user.
          * @param {object} [response] Service-specific response object
+         * @private
          */
         updateGooglePlusUser: function (response) {
             handleUserSignin.loggedIn = response && response.status && response.status.signed_in;
@@ -419,6 +421,7 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
         /**
          * Disconnects the signed-in Google+ user because the Google+ API doesn't actually sign the user out.
          * @param {string}access_token Token provided by the Google+ API when the user signs in
+         * @private
          */
         disconnectUser: function (access_token) {
             // From https://developers.google.com/+/web/signin/disconnect
@@ -442,6 +445,7 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
 
         /**
          * Displays the Google+ logout window, which completes the logout of the current user.
+         * @private
          */
         showGooglePlusLogoutWin: function () {
             var baseUrl, left, top, w, h;
@@ -460,6 +464,7 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
         /**
          * Displays the Twitter login window.
          * @param {boolean} [forceLogin] If false or omitted, sets up for login; if true, sets up for logout
+         * @private
          */
         showTwitterLoginWin: function (forceLogin) {
             var baseUrl, package_path, redirect_uri, left, top, w, h;
@@ -492,6 +497,7 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
         /**
          * Updates the information held about the signed-in Twitter user.
          * @param {object} [response] Service-specific response object
+         * @private
          */
         updateTwitterUser: function () {
             var query = {
@@ -547,6 +553,7 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
         /**
          * Tests if the browser is IE 8 or lower.
          * @return {boolean} True if the browser is IE 8 or lower
+         * @private
          */
         createIE8Test: function () {
             return handleUserSignin.isIE(8, "lte");
@@ -563,6 +570,7 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
          * @author Scott Jehl
          * @see <a href="https://gist.github.com/scottjehl/357727">detect IE and version number through injected
          * conditional comments.js</a>.
+         * @private
          */
         isIE: function (version, comparison) {
             var cc = 'IE',
