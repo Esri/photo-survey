@@ -478,11 +478,11 @@ diag.appendWithLF("block slide to " + data.direction);  //???
             $("#rankLabel")[0].innerHTML = prepareAppConfigInfo.appParams.contribLevels[level].label;
             $("#level")[0].innerHTML = i18n.labels.label_level.replace("${0}", level);
             if (level === 0) {
-                $("img", ".profileRankStars").attr("src", "images/empty-star.png");
+                $("div", ".profileRankStars").removeClass("filled-star").addClass("empty-star")
             } else {
-                var stars = $("img:eq(" + (level - 1) + ")", ".profileRankStars");
-                stars.prevAll().andSelf().attr("src", "images/filled-star.png");
-                stars.nextAll().attr("src", "images/empty-star.png");
+                var stars = $("div:eq(" + (level - 1) + ")", ".profileRankStars");
+                stars.prevAll().andSelf().removeClass("empty-star").addClass("filled-star")
+                stars.nextAll().removeClass("filled-star").addClass("empty-star")
             }
 
             // If below top level, show how far to next level
