@@ -123,7 +123,7 @@ define(function () {
             // not found in the line, the line is skipped. By forcing this order, the app doesn't have to check all tags for
             // each line.
             // Here is a sample source:
-            //  <div>Copyright 2015 My City</div><div><br /></div><div>=== Access and use settings ===</div><div><br />
+            //  <div>My City</div><div><br /></div><div>=== Access and use settings ===</div><div><br />
             //  </div><div>contribution star levels:</div><div>0: Getting Started @0</div><div>1: Beginner @5</div><div>2:
             //  Helper @10</div><div>3: Intermediate @15</div><div>4: Advanced @20</div><div>5: Wow! @25</div><div><br />
             //  </div><div>surveyor name field: SRVNAME</div><div>best photo field: BSTPHOTOID</div><div><br /></div>
@@ -145,7 +145,7 @@ define(function () {
             // 2. remove all html tags (could have <b>, <i>, <u>, <ol>, <ul>, <li>, <a>, <font>, <span>, <br>, <div>,
             // and their closures included or explicit)
             // yields something like:
-            //  0: "Copyright 2015 My City"
+            //  0: "My City"
             //  1: "=== Access and use settings ==="
             //  2: "contribution star levels:"
             //  3: "0: Getting Started @0"

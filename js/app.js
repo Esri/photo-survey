@@ -1,12 +1,8 @@
-// Source:  https://github.com/requirejs/example-jquery-cdn/blob/master/www/js/app.js
-// Place third party dependencies in the lib folder
-//
-// Configure loading modules from the lib directory,
-// except 'app' ones,
+// Main module is in js/app directory, and it refers to third-party libraries in the js/lib directory
 requirejs.config({
-    "baseUrl": "js/app",
-    "paths": {
-        "lib": "../lib"
+    baseUrl: "js/app",
+    paths: {
+        lib: "../lib"
     }
 });
 
