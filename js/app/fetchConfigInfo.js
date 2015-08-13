@@ -223,6 +223,7 @@ define(['parseConfigInfo'], function (parseConfigInfo) {
          * @param {string} url URL to test
          * @param {function} callback Function to call upon response from test; function gets boolean parameter indicating
          * if the HEAD call succeeded or not
+         * @private
          */
         testURL: function (url, callback) {
             // Shield the call--a cross-domain call in IE9 sporadically breaks with "Access refused"

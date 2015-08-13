@@ -515,7 +515,6 @@ diag.appendWithLF("block slide to " + data.direction);  //???
     function startQuestion(surveyContainer, iQuestion, questionInfo) {
         // <div class='form-group'>
         //   <label for='q1'>Is there a structure on the property? <span class='glyphicon glyphicon-star'></span></label><br>
-        //??? TODO: i18n "Please answer this question"
         var start =
             "<div id='qg" + iQuestion + "' class='form-group'>"
             + "<label for='q" + iQuestion + "'>" + questionInfo.question

@@ -224,6 +224,7 @@ define(function () {
          * minimum number of contributions necessary to attain the level
          * @param {array} contribLevels List of objects describing a contribution level; each object contains label and
          * minimumSurveysNeeded properties. The object created from this levelDescrip is pushed onto the end of the array.
+         * @private
          */
         extractContribLevel: function (iLevel, levelDescrip, contribLevels) {
             var levelParts, minimumSurveysNeeded;
@@ -251,6 +252,7 @@ define(function () {
          * @param {array} featureSvcFields List of fields such as the one supplied by a feature service
          * @return {object} Object containing the field names as its properties; each property's value consists of the
          * '|'-separated coded values in the field's domain
+         * @private
          */
         createSurveyDictionary: function (featureSvcFields) {
             var fieldDomains = {};
@@ -271,6 +273,7 @@ define(function () {
          * Extracts the text from an HTML passage.
          * @param {string} original Text which may contain HTML
          * @return {string} Text-only version of original
+         * @private
          */
         textOnly: function (original) {
             return $("<div>" + original + "</div>").text();
@@ -280,44 +283,10 @@ define(function () {
          * Tests that an item is a string of length greater than zero.
          * @param {string} item Item to test
          * @return {boolean} True if the item is a string with length greater than zero
+         * @private
          */
         isUsableString: function (item) {
             return typeof item === "string" && item.length > 0;
-        },
-
-        /** Normalizes a boolean value to true or false.
-         * @param {boolean|string} boolValue A true or false value that is returned directly or a string "true" or "false"
-         * (case-insensitive) that is interpreted and returned; if neither a a boolean or a usable string, falls back to
-         * defaultValue
-         * @param {boolean} [defaultValue] A true or false that is returned if boolValue can't be used; if not defined,
-         * true is returned
-         */
-        toBoolean: function (boolValue, defaultValue) {
-            var lowercaseValue;
-
-            // Shortcut true|false
-            if (boolValue === true) {
-                return true;
-            }
-            if (boolValue === false) {
-                return false;
-            }
-
-            // Handle a true|false string
-            if (typeof boolValue === "string") {
-                lowercaseValue = boolValue.toLowerCase();
-                if (lowercaseValue === "true") {
-                    return true;
-                }
-                if (lowercaseValue === "false") {
-                    return false;
-                }
-            }
-            // Fall back to default
-            if (defaultValue === undefined) {
-                return true;
-            }
-            return defaultValue;
         }
 
     };
