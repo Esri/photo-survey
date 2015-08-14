@@ -284,6 +284,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         dataAccess.getCandidate(prepareAppConfigInfo.appParams.randomizeSelection).then(function (candidate) {
             // obj:feature{}
             // attachments:[{id,url},...]
+            var showThumbnails = candidate.attachments.length <= prepareAppConfigInfo.appParams.thumbnailLimit
 
             that.numPhotos = candidate.attachments.length;
             if (!candidate.obj) {
@@ -314,8 +315,10 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
 
             $.each(candidate.attachments, function (indexInArray, attachment) {
                 addPhoto(carouselSlidesHolder, indexInArray, (initiallyActiveItem === indexInArray), attachment.url);
-                addPhotoIndicator(carouselIndicatorsHolder, indexInArray, (initiallyActiveItem === indexInArray),
-                "carousel", attachment.url);
+                if (showThumbnails) {
+                    addPhotoIndicator(carouselIndicatorsHolder, indexInArray, (initiallyActiveItem === indexInArray),
+                        "carousel", attachment.url);
+                }
             });
             $("#carousel").trigger('create');
 
