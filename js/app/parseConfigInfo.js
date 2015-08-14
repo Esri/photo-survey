@@ -305,7 +305,7 @@ define(function () {
 
             if (typeof numValue === "string") {
                 try {
-                    parsedNumValue = parseInt(numValue);
+                    parsedNumValue = parseInt(numValue, 10);
                 } catch (ignore) {
                     parsedNumValue = defaultValue;
                 }
