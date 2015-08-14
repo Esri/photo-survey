@@ -232,6 +232,9 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
             var user = handleUserSignin.getUser();
         //diag.clearCode();  //???
 
+            // Make sure that the main content is available
+            showMainContent();
+
             // Heading on survey/profile page
             $("#name")[0].innerHTML = user.name;
             $("#name2")[0].innerHTML = user.name;
@@ -263,7 +266,18 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         handleUserSignin.signOut();
     });
 
+    $(document).on('show:noSurveys', function (e) {
+        // No more surveys available either due to error or completion
+        // Hide the main content
+        hideMainContent();
+
+        // Show the profile view & help window
+        $(document).triggerHandler('show:profile');
+        $('#additionalInfoPanel').modal('show');
+    });
+
     $(document).on('show:newSurvey', function (e) {
+        var isReadOnly = !(prepareAppConfigInfo.featureSvcParams.canBeUpdated && handleUserSignin.getUser().canSubmit);
         $("#submitBtn")[0].blur();
 
         // Provide some visual feedback for the switch to a new survey
@@ -273,10 +287,12 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         dataAccess.getCandidate(prepareAppConfigInfo.appParams.randomizeSelection).then(function (candidate) {
             // obj:feature{}
             // attachments:[{id,url},...]
+            var showThumbnails = (prepareAppConfigInfo.appParams.thumbnailLimit < 0) ||
+                (candidate.attachments.length <= prepareAppConfigInfo.appParams.thumbnailLimit);
 
             that.numPhotos = candidate.attachments.length;
             if (!candidate.obj) {
-                $(document).triggerHandler('show:newSurvey');
+                $(document).triggerHandler('show:noSurveys');
                 return;
             } else if (that.numPhotos === 0) {
                 diag.appendWithLF("no photos for property <i>" + JSON.stringify(candidate.obj.attributes) + "</i>");  //???
@@ -303,15 +319,18 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
 
             $.each(candidate.attachments, function (indexInArray, attachment) {
                 addPhoto(carouselSlidesHolder, indexInArray, (initiallyActiveItem === indexInArray), attachment.url);
-                addPhotoIndicator(carouselIndicatorsHolder, indexInArray, (initiallyActiveItem === indexInArray),
-                "carousel", attachment.url);
+                if (showThumbnails) {
+                    addPhotoIndicator(carouselIndicatorsHolder, indexInArray, (initiallyActiveItem === indexInArray),
+                        "carousel", attachment.url);
+                }
             });
             $("#carousel").trigger('create');
 
             updatePhotoSelectionDisplay();
 
             // Provide some visual feedback for the switch to a new survey
-            $("#surveyContainer").fadeTo(1000, 1.0);
+            $("#surveyContainer").fadeTo(1000, (isReadOnly ? 0.75 : 1.0));
+
         }).fail(function (error) {
         });
 
@@ -319,13 +338,15 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         var surveyContainer = $("#surveyContainer")[0];
         $(surveyContainer).children().remove();  // remove children and their events
         $.each(prepareAppConfigInfo.survey, function (indexInArray, questionInfo) {
-            addQuestion(surveyContainer, indexInArray, questionInfo);
+            addQuestion(surveyContainer, indexInArray, questionInfo, isReadOnly);
         });
         $(".btn-group").trigger('create');
 
         // Can submit?
-        $("#submitBtn").attr("disabled",
-            !(prepareAppConfigInfo.featureSvcParams.canBeUpdated && handleUserSignin.getUser().canSubmit));
+        $("#submitBtn").css("display",
+            isReadOnly
+            ? "none"
+            : "inline-block");
 
         // Show the content
         $("#contentPage").fadeIn("fast");
@@ -524,7 +545,7 @@ diag.appendWithLF("block slide to " + data.direction);  //???
         return start;
     }
 
-    function createButtonChoice(surveyContainer, iQuestion, questionInfo) {
+    function createButtonChoice(surveyContainer, iQuestion, questionInfo, isReadOnly) {
         // <div id='q1' class='btn-group'>
         //   <button type='button' class='btn'>Yes</button>
         //   <button type='button' class='btn'>No</button>
@@ -533,13 +554,13 @@ diag.appendWithLF("block slide to " + data.direction);  //???
         var buttons = "<div id='q" + iQuestion + "' class='btn-group'>";
         var domain = questionInfo.domain.split('|');
         $.each(domain, function (i, choice) {
-            buttons += "<button type='button' class='btn' value='" + i + "'>" + choice + "</button>";
+            buttons += "<button type='button' class='btn' value='" + i + "' " + (isReadOnly ? "disabled" : "") + ">" + choice + "</button>";
         });
         buttons += "</div>";
         return buttons;
     }
 
-    function createListChoice(surveyContainer, iQuestion, questionInfo) {
+    function createListChoice(surveyContainer, iQuestion, questionInfo, isReadOnly) {
         // <div class='radio'><label><input type='radio' name='q1' id='optionFound1' value='0'>Crawlspace</label></div>
         // <div class='radio'><label><input type='radio' name='q1' id='optionFound2' value='1'>Raised</label></div>
         // <div class='radio'><label><input type='radio' name='q1' id='optionFound3' value='2'>Elevated</label></div>
@@ -548,7 +569,7 @@ diag.appendWithLF("block slide to " + data.direction);  //???
         var list = "";
         var domain = questionInfo.domain.split('|');
         $.each(domain, function (i, choice) {
-            list += "<div class='radio'><label><input type='radio' name='q" + iQuestion + "' value='" + i + "'>" + choice + "</label></div>";
+            list += "<div class='radio'><label><input type='radio' name='q" + iQuestion + "' value='" + i + "' " + (isReadOnly ? "disabled" : "") + ">" + choice + "</label></div>";
         });
         return list;
     }
@@ -560,12 +581,12 @@ diag.appendWithLF("block slide to " + data.direction);  //???
         return wrap;
     }
 
-    function addQuestion(surveyContainer, iQuestion, questionInfo) {
+    function addQuestion(surveyContainer, iQuestion, questionInfo, isReadOnly) {
         var question = startQuestion(surveyContainer, iQuestion, questionInfo);
         if (questionInfo.style === "button") {
-            question += createButtonChoice(surveyContainer, iQuestion, questionInfo);
+            question += createButtonChoice(surveyContainer, iQuestion, questionInfo, isReadOnly);
         } else {
-            question += createListChoice(surveyContainer, iQuestion, questionInfo);
+            question += createListChoice(surveyContainer, iQuestion, questionInfo, isReadOnly);
         }
         question += wrapupQuestion(surveyContainer, iQuestion, questionInfo);
         $(surveyContainer).append(question);
@@ -604,6 +625,29 @@ diag.appendWithLF("block slide to " + data.direction);  //???
     }
 
     //------------------------------------------------------------------------------------------------------------------------//
+
+
+    function showMainContent() {
+        // Hide the main content
+        $("#mainContent").css("visibility", "visible");
+
+        // Hide the profile's action bar
+        $("#profileActionBar").css("display", "block");
+
+        // Switch out the help display
+        $("#helpBody")[0].innerHTML = prepareAppConfigInfo.appParams.helpText;
+    }
+
+    function hideMainContent() {
+        // Hide the main content
+        $("#mainContent").css("visibility", "hidden");
+
+        // Hide the profile's action bar
+        $("#profileActionBar").css("display", "none");
+
+        // Switch out the help display
+        $("#helpBody")[0].innerHTML = i18n.signin.noMoreSurveys;
+    }
 
     function testURL(url, callback) {
         $.ajax( {
