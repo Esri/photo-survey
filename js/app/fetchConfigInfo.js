@@ -23,15 +23,6 @@ define(['parseConfigInfo'], function (parseConfigInfo) {
         //--------------------------------------------------------------------------------------------------------------------//
 
         /**
-         * Initializes the module and its dependency 'parseConfigInfo'.
-         */
-        init: function () {
-            parseConfigInfo.init();
-        },
-
-        //--------------------------------------------------------------------------------------------------------------------//
-
-        /**
          * Extracts parameters from app's location URL.
          * @return {object} Parameters and values; a value is null if the parameter does not have a value assignment in the URL
          */

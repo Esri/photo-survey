@@ -23,13 +23,6 @@ define(function () {
         //--------------------------------------------------------------------------------------------------------------------//
 
         /**
-         * Initializes the module.
-         */
-        init: function () {
-            return null;  //???
-        },
-
-        /**
          * Parses HTML text such as appears in a webmap's feature layer's popup to generate a set of survey questions.
          * @param {string} source Text from source
          * @param {object} fieldDomains List of field domains and field required/optional state as created by function
