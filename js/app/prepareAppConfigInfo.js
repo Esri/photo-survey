@@ -77,8 +77,6 @@ define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchC
             var parametersReady, surveyReady, webmapOrigImageUrlReady, webmapParamsFetch, webmapDataFetch, webmapFetcher,
                     paramsFromUrl, onlineAppFetch, configFileFetch;
 
-            fetchConfigInfo.init();
-
             // Set up external notifications for various stages of preparation
             parametersReady = $.Deferred();
             surveyReady = $.Deferred();
