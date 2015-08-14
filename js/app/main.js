@@ -230,6 +230,9 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         appConfigReadies.surveyReady.then(function () {
             var user = handleUserSignin.getUser();
 
+            // Make sure that the main content is available
+            showMainContent();
+
             // Heading on survey/profile page
             $("#name")[0].innerHTML = user.name;
             $("#name2")[0].innerHTML = user.name;
@@ -261,6 +264,16 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         handleUserSignin.signOut();
     });
 
+    $(document).on('show:noSurveys', function (e) {
+        // No more surveys available either due to error or completion
+        // Hide the main content
+        hideMainContent();
+
+        // Show the profile view & help window
+        $(document).triggerHandler('show:profile');
+        $('#additionalInfoPanel').modal('show');
+    });
+
     $(document).on('show:newSurvey', function (e) {
         $("#submitBtn")[0].blur();
 
@@ -274,7 +287,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
 
             that.numPhotos = candidate.attachments.length;
             if (!candidate.obj) {
-                $(document).triggerHandler('show:newSurvey');
+                $(document).triggerHandler('show:noSurveys');
                 return;
             } else if (that.numPhotos === 0) {
                 diag.appendWithLF("no photos for property <i>" + JSON.stringify(candidate.obj.attributes) + "</i>");  //???
@@ -614,6 +627,28 @@ diag.appendWithLF("block slide to " + data.direction);  //???
 
     //------------------------------------------------------------------------------------------------------------------------//
 
+
+    function showMainContent() {
+        // Hide the main content
+        $("#mainContent").css("visibility", "visible");
+
+        // Hide the profile's action bar
+        $("#profileActionBar").css("display", "block");
+
+        // Switch out the help display
+        $("#helpBody")[0].innerHTML = prepareAppConfigInfo.appParams.helpText;
+    }
+
+    function hideMainContent() {
+        // Hide the main content
+        $("#mainContent").css("visibility", "hidden");
+
+        // Hide the profile's action bar
+        $("#profileActionBar").css("display", "none");
+
+        // Switch out the help display
+        $("#helpBody")[0].innerHTML = i18n.signin.noMoreSurveys;
+    }
 
     function testURL(url, callback) {
         $.ajax( {
