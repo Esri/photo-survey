@@ -283,7 +283,41 @@ define(function () {
             return typeof item === "string" && item.length > 0;
         },
 
-        /** Normalizes a boolean value to true or false.
+        /**
+         * Insures that a supplied value is a number.
+         * @param {number|string} numValue Item to check
+         * @param {number} [defaultValue] Value to use if numValue is not a number or convertable
+         * to a number from a string; if omitted, zero is used
+         * @return {number} Supplied number, supplied string converted to a number, the
+         * default value, or zero
+         */
+        toNumber: function (numValue, defaultValue) {
+            var parsedNumValue;
+
+            // Fall back to default
+            if (defaultValue === undefined) {
+                defaultValue = 0;
+            }
+
+            if (typeof numValue === "number") {
+                return numValue;
+            }
+
+            if (typeof numValue === "string") {
+                try {
+                    parsedNumValue = parseInt(numValue);
+                } catch (ignore) {
+                    parsedNumValue = defaultValue;
+                }
+            } else {
+                parsedNumValue = defaultValue;
+            }
+
+            return parsedNumValue;
+        },
+
+        /**
+         * Normalizes a boolean value to true or false.
          * @param {boolean|string} boolValue A true or false value that is returned directly or a string "true" or "false"
          * (case-insensitive) that is interpreted and returned; if neither a a boolean or a usable string, falls back to
          * defaultValue
