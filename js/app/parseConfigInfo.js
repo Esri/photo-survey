@@ -306,6 +306,9 @@ define(function () {
             if (typeof numValue === "string") {
                 try {
                     parsedNumValue = parseInt(numValue, 10);
+                    if (isNaN(parsedNumValue)) {
+                        parsedNumValue = defaultValue;
+                    }
                 } catch (ignore) {
                     parsedNumValue = defaultValue;
                 }

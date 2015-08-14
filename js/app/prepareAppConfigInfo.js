@@ -158,7 +158,7 @@ define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchC
                         that.appParams.googleplusClientId !== null && that.appParams.googleplusClientId.length > 0;
                     that.appParams.showTwitter = parseConfigInfo._toBoolean(that.appParams.showTwitter);
                     that.appParams.allowGuestSubmissions = parseConfigInfo._toBoolean(that.appParams.allowGuestSubmissions, false);
-                    that.appParams.thumbnailLimit = parseConfigInfo.toNumber(that.appParams.thumbnailLimit);
+                    that.appParams.thumbnailLimit = parseConfigInfo.toNumber(that.appParams.thumbnailLimit, -1);
 
                     parametersReady.resolve(true);
                 }).fail(function () {

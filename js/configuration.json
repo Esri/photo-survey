@@ -10,7 +10,7 @@
 
         "randomizeSelection": true,
         "allowGuestSubmissions": false,
-        "thumbnailLimit": "2",
+        "thumbnailLimit": "10",
 
         "showGuest": "true",
         "facebookAppId": "",
