@@ -285,7 +285,8 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         dataAccess.getCandidate(prepareAppConfigInfo.appParams.randomizeSelection).then(function (candidate) {
             // obj:feature{}
             // attachments:[{id,url},...]
-            var showThumbnails = candidate.attachments.length <= prepareAppConfigInfo.appParams.thumbnailLimit
+            var showThumbnails = (prepareAppConfigInfo.appParams.thumbnailLimit < 0) ||
+                (candidate.attachments.length <= prepareAppConfigInfo.appParams.thumbnailLimit);
 
             that.numPhotos = candidate.attachments.length;
             if (!candidate.obj) {
