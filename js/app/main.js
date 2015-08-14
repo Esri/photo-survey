@@ -235,6 +235,9 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
             // Make sure that the main content is available
             showMainContent();
 
+            // Make sure that the main content is available
+            showMainContent();
+
             // Heading on survey/profile page
             $("#name")[0].innerHTML = user.name;
             $("#name2")[0].innerHTML = user.name;
