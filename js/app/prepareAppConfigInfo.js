@@ -41,6 +41,7 @@ define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchC
             twitterUserUrl: "",
             twitterCallbackUrl: "",
             allowGuestSubmissions: false,
+            thumbnailLimit: "10",
 
             surveyorNameField: "",
             bestPhotoField: "",
@@ -156,6 +157,7 @@ define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchC
                             prepareAppConfigInfo.appParams.googleplusClientId !== null && prepareAppConfigInfo.appParams.googleplusClientId.length > 0;
                     prepareAppConfigInfo.appParams.showTwitter = prepareAppConfigInfo.toBoolean(prepareAppConfigInfo.appParams.showTwitter);
                     prepareAppConfigInfo.appParams.allowGuestSubmissions = prepareAppConfigInfo.toBoolean(prepareAppConfigInfo.appParams.allowGuestSubmissions, false);
+                    that.appParams.thumbnailLimit = prepareAppConfigInfo.toNumber(that.appParams.thumbnailLimit, -1);
 
                     parametersReady.resolve(true);
                 }).fail(function () {
@@ -212,6 +214,42 @@ define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchC
                 screenedObject[param] = objectToScreen[param];
             });
             return screenedObject;
+        },
+
+        /**
+         * Insures that a supplied value is a number.
+         * @param {number|string} numValue Item to check
+         * @param {number} [defaultValue] Value to use if numValue is not a number or convertable
+         * to a number from a string; if omitted, zero is used
+         * @return {number} Supplied number, supplied string converted to a number, the
+         * default value, or zero
+         */
+        toNumber: function (numValue, defaultValue) {
+            var parsedNumValue;
+
+            // Fall back to default
+            if (defaultValue === undefined) {
+                defaultValue = 0;
+            }
+
+            if (typeof numValue === "number") {
+                return numValue;
+            }
+
+            if (typeof numValue === "string") {
+                try {
+                    parsedNumValue = parseInt(numValue, 10);
+                    if (isNaN(parsedNumValue)) {
+                        parsedNumValue = defaultValue;
+                    }
+                } catch (ignore) {
+                    parsedNumValue = defaultValue;
+                }
+            } else {
+                parsedNumValue = defaultValue;
+            }
+
+            return parsedNumValue;
         },
 
         /** Normalizes a boolean value to true or false.
