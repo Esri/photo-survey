@@ -75,27 +75,22 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
             // Callback from current social medium
             switch (notificationType) {
                 case handleUserSignin.notificationSignIn:
-                    diag.appendWithLF("sign-in callback; believed logged in: " + that.signedIn);  //???
                     if (!that.signedIn) {
                         that.signedIn = true;
-                        diag.appendWithLF("    trigger signedIn:user");  //???
                         $(document).triggerHandler('signedIn:user');
                     }
                     break;
                 case handleUserSignin.notificationSignOut:
-                    diag.appendWithLF("sign-out callback; believed logged in: " + that.signedIn);  //???
                     if (that.signedIn) {
                         that.signedIn = false;
                         $("#contentPage").fadeOut("fast");
                         $("#signinPage").fadeIn();
-                        diag.appendWithLF("    switch content->signin");  //???
                         $(document).triggerHandler('hide:profile');
                         $("#profileAvatar").css("display", "none");
                     }
                     break;
                 case handleUserSignin.notificationAvatarUpdate:
                     var avatar = handleUserSignin.getUser().avatar;
-                    diag.appendWithLF("avatar callback; believed logged in: " + that.signedIn);  //???
                     if (avatar) {
                         $("#profileAvatar").css("backgroundImage", "url(" + avatar + ")");
                         $("#profileAvatar").fadeIn("fast");
@@ -436,8 +431,6 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         that.photoSelected = !that.photoSelected;
         that.iVisiblePhoto = parseInt($("#carouselSlidesHolder > .item.active")[0].id.substring(1));
         that.iSelectedPhoto = that.photoSelected ? that.iVisiblePhoto : -1;
-        /*showHeart('filledHeart', that.photoSelected);
-        that.iSelectedPhoto = that.photoSelected ? that.iVisiblePhoto : -1;*/
         updatePhotoSelectionDisplay();
     });
 
@@ -455,7 +448,6 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         if ((that.iVisiblePhoto === 0 && data.direction === "right")
             || (that.iVisiblePhoto === (that.numPhotos - 1) && data.direction === "left")) {
             // Block move
-diag.appendWithLF("block slide to " + data.direction);  //???
             data.preventDefault();
         } else {
             // Otherwise, hide the heart until the next slide appears

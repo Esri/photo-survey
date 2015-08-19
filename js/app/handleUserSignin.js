@@ -39,7 +39,7 @@
  | limitations under the License.
  */
 //============================================================================================================================//
-define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
+define(['lib/i18n.min!nls/resources.js'], function (i18n) {
     'use strict';
     var handleUserSignin;
     handleUserSignin = {
@@ -84,7 +84,6 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
 
             // Do we offer guest access?
             handleUserSignin.availabilities.guest = appParams.showGuest;
-                //???|| (!appParams.showFacebook && !appParams.showGooglePlus && !appParams.showTwitter);
 
             //................................................................................................................//
 
@@ -188,13 +187,12 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
 
         initUI: function (buttonContainer) {
 
-            if (handleUserSignin.availabilities.guest) {  //??? i18n
+            if (handleUserSignin.availabilities.guest) {
                 $('<div id="guestSignin" class="socialMediaButton guestOfficialColor"><span class="socialMediaIcon sprites guest-user_29"></span>'
                         + i18n.signin.guestLabel + '</div>').appendTo(buttonContainer);
                 $('#guestSignin').on('click', function () {
                     handleUserSignin.loggedIn = true;
                     handleUserSignin.currentProvider = "guest";
-                    diag.appendWithLF("guest login");  //???
 
                     handleUserSignin.user = {
                         name: i18n.signin.guestLabel,
@@ -274,12 +272,10 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
          * Signs the user out of the currently-active social medium provider.
          */
         signOut: function () {
-            diag.appendWithLF("signOut; believed logged in: " + handleUserSignin.isSignedIn());  //???
             if (handleUserSignin.isSignedIn()) {
                 switch (handleUserSignin.currentProvider) {
 
                 case "guest":
-                    diag.appendWithLF("guest logout");  //???
                     handleUserSignin.user = {};
 
                     // Update the calling app
@@ -287,14 +283,12 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
                     break;
 
                 case "facebook":
-                    diag.appendWithLF("FB logout");  //???
                     // Log the user out of the app; known FB issue is that cookies are not cleared as promised if
                     // browser set to block third-party cookies
                     FB.logout();
                     break;
 
                 case "googlePlus":
-                    diag.appendWithLF("G+ logout");  //???
                     // Log the user out of the app; known G+ issue that user is not really logged out
                     try {
                         handleUserSignin.disconnectUser(handleUserSignin.user.access_token);
@@ -305,7 +299,6 @@ define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
                     break;
 
                 case "twitter":
-                    diag.appendWithLF("Tw logout");  //???
                     // Update the calling app
                     handleUserSignin.statusCallback(handleUserSignin.notificationSignOut);
 

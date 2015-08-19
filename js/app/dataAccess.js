@@ -70,7 +70,9 @@ define(['diag'], function (diag) {
                 if (!results || results.error) {
                     deferred.reject(-1);
                 }
-                diag.appendWithLF("surveys using condition \"" + condition + "\": " + results.count);  //???
+                diag.appendWithLF("surveys " + (condition
+                    ? "for \"" + condition + "\""
+                    : "available") + ": " + results.count);
                 deferred.resolve(results.count);
             });
 
@@ -205,28 +207,28 @@ define(['diag'], function (diag) {
                 //   * status === "success"
                 //   * results.updateResults[0].objectId === candidate.obj[dataAccess.objectIdField]
                 //   * results.updateResults[0].success === true
-                diag.append("update obj #" + candidate.obj.attributes[dataAccess.objectIdField] + " result: ");  //???
-                if (status === "success" && results && results.updateResults.length > 0) {  //???
-                    if (results.updateResults[0].success === true  //???
-                            && results.updateResults[0].objectId === candidate.obj.attributes[dataAccess.objectIdField]) {  //???
-                        diag.appendWithLF("OK");  //???
+                diag.append("update obj #" + candidate.obj.attributes[dataAccess.objectIdField] + " result: ");
+                if (status === "success" && results && results.updateResults.length > 0) {
+                    if (results.updateResults[0].success === true
+                            && results.updateResults[0].objectId === candidate.obj.attributes[dataAccess.objectIdField]) {
+                        diag.appendWithLF("OK");
                         deferred.resolve();
-                    } else if (results.updateResults[0].error) {  //???
-                        diag.appendWithLF("fail #" + results.updateResults[0].error.code  //???
-                                + " (" + results.updateResults[0].error.description + ")");  //???
+                    } else if (results.updateResults[0].error) {
+                        diag.appendWithLF("fail #" + results.updateResults[0].error.code
+                                + " (" + results.updateResults[0].error.description + ")");
                         deferred.reject();
-                    } else {  //???
-                        diag.appendWithLF("unspecified update fail");  //???
+                    } else {
+                        diag.appendWithLF("unspecified fail");
                         deferred.reject();
-                    }  //???
-                } else {  //???
-                    diag.appendWithLF("overall fail: " + status);  //???
+                    }
+                } else {
+                    diag.appendWithLF("overall fail: " + status);
                     deferred.reject();
-                }  //???
+                }
             }, "json").fail(function (err) {
                 // Unable to POST; can be IE 9 proxy problem
-                diag.appendWithLF("POST fail: " + JSON.stringify(err));  //???
-                diag.appendWithLF("failing URL: " + url);  //???
+                diag.appendWithLF("update obj #" + candidate.obj.attributes[dataAccess.objectIdField]
+                        + " POST fail: " + JSON.stringify(err) + "; failing URL: " + url);
                 deferred.reject();
             });
 
