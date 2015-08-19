@@ -41,7 +41,8 @@
 //============================================================================================================================//
 define(['lib/i18n.min!nls/resources.js', 'diag'], function (i18n, diag) {
     'use strict';
-    var handleUserSignin = {
+    var handleUserSignin;
+    handleUserSignin = {
 
         // Constants for callback to app
         notificationSignIn: 0,
