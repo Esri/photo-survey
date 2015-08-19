@@ -18,7 +18,8 @@
 //============================================================================================================================//
 define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchConfigInfo) {
     'use strict';
-    var prepareAppConfigInfo = {
+    var prepareAppConfigInfo;
+    prepareAppConfigInfo = {
 
         //--------------------------------------------------------------------------------------------------------------------//
 

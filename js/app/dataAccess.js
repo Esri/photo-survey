@@ -18,7 +18,8 @@
 //============================================================================================================================//
 define(['diag'], function (diag) {
     'use strict';
-    var dataAccess = {
+    var dataAccess;
+    dataAccess = {
 
         fixedQueryParams: "&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&distance=&units=esriSRUnit_Meter&returnGeometry=false&maxAllowableOffset=&geometryPrecision=&outSR=&returnExtentOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&quantizationParameters=&f=pjson",
         featureServiceUrl: null,
