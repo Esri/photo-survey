@@ -467,13 +467,15 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         $("#leftCarouselCtl").css("display", (that.iVisiblePhoto === 0 ? "none" : "block"));
         $("#rightCarouselCtl").css("display", (that.iVisiblePhoto === (that.numPhotos - 1) ? "none" : "block"));
 
-        // Update selected photo indicator
-        that.photoSelected = that.iVisiblePhoto === that.iSelectedPhoto;
-        showHeart('emptyHeart', !that.photoSelected);
-        showHeart('filledHeart', that.photoSelected);
-        $("#hearts").attr("title",
-            (that.photoSelected ? i18n.tooltips.button_best_image : i18n.tooltips.button_click_if_best_image));
-        $("#hearts")[0].style.display = "block";
+        if (prepareAppConfigInfo.appParams.bestPhotoField) {
+            // Update selected photo indicator
+            that.photoSelected = that.iVisiblePhoto === that.iSelectedPhoto;
+            showHeart('emptyHeart', !that.photoSelected);
+            showHeart('filledHeart', that.photoSelected);
+            $("#hearts").attr("title",
+                (that.photoSelected ? i18n.tooltips.button_best_image : i18n.tooltips.button_click_if_best_image));
+            $("#hearts")[0].style.display = "block";
+        }
     }
 
     function updateCount() {
