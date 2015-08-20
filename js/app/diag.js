@@ -1,5 +1,5 @@
 ﻿/*global define,$ */
-/*jslint browser:true,sloppy:true,nomen:true,unparam:true,plusplus:true */
+/*jslint browser:true */
 /** @license
  | Copyright 2015 Esri
  |
@@ -16,28 +16,41 @@
  | limitations under the License.
  */
 //============================================================================================================================//
-define(function () {
-    var ignore = true;
-
-    return {
+define(['lib/barcode.min'], function (barcode) {
+    'use strict';
+    var showDiag = false, showTest = false, diag;
+    diag = {
 
         //--------------------------------------------------------------------------------------------------------------------//
 
         /**
          * Initializes the module by creating the diagnostic modal display and its trigger button.
          */
-        init: function () {
-            if (ignore) {
+        init: function (appParams) {
+            var barcodeDir = "h";
+
+            showDiag = appParams.diag !== undefined;
+            showTest = appParams.test !== undefined;
+
+            if (showDiag) {
                 // Create the display modal box and the button to trigger it
                 $("body").append("<button id='diagnosticButton' style='z-index:2000;position:absolute;left:0;top:0;width:32px;"
-                    + "height:32px;background-color:transparent' data-toggle='modal' data-target='#diagnosticPanel' class='iconButton'></button>"
-                    + "<div id='diagnosticPanel' class='modal fade' role='dialog'>"
-                    + "  <div class='modal-dialog'>"
-                    + "    <div id='diagnosticLog' class='modal-content' style='padding:8px;word-wrap:break-word;'></div>"
-                    + "  </div>"
-                    + "</div>");
+                        + "height:32px;background-color:transparent' data-toggle='modal' data-target='#diagnosticPanel' class='iconButton'></button>"
+                        + "<div id='diagnosticPanel' class='modal fade' role='dialog'>"
+                        + "  <div class='modal-dialog'>"
+                        + "    <div id='diagnosticLog' class='modal-content' style='padding:8px;word-wrap:break-word;'></div>"
+                        + "  </div>"
+                        + "</div>");
                 $("#diagnosticPanel").modal({show: false});
-                ignore = false;
+            }
+
+            if (showTest) {
+                if (appParams.test === "v") {
+                    barcodeDir = "v";
+                }
+                // Create the barcode display box
+                $("head").append("<link href='js/lib/barcode.min.css' rel='stylesheet'>");
+                $("body").append("<span class='barcode128" + barcodeDir + "' id='barcode'></span>");
             }
         },
 
@@ -46,7 +59,7 @@ define(function () {
          * @param {string} note Text to append; text can contain HTML
          */
         append: function (note) {
-            if (!ignore) {
+            if (showDiag) {
                 $("#diagnosticLog").append(note);
             }
         },
@@ -56,15 +69,39 @@ define(function () {
          * @param {string} note Text to append; text can contain HTML
          */
         appendWithLF: function (note) {
-            this.append(note + "<br>");
+            diag.append(note + "<br>");
         },
 
         /**
          * Appends an HTML &lt;hr&gt; to the diagnostic modal display.
          */
         appendLine: function () {
-            this.append("<hr>");
+            diag.append("<hr>");
+        },
+
+        /**
+         * Displays the supplied text as a code-128 barcode.
+         * @param {string} text Text to convert and display
+         */
+        showAsCode: function (text) {
+            if (showTest) {
+                var codeContainer = $("#barcode");
+                codeContainer[0].innerHTML = barcode.code128(text);
+                codeContainer.css("display", "block");
+            }
+        },
+
+        /**
+         * Clears and hides the code-128 barcode.
+         */
+        clearCode: function () {
+            if (showTest) {
+                var codeContainer = $("#barcode");
+                codeContainer[0].innerHTML = "";
+                codeContainer.css("display", "none");
+            }
         }
 
     };
+    return diag;
 });

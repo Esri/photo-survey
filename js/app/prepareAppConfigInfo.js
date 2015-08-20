@@ -1,5 +1,5 @@
 ﻿/*global define,$ */
-/*jslint browser:true,sloppy:true,nomen:true,unparam:true,plusplus:true */
+/*jslint browser:true */
 /** @license
  | Copyright 2015 Esri
  |
@@ -17,8 +17,9 @@
  */
 //============================================================================================================================//
 define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchConfigInfo) {
-    var that;
-    return {
+    'use strict';
+    var prepareAppConfigInfo;
+    prepareAppConfigInfo = {
 
         //--------------------------------------------------------------------------------------------------------------------//
 
@@ -75,10 +76,7 @@ define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchC
          */
         init: function () {
             var parametersReady, surveyReady, webmapOrigImageUrlReady, webmapParamsFetch, webmapDataFetch, webmapFetcher,
-                paramsFromUrl, onlineAppFetch, configFileFetch;
-
-            that = this;
-            fetchConfigInfo.init();
+                    paramsFromUrl, onlineAppFetch, configFileFetch;
 
             // Set up external notifications for various stages of preparation
             parametersReady = $.Deferred();
@@ -91,31 +89,31 @@ define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchC
             webmapFetcher = null;
 
             // Get the URL parameters
-            paramsFromUrl = that._screenProperties(["webmap", "diag"], fetchConfigInfo._getParamsFromUrl());
+            paramsFromUrl = prepareAppConfigInfo.screenProperties(["webmap", "diag", "test"], fetchConfigInfo.getParamsFromUrl());
 
             // If webmap specified in the URL, we can start a fetch of its data now
-            if (parseConfigInfo._isUsableString(paramsFromUrl.webmap)) {
+            if (parseConfigInfo.isUsableString(paramsFromUrl.webmap)) {
                 webmapFetcher = "url";
-                fetchConfigInfo._getParamsFromWebmap(paramsFromUrl.webmap, webmapParamsFetch, webmapOrigImageUrlReady);
-                fetchConfigInfo._getWebmapData(paramsFromUrl.webmap, webmapDataFetch);
+                fetchConfigInfo.getParamsFromWebmap(paramsFromUrl.webmap, webmapParamsFetch, webmapOrigImageUrlReady);
+                fetchConfigInfo.getWebmapData(paramsFromUrl.webmap, webmapDataFetch);
             }
 
             // If the appId is specified in the URL, fetch its parameters; resolves immediately if no appId
             onlineAppFetch = $.Deferred();
-            fetchConfigInfo._getParamsFromOnlineApp(paramsFromUrl.appid).done(function (data) {
+            fetchConfigInfo.getParamsFromOnlineApp(paramsFromUrl.appid).done(function (data) {
                 if (!webmapFetcher) {
                     if (data && data.webmap) {
                         // Use webmap specified in online app
                         webmapFetcher = "online";
-                        fetchConfigInfo._getParamsFromWebmap(data.webmap, webmapParamsFetch, webmapOrigImageUrlReady);
-                        fetchConfigInfo._getWebmapData(data.webmap, webmapDataFetch);
+                        fetchConfigInfo.getParamsFromWebmap(data.webmap, webmapParamsFetch, webmapOrigImageUrlReady);
+                        fetchConfigInfo.getWebmapData(data.webmap, webmapDataFetch);
                     }
                 }
                 onlineAppFetch.resolve(data);
             });
 
             // Get the configuration file
-            configFileFetch = fetchConfigInfo._getParamsFromConfigFile(configFileFetch);
+            configFileFetch = fetchConfigInfo.getParamsFromConfigFile(configFileFetch);
 
             // Once we have config file and online app config (if any), see if we have a webmap
             $.when(configFileFetch, onlineAppFetch).done(function (paramsFromFile, paramsFromOnline) {
@@ -124,8 +122,8 @@ define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchC
                 if (!webmapFetcher) {
                     if (paramsFromFile.webmap) {
                         webmapFetcher = "file";
-                        fetchConfigInfo._getParamsFromWebmap(paramsFromFile.webmap, webmapParamsFetch, webmapOrigImageUrlReady);
-                        fetchConfigInfo._getWebmapData(paramsFromFile.webmap, webmapDataFetch);
+                        fetchConfigInfo.getParamsFromWebmap(paramsFromFile.webmap, webmapParamsFetch, webmapOrigImageUrlReady);
+                        fetchConfigInfo.getWebmapData(paramsFromFile.webmap, webmapDataFetch);
                     } else {
                         // We've no webmap; nothing more that can be done
                         parametersReady.resolve(false);
@@ -142,8 +140,8 @@ define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchC
                     //  3. webmap
                     //  4. online app
                     //  5. URL
-                    that.appParams = $.extend(
-                        that.appParams,
+                    prepareAppConfigInfo.appParams = $.extend(
+                        prepareAppConfigInfo.appParams,
                         paramsFromFile,
                         paramsFromWebmap,
                         paramsFromOnline,
@@ -151,14 +149,14 @@ define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchC
                     );
 
                     // Normalize booleans
-                    that.appParams.showGuest = parseConfigInfo._toBoolean(that.appParams.showGuest);
-                    that.appParams.showFacebook =
-                        that.appParams.facebookAppId !== null && that.appParams.facebookAppId.length > 0;
-                    that.appParams.showGooglePlus =
-                        that.appParams.googleplusClientId !== null && that.appParams.googleplusClientId.length > 0;
-                    that.appParams.showTwitter = parseConfigInfo._toBoolean(that.appParams.showTwitter);
-                    that.appParams.allowGuestSubmissions = parseConfigInfo._toBoolean(that.appParams.allowGuestSubmissions, false);
-                    that.appParams.thumbnailLimit = parseConfigInfo.toNumber(that.appParams.thumbnailLimit, -1);
+                    prepareAppConfigInfo.appParams.showGuest = prepareAppConfigInfo.toBoolean(prepareAppConfigInfo.appParams.showGuest);
+                    prepareAppConfigInfo.appParams.showFacebook =
+                            prepareAppConfigInfo.appParams.facebookAppId !== null && prepareAppConfigInfo.appParams.facebookAppId.length > 0;
+                    prepareAppConfigInfo.appParams.showGooglePlus =
+                            prepareAppConfigInfo.appParams.googleplusClientId !== null && prepareAppConfigInfo.appParams.googleplusClientId.length > 0;
+                    prepareAppConfigInfo.appParams.showTwitter = prepareAppConfigInfo.toBoolean(prepareAppConfigInfo.appParams.showTwitter);
+                    prepareAppConfigInfo.appParams.allowGuestSubmissions = prepareAppConfigInfo.toBoolean(prepareAppConfigInfo.appParams.allowGuestSubmissions, false);
+                    prepareAppConfigInfo.appParams.thumbnailLimit = prepareAppConfigInfo.toNumber(prepareAppConfigInfo.appParams.thumbnailLimit, -1);
 
                     parametersReady.resolve(true);
                 }).fail(function () {
@@ -171,20 +169,20 @@ define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchC
 
                     if (data.opLayerParams && data.opLayerParams.popupInfo && data.opLayerParams.popupInfo.description
                             && data.featureSvcParams && data.featureSvcParams.fields) {
-                        that.featureSvcParams.url = data.opLayerParams.url;
-                        that.featureSvcParams.id = data.featureSvcParams.id;
-                        that.featureSvcParams.objectIdField = data.featureSvcParams.objectIdField;
-                        that.featureSvcParams.canBeUpdated = data.featureSvcParams.canBeUpdated;
+                        prepareAppConfigInfo.featureSvcParams.url = data.opLayerParams.url;
+                        prepareAppConfigInfo.featureSvcParams.id = data.featureSvcParams.id;
+                        prepareAppConfigInfo.featureSvcParams.objectIdField = data.featureSvcParams.objectIdField;
+                        prepareAppConfigInfo.featureSvcParams.canBeUpdated = data.featureSvcParams.canBeUpdated;
 
                         // Create dictionary of domains
-                        dictionary = parseConfigInfo._createSurveyDictionary(data.featureSvcParams.fields);
+                        dictionary = parseConfigInfo.createSurveyDictionary(data.featureSvcParams.fields);
 
                         // Parse survey
-                        that.survey = parseConfigInfo._parseSurvey(data.opLayerParams.popupInfo.description, dictionary);
+                        prepareAppConfigInfo.survey = parseConfigInfo.parseSurvey(data.opLayerParams.popupInfo.description, dictionary);
                         surveyReady.resolve();
                     } else {
-                        that.featureSvcParams = {};
-                        that.survey = {};
+                        prepareAppConfigInfo.featureSvcParams = {};
+                        prepareAppConfigInfo.survey = {};
                         surveyReady.reject();
                     }
                 }).fail(function () {
@@ -193,9 +191,9 @@ define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchC
             });
 
             return {
-                "parametersReady": parametersReady,
-                "surveyReady" : surveyReady,
-                "webmapOrigImageUrlReady": webmapOrigImageUrlReady
+                parametersReady: parametersReady,
+                surveyReady: surveyReady,
+                webmapOrigImageUrlReady: webmapOrigImageUrlReady
             };
         },
 
@@ -206,16 +204,89 @@ define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchC
          * @return {object} Object composed of properties from the supportedProperties list
          * with values assigned from the objectToScreen object; supportedProperties not
          * found in objectToScreen are assigned 'null'
-         * @memberOf js.LGDropdownBox#
+         * @private
          */
-        _screenProperties: function (supportedProperties, objectToScreen) {
+        screenProperties: function (supportedProperties, objectToScreen) {
             var screenedObject = {};
 
-            $.each(supportedProperties, function (indexInArray, param) {
+            $.each(supportedProperties, function (ignore, param) {
                 screenedObject[param] = objectToScreen[param];
             });
             return screenedObject;
+        },
+
+        /**
+         * Insures that a supplied value is a number.
+         * @param {number|string} numValue Item to check
+         * @param {number} [defaultValue] Value to use if numValue is not a number or convertable
+         * to a number from a string; if omitted, zero is used
+         * @return {number} Supplied number, supplied string converted to a number, the
+         * default value, or zero
+         */
+        toNumber: function (numValue, defaultValue) {
+            var parsedNumValue;
+
+            // Fall back to default
+            if (defaultValue === undefined) {
+                defaultValue = 0;
+            }
+
+            if (typeof numValue === "number") {
+                return numValue;
+            }
+
+            if (typeof numValue === "string") {
+                try {
+                    parsedNumValue = parseInt(numValue, 10);
+                    if (isNaN(parsedNumValue)) {
+                        parsedNumValue = defaultValue;
+                    }
+                } catch (ignore) {
+                    parsedNumValue = defaultValue;
+                }
+            } else {
+                parsedNumValue = defaultValue;
+            }
+
+            return parsedNumValue;
+        },
+
+        /** Normalizes a boolean value to true or false.
+         * @param {boolean|string} boolValue A true or false value that is returned directly or a string "true" or "false"
+         * (case-insensitive) that is interpreted and returned; if neither a a boolean or a usable string, falls back to
+         * defaultValue
+         * @param {boolean} [defaultValue] A true or false that is returned if boolValue can't be used; if not defined,
+         * true is returned
+         * @private
+         */
+        toBoolean: function (boolValue, defaultValue) {
+            var lowercaseValue;
+
+            // Shortcut true|false
+            if (boolValue === true) {
+                return true;
+            }
+            if (boolValue === false) {
+                return false;
+            }
+
+            // Handle a true|false string
+            if (typeof boolValue === "string") {
+                lowercaseValue = boolValue.toLowerCase();
+                if (lowercaseValue === "true") {
+                    return true;
+                }
+                if (lowercaseValue === "false") {
+                    return false;
+                }
+            }
+            // Fall back to default
+            if (defaultValue === undefined) {
+                return true;
+            }
+            return defaultValue;
         }
 
     };
+    return prepareAppConfigInfo;
 });
