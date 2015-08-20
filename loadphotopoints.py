@@ -90,7 +90,7 @@ else:
 
 	pass
 
-snapenv = [ParcelsFeatureClass, "VERTEX", "30 Feet"]
+snapenv = [ParcelsFeatureClass, "EDGE", "30 Feet"]
 arcpy.Snap_edit(PhotoFeatureClass2, [snapenv])
 
 
@@ -161,7 +161,7 @@ else:
 
 	pass
 
-snapenv = ["PARCELSFL2", "VERTEX", "100 Feet"]
+snapenv = ["PARCELSFL2", "EDGE", "100 Feet"]
 arcpy.Snap_edit(PhotoFeatureClass3, [snapenv])
 
 Nearhelper = """{}\\NEAR""".format(Geodatabase)
