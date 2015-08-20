@@ -3,12 +3,11 @@ origin	git@github.com:ArcGIS/photo-survey.git (fetch)
 origin	git@github.com:ArcGIS/photo-survey.git (push)
 . 
 branch 
-develop
+Sep_2015_prerelease
 . 
-commit e1d657d82db0df333998820d89d744da9fbec1d8
+commit 6170dbdc6a3cf70a8f1cc7619f1bf65b6ecfddaa
+Merge: b81c2c8 b798bcb
 Author: MikeTschudi <mtschudi@esri.com>
-Date:   Mon Aug 10 08:41:30 2015 -0700
+Date:   Thu Aug 20 14:01:34 2015 -0700
 
-    Chopped off extra-long no-break title rather than have whole survey area have horizontal scroll
-    
-    #31
+    Merge branch 'master' into develop

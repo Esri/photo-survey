@@ -9,11 +9,14 @@
         "proxyProgram": "proxy/proxy.ashx",
 
         "randomizeSelection": true,
+        "allowGuestSubmissions": false,
+        "thumbnailLimit": "10",
 
         "showGuest": "true",
         "facebookAppId": "101991193476073",
         "googleplusClientId": "884148190980-mrcnakr5q14ura5snpcbgp85ovq7s7ea.apps.googleusercontent.com",
         "showTwitter": "true",
+
 
         "googleplusLogoutUrl": "https://accounts.google.com/logout",
         "twitterSigninUrl": "https://utility.arcgis.com/tproxy/signin",
