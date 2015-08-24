@@ -35,7 +35,7 @@
         <div class="row fillHeight">
 
             <h2 class="screenreaderInfo">Photo gallery</h2>
-            <article class="mainContent fillHeight col-sm-9 col-md-9 repad">
+            <article id="mainContent" class="mainContent fillHeight col-sm-9 col-md-9 repad">
                 <div id="carousel" class="carousel slide" data-ride="carousel" data-interval="false">
                   <!-- Wrapper for slides -->
                   <div id="carouselSlidesHolder" class="carousel-inner" role="listbox"></div>
@@ -45,17 +45,17 @@
 
                   <!-- Left and right controls -->
                   <a id="leftCarouselCtl" class="left carousel-control carousel-control-heartTL" href="#carousel" role="button" data-slide="prev">
-                    <img id="previousImageBtn" src="images/left-arrow.png" class="glyphicon glyphicon-chevron-right" aria-hidden="true">
+                    <span id="previousImageBtn" class="carousel-arrow sprites left-arrow" aria-hidden="true"></span>
                     <span class="sr-only">Previous</span>
                   </a>
                   <a id="rightCarouselCtl" class="right carousel-control carousel-control-heartTL" href="#carousel" role="button" data-slide="next">
-                    <img id="nextImageBtn" src="images/right-arrow.png" class="glyphicon glyphicon-chevron-right" aria-hidden="true">
+                    <span id="nextImageBtn" class="carousel-arrow sprites right-arrow" aria-hidden="true"></span>
                     <span class="sr-only">Next</span>
                   </a>
                 </div>
                 <div id="hearts" class="heartsTL heartsBackground">
-                    <img id="emptyHeart" class="heart" src="images/empty-heart.png" aria-hidden="false">
-                    <img id="filledHeart" class="heart" src="images/filled-heart.png" aria-hidden="false">
+                    <span id="emptyHeart" class="heart sprites empty-heart" aria-hidden="false"></span>
+                    <span id="filledHeart" class="heart sprites filled-heart" aria-hidden="false"></span>
                 </div>
             </article>
 
@@ -95,14 +95,14 @@
                         <div id="ranking" class="ranking transparent">
                             <div id="rankLabel" class="profileRankLabel"></div>
                             <div id="level" class="profileRankLevel"></div>
-                            <div class="profileRankStars"><img src="images/empty-star.png"/><img src="images/empty-star.png"/><img src="images/empty-star.png"/><img src="images/empty-star.png"/><img src="images/empty-star.png"/></div>
+                            <div class="profileRankStars"><div class="sprites empty-star"></div><div class="sprites empty-star"></div><div class="sprites empty-star"></div><div class="sprites empty-star"></div><div class="sprites empty-star"></div></div>
                             <div id="profileRankBar" class="profileRankBar">
                                 <div id="profileRankBarFill" class="profileRankBarFill"></div>
                             </div>
                             <div id="remainingToNextLevel" class="profileRankToGo"></div>
                         </div>
                     </div>
-                    <div class="action-bar">
+                    <div id="profileActionBar" class="action-bar">
                       <button id="closeProfileBtn" type="button" class="btn skip-button">&lt; Back to survey</button>
                     </div>
                 </article>
@@ -131,11 +131,19 @@
         </div>
     </aside>
 
-    <!-- jQuery, Bootstrap, and AMD module support -->
-    <script src="js/lib/modernizr.custom.69413.js"></script>
-    <script src="js/lib/jquery.min.js"></script>
-    <script src="js/lib/bootstrap.min.js"></script>
-    <script src="js/lib/jquery.bcSwipe.min.js"></script>
-    <script data-main="js/app" src="js/lib/require.js"></script>
+    <!-- Load libs and launch app -->
+    <script src="js/lib/libs.js"></script>
+    <script>
+    // Main module is in js/app directory, and it refers to third-party libraries in the js/lib directory
+    requirejs.config({
+        baseUrl: "js/app",
+        paths: {
+            lib: "../lib"
+        }
+    });
+
+    // Load the main app module to start the app
+    requirejs(["main"]);
+    </script>
 </body>
 </html>

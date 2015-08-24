@@ -50,7 +50,8 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
 
     // When we have the app parameters, we can continue setting up the app
     appConfigReadies.parametersReady.then(function () {
-        if (prepareAppConfigInfo.appParams.diag !== undefined) {diag.init()};  //???
+        if (prepareAppConfigInfo.appParams.diag !== undefined || prepareAppConfigInfo.appParams.test !== undefined) {diag.init(prepareAppConfigInfo.appParams)};  //???
+        diag.showAsCode("appConfigReadies.parametersReady");  //???
 
         // Update the page's title
         document.title = prepareAppConfigInfo.appParams.title;
@@ -74,27 +75,22 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
             // Callback from current social medium
             switch (notificationType) {
                 case handleUserSignin.notificationSignIn:
-                    diag.appendWithLF("sign-in callback; believed logged in: " + that.signedIn);  //???
                     if (!that.signedIn) {
                         that.signedIn = true;
-                        diag.appendWithLF("    trigger signedIn:user");  //???
                         $(document).triggerHandler('signedIn:user');
                     }
                     break;
                 case handleUserSignin.notificationSignOut:
-                    diag.appendWithLF("sign-out callback; believed logged in: " + that.signedIn);  //???
                     if (that.signedIn) {
                         that.signedIn = false;
                         $("#contentPage").fadeOut("fast");
                         $("#signinPage").fadeIn();
-                        diag.appendWithLF("    switch content->signin");  //???
                         $(document).triggerHandler('hide:profile');
                         $("#profileAvatar").css("display", "none");
                     }
                     break;
                 case handleUserSignin.notificationAvatarUpdate:
                     var avatar = handleUserSignin.getUser().avatar;
-                    diag.appendWithLF("avatar callback; believed logged in: " + that.signedIn);  //???
                     if (avatar) {
                         $("#profileAvatar").css("backgroundImage", "url(" + avatar + ")");
                         $("#profileAvatar").fadeIn("fast");
@@ -229,6 +225,13 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
     $(document).on('signedIn:user', function (e) {
         appConfigReadies.surveyReady.then(function () {
             var user = handleUserSignin.getUser();
+        //diag.clearCode();  //???
+
+            // Make sure that the main content is available
+            showMainContent();
+
+            // Make sure that the main content is available
+            showMainContent();
 
             // Heading on survey/profile page
             $("#name")[0].innerHTML = user.name;
@@ -261,7 +264,18 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         handleUserSignin.signOut();
     });
 
+    $(document).on('show:noSurveys', function (e) {
+        // No more surveys available either due to error or completion
+        // Hide the main content
+        hideMainContent();
+
+        // Show the profile view & help window
+        $(document).triggerHandler('show:profile');
+        $('#additionalInfoPanel').modal('show');
+    });
+
     $(document).on('show:newSurvey', function (e) {
+        var isReadOnly = !(prepareAppConfigInfo.featureSvcParams.canBeUpdated && handleUserSignin.getUser().canSubmit);
         $("#submitBtn")[0].blur();
 
         // Provide some visual feedback for the switch to a new survey
@@ -271,10 +285,12 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         dataAccess.getCandidate(prepareAppConfigInfo.appParams.randomizeSelection).then(function (candidate) {
             // obj:feature{}
             // attachments:[{id,url},...]
+            var showThumbnails = (prepareAppConfigInfo.appParams.thumbnailLimit < 0) ||
+                (candidate.attachments.length <= prepareAppConfigInfo.appParams.thumbnailLimit);
 
             that.numPhotos = candidate.attachments.length;
             if (!candidate.obj) {
-                $(document).triggerHandler('show:newSurvey');
+                $(document).triggerHandler('show:noSurveys');
                 return;
             } else if (that.numPhotos === 0) {
                 diag.appendWithLF("no photos for property <i>" + JSON.stringify(candidate.obj.attributes) + "</i>");  //???
@@ -301,15 +317,18 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
 
             $.each(candidate.attachments, function (indexInArray, attachment) {
                 addPhoto(carouselSlidesHolder, indexInArray, (initiallyActiveItem === indexInArray), attachment.url);
-                addPhotoIndicator(carouselIndicatorsHolder, indexInArray, (initiallyActiveItem === indexInArray),
-                "carousel", attachment.url);
+                if (showThumbnails) {
+                    addPhotoIndicator(carouselIndicatorsHolder, indexInArray, (initiallyActiveItem === indexInArray),
+                        "carousel", attachment.url);
+                }
             });
             $("#carousel").trigger('create');
 
             updatePhotoSelectionDisplay();
 
             // Provide some visual feedback for the switch to a new survey
-            $("#surveyContainer").fadeTo(1000, 1.0);
+            $("#surveyContainer").fadeTo(1000, (isReadOnly ? 0.75 : 1.0));
+
         }).fail(function (error) {
         });
 
@@ -317,13 +336,15 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         var surveyContainer = $("#surveyContainer")[0];
         $(surveyContainer).children().remove();  // remove children and their events
         $.each(prepareAppConfigInfo.survey, function (indexInArray, questionInfo) {
-            addQuestion(surveyContainer, indexInArray, questionInfo);
+            addQuestion(surveyContainer, indexInArray, questionInfo, isReadOnly);
         });
         $(".btn-group").trigger('create');
 
         // Can submit?
-        $("#submitBtn").attr("disabled",
-            !(prepareAppConfigInfo.featureSvcParams.canBeUpdated && handleUserSignin.getUser().canSubmit));
+        $("#submitBtn").css("display",
+            isReadOnly
+            ? "none"
+            : "inline-block");
 
         // Show the content
         $("#contentPage").fadeIn("fast");
@@ -410,8 +431,6 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         that.photoSelected = !that.photoSelected;
         that.iVisiblePhoto = parseInt($("#carouselSlidesHolder > .item.active")[0].id.substring(1));
         that.iSelectedPhoto = that.photoSelected ? that.iVisiblePhoto : -1;
-        /*showHeart('filledHeart', that.photoSelected);
-        that.iSelectedPhoto = that.photoSelected ? that.iVisiblePhoto : -1;*/
         updatePhotoSelectionDisplay();
     });
 
@@ -429,7 +448,6 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         if ((that.iVisiblePhoto === 0 && data.direction === "right")
             || (that.iVisiblePhoto === (that.numPhotos - 1) && data.direction === "left")) {
             // Block move
-diag.appendWithLF("block slide to " + data.direction);  //???
             data.preventDefault();
         } else {
             // Otherwise, hide the heart until the next slide appears
@@ -449,13 +467,15 @@ diag.appendWithLF("block slide to " + data.direction);  //???
         $("#leftCarouselCtl").css("display", (that.iVisiblePhoto === 0 ? "none" : "block"));
         $("#rightCarouselCtl").css("display", (that.iVisiblePhoto === (that.numPhotos - 1) ? "none" : "block"));
 
-        // Update selected photo indicator
-        that.photoSelected = that.iVisiblePhoto === that.iSelectedPhoto;
-        showHeart('emptyHeart', !that.photoSelected);
-        showHeart('filledHeart', that.photoSelected);
-        $("#hearts").attr("title",
-            (that.photoSelected ? i18n.tooltips.button_best_image : i18n.tooltips.button_click_if_best_image));
-        $("#hearts")[0].style.display = "block";
+        if (prepareAppConfigInfo.appParams.bestPhotoField) {
+            // Update selected photo indicator
+            that.photoSelected = that.iVisiblePhoto === that.iSelectedPhoto;
+            showHeart('emptyHeart', !that.photoSelected);
+            showHeart('filledHeart', that.photoSelected);
+            $("#hearts").attr("title",
+                (that.photoSelected ? i18n.tooltips.button_best_image : i18n.tooltips.button_click_if_best_image));
+            $("#hearts")[0].style.display = "block";
+        }
     }
 
     function updateCount() {
@@ -476,11 +496,11 @@ diag.appendWithLF("block slide to " + data.direction);  //???
             $("#rankLabel")[0].innerHTML = prepareAppConfigInfo.appParams.contribLevels[level].label;
             $("#level")[0].innerHTML = i18n.labels.label_level.replace("${0}", level);
             if (level === 0) {
-                $("img", ".profileRankStars").attr("src", "images/empty-star.png");
+                $("div", ".profileRankStars").removeClass("filled-star").addClass("empty-star")
             } else {
-                var stars = $("img:eq(" + (level - 1) + ")", ".profileRankStars");
-                stars.prevAll().andSelf().attr("src", "images/filled-star.png");
-                stars.nextAll().attr("src", "images/empty-star.png");
+                var stars = $("div:eq(" + (level - 1) + ")", ".profileRankStars");
+                stars.prevAll().andSelf().removeClass("empty-star").addClass("filled-star")
+                stars.nextAll().removeClass("filled-star").addClass("empty-star")
             }
 
             // If below top level, show how far to next level
@@ -513,7 +533,6 @@ diag.appendWithLF("block slide to " + data.direction);  //???
     function startQuestion(surveyContainer, iQuestion, questionInfo) {
         // <div class='form-group'>
         //   <label for='q1'>Is there a structure on the property? <span class='glyphicon glyphicon-star'></span></label><br>
-        //??? TODO: i18n "Please answer this question"
         var start =
             "<div id='qg" + iQuestion + "' class='form-group'>"
             + "<label for='q" + iQuestion + "'>" + questionInfo.question
@@ -523,7 +542,7 @@ diag.appendWithLF("block slide to " + data.direction);  //???
         return start;
     }
 
-    function createButtonChoice(surveyContainer, iQuestion, questionInfo) {
+    function createButtonChoice(surveyContainer, iQuestion, questionInfo, isReadOnly) {
         // <div id='q1' class='btn-group'>
         //   <button type='button' class='btn'>Yes</button>
         //   <button type='button' class='btn'>No</button>
@@ -532,13 +551,13 @@ diag.appendWithLF("block slide to " + data.direction);  //???
         var buttons = "<div id='q" + iQuestion + "' class='btn-group'>";
         var domain = questionInfo.domain.split('|');
         $.each(domain, function (i, choice) {
-            buttons += "<button type='button' class='btn' value='" + i + "'>" + choice + "</button>";
+            buttons += "<button type='button' class='btn' value='" + i + "' " + (isReadOnly ? "disabled" : "") + ">" + choice + "</button>";
         });
         buttons += "</div>";
         return buttons;
     }
 
-    function createListChoice(surveyContainer, iQuestion, questionInfo) {
+    function createListChoice(surveyContainer, iQuestion, questionInfo, isReadOnly) {
         // <div class='radio'><label><input type='radio' name='q1' id='optionFound1' value='0'>Crawlspace</label></div>
         // <div class='radio'><label><input type='radio' name='q1' id='optionFound2' value='1'>Raised</label></div>
         // <div class='radio'><label><input type='radio' name='q1' id='optionFound3' value='2'>Elevated</label></div>
@@ -547,7 +566,7 @@ diag.appendWithLF("block slide to " + data.direction);  //???
         var list = "";
         var domain = questionInfo.domain.split('|');
         $.each(domain, function (i, choice) {
-            list += "<div class='radio'><label><input type='radio' name='q" + iQuestion + "' value='" + i + "'>" + choice + "</label></div>";
+            list += "<div class='radio'><label><input type='radio' name='q" + iQuestion + "' value='" + i + "' " + (isReadOnly ? "disabled" : "") + ">" + choice + "</label></div>";
         });
         return list;
     }
@@ -559,12 +578,12 @@ diag.appendWithLF("block slide to " + data.direction);  //???
         return wrap;
     }
 
-    function addQuestion(surveyContainer, iQuestion, questionInfo) {
+    function addQuestion(surveyContainer, iQuestion, questionInfo, isReadOnly) {
         var question = startQuestion(surveyContainer, iQuestion, questionInfo);
         if (questionInfo.style === "button") {
-            question += createButtonChoice(surveyContainer, iQuestion, questionInfo);
+            question += createButtonChoice(surveyContainer, iQuestion, questionInfo, isReadOnly);
         } else {
-            question += createListChoice(surveyContainer, iQuestion, questionInfo);
+            question += createListChoice(surveyContainer, iQuestion, questionInfo, isReadOnly);
         }
         question += wrapupQuestion(surveyContainer, iQuestion, questionInfo);
         $(surveyContainer).append(question);
@@ -583,25 +602,15 @@ diag.appendWithLF("block slide to " + data.direction);  //???
         //    "'><img src='" + photoUrl + "'></div>";
         // $(carouselSlidesHolder).append(content);
 
-        // var content = $("<div id='c" + indexInArray + "' class='item" + (isActive ? " active" : "") + "'></div>");
         var content = "<div id='c" + indexInArray + "' class='item" + (isActive ? " active" : "") + "'><img /></div>";
         $(carouselSlidesHolder).append(content);
 
-        if (indexInArray === -1) {  //???
-            loadImage(photoUrl, $("#c" + indexInArray + " img")[0]);  //???
-        } else {
-            var img = $("#c" + indexInArray + " img")[0];
-            img.src = photoUrl;
-            $(img).on('error', function (err) {
-                img.src = "images/noPhoto.png";
-                $(img).css("margin", "auto");
-            });
-        }
-
-        /*loadImage(photoUrl).then(function (imgElement) {
-            $(content).append(imgElement);
-            $(carouselSlidesHolder).append(content);
-        });*/
+        var img = $("#c" + indexInArray + " img")[0];
+        img.src = photoUrl;
+        $(img).on('error', function (err) {
+            img.src = "images/noPhoto.png";
+            $(img).css("margin", "auto");
+        });
     }
 
     function addPhotoIndicator(carouselIndicatorsHolder, indexInArray, isActive, carouselId, photoUrl) {
@@ -615,6 +624,28 @@ diag.appendWithLF("block slide to " + data.direction);  //???
     //------------------------------------------------------------------------------------------------------------------------//
 
 
+    function showMainContent() {
+        // Hide the main content
+        $("#mainContent").css("visibility", "visible");
+
+        // Hide the profile's action bar
+        $("#profileActionBar").css("display", "block");
+
+        // Switch out the help display
+        $("#helpBody")[0].innerHTML = prepareAppConfigInfo.appParams.helpText;
+    }
+
+    function hideMainContent() {
+        // Hide the main content
+        $("#mainContent").css("visibility", "hidden");
+
+        // Hide the profile's action bar
+        $("#profileActionBar").css("display", "none");
+
+        // Switch out the help display
+        $("#helpBody")[0].innerHTML = i18n.signin.noMoreSurveys;
+    }
+
     function testURL(url, callback) {
         $.ajax( {
             type: 'HEAD',
@@ -627,92 +658,5 @@ diag.appendWithLF("block slide to " + data.direction);  //???
             }
         });
     }
-
-    function startPhotoSet(numPhotos) {
-        // Init shared progress bar
-    }
-
-    // https://gist.github.com/jafstar/3395525
-    // with mods to anonymous functions
-    var progressBar;
-
-    function loadImage(imageURI, context)
-    {
-        var request;
-        //var deferred = $.Deferred();
-        //var imageElement = document.createElement("img");
-
-        request = new XMLHttpRequest();
-        request.onloadstart = function () {
-            progressBar = document.createElement("progress");
-            progressBar.value = 0;
-            progressBar.max = 100;
-            progressBar.removeAttribute("value");
-            document.body.appendChild(progressBar);
-        };
-        request.onprogress = function (e) {
-            if (e.lengthComputable)
-                progressBar.value = e.loaded / e.total * 100;
-            else
-                progressBar.removeAttribute("value");
-        };
-        request.onload = function () {
-            //imageElement.src = "data:image/jpeg;base64," + base64Encode(request.responseText);
-            //deferred.resolve(imageElement);
-
-            context.src = "data:image/jpeg;base64," + base64Encode(request.responseText);
-        };
-        request.onloadend = function () {
-            document.body.removeChild(progressBar);
-        };
-        request.open("GET", imageURI, true);
-        request.overrideMimeType('text/plain; charset=x-user-defined');
-        request.send(null);
-
-        //return deferred;
-    }
-
-    // This encoding function is from Philippe Tenenhaus's example at http://www.philten.com/us-xmlhttprequest-image/
-    function base64Encode(inputStr)
-    {
-       var b64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-       var outputStr = "";
-       var i = 0;
-
-       while (i < inputStr.length)
-       {
-           //all three "& 0xff" added below are there to fix a known bug
-           //with bytes returned by xhr.responseText
-           var byte1 = inputStr.charCodeAt(i++) & 0xff;
-           var byte2 = inputStr.charCodeAt(i++) & 0xff;
-           var byte3 = inputStr.charCodeAt(i++) & 0xff;
-
-           var enc1 = byte1 >> 2;
-           var enc2 = ((byte1 & 3) << 4) | (byte2 >> 4);
-
-           var enc3, enc4;
-           if (isNaN(byte2))
-           {
-               enc3 = enc4 = 64;
-           }
-           else
-           {
-               enc3 = ((byte2 & 15) << 2) | (byte3 >> 6);
-               if (isNaN(byte3))
-               {
-                   enc4 = 64;
-               }
-               else
-               {
-                   enc4 = byte3 & 63;
-               }
-           }
-
-           outputStr += b64.charAt(enc1) + b64.charAt(enc2) + b64.charAt(enc3) + b64.charAt(enc4);
-        }
-
-        return outputStr;
-    }
-
 
 });
