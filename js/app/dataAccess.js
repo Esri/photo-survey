@@ -1,5 +1,5 @@
 ﻿/*global define,$ */
-/*jslint browser:true,sloppy:true,nomen:true,unparam:true,plusplus:true */
+/*jslint browser:true */
 /** @license
  | Copyright 2015 Esri
  |
@@ -17,8 +17,9 @@
  */
 //============================================================================================================================//
 define(['diag'], function (diag) {
-    var that;
-    return {
+    'use strict';
+    var dataAccess;
+    dataAccess = {
 
         fixedQueryParams: "&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&distance=&units=esriSRUnit_Meter&returnGeometry=false&maxAllowableOffset=&geometryPrecision=&outSR=&returnExtentOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&quantizationParameters=&f=pjson",
         featureServiceUrl: null,
@@ -41,15 +42,14 @@ define(['diag'], function (diag) {
          * only IE9 needs the proxy)
          */
         init: function (featureServiceUrl, featureServiceLayerId, objectIdField, validCandidateCondition, proxyProgram) {
-            that = this;
-            that.featureServiceUrl = featureServiceUrl;
-            if (that.featureServiceUrl.lastIndexOf("/") !== that.featureServiceUrl.length - 1) {
-                that.featureServiceUrl += "/";
+            dataAccess.featureServiceUrl = featureServiceUrl;
+            if (dataAccess.featureServiceUrl.lastIndexOf("/") !== dataAccess.featureServiceUrl.length - 1) {
+                dataAccess.featureServiceUrl += "/";
             }
-            that.featureServiceLayerId = featureServiceLayerId;
-            that.objectIdField = objectIdField;
-            that.validCandidateCondition = validCandidateCondition;
-            that.proxyProgram = proxyProgram;
+            dataAccess.featureServiceLayerId = featureServiceLayerId;
+            dataAccess.objectIdField = objectIdField;
+            dataAccess.validCandidateCondition = validCandidateCondition;
+            dataAccess.proxyProgram = proxyProgram;
         },
 
         /**
@@ -63,14 +63,16 @@ define(['diag'], function (diag) {
             var deferred, url;
             deferred = $.Deferred();
 
-            url = that.featureServiceUrl + "query?where=" + (condition || that.validCandidateCondition)
-                + "&objectIds=&returnIdsOnly=false&returnCountOnly=true&outFields=" + that.fixedQueryParams
-                + "&callback=?";
+            url = dataAccess.featureServiceUrl + "query?where=" + (condition || dataAccess.validCandidateCondition)
+                    + "&objectIds=&returnIdsOnly=false&returnCountOnly=true&outFields=" + dataAccess.fixedQueryParams
+                    + "&callback=?";
             $.getJSON(url, "jsonp", function (results) {
                 if (!results || results.error) {
                     deferred.reject(-1);
                 }
-                diag.appendWithLF("surveys using condition \"" + condition + "\": " + results.count);  //???
+                diag.appendWithLF("surveys " + (condition
+                    ? "for \"" + condition + "\""
+                    : "available") + ": " + results.count);
                 deferred.resolve(results.count);
             });
 
@@ -91,9 +93,9 @@ define(['diag'], function (diag) {
             deferred = $.Deferred();
 
             // Get the ids of available unsurveyed candidates
-            url = that.featureServiceUrl + "query?where=" + that.validCandidateCondition
-                + "&objectIds=&returnIdsOnly=true&returnCountOnly=false&outFields=" + that.fixedQueryParams
-                + "&callback=?";
+            url = dataAccess.featureServiceUrl + "query?where=" + dataAccess.validCandidateCondition
+                    + "&objectIds=&returnIdsOnly=true&returnCountOnly=false&outFields=" + dataAccess.fixedQueryParams
+                    + "&callback=?";
             $.getJSON(url, "jsonp", function (results) {
                 var objectId, attributesDeferred, objectAttrsUrl, attachmentsDeferred, objectAttachmentsUrl;
 
@@ -113,14 +115,15 @@ define(['diag'], function (diag) {
                 }
 
                 // Pick a candidate from amongst the available
-                objectId = randomizeSelection ?
-                        results.objectIds[Math.floor(Math.random() * results.objectIds.length)] : results.objectIds[0];
+                objectId = randomizeSelection
+                    ? results.objectIds[Math.floor(Math.random() * results.objectIds.length)]
+                    : results.objectIds[0];
 
                 // Get the candidate's attributes
                 attributesDeferred = $.Deferred();
-                objectAttrsUrl = that.featureServiceUrl + "query?objectIds=" + objectId
-                    + "&returnIdsOnly=false&returnCountOnly=false&outFields=*" + that.fixedQueryParams
-                    + "&callback=?";
+                objectAttrsUrl = dataAccess.featureServiceUrl + "query?objectIds=" + objectId
+                        + "&returnIdsOnly=false&returnCountOnly=false&outFields=*" + dataAccess.fixedQueryParams
+                        + "&callback=?";
                 $.getJSON(objectAttrsUrl, "jsonp", function (results) {
                     // No attributes is a problem
                     if (!results || results.error || !results.features || results.features.length === 0) {
@@ -133,7 +136,7 @@ define(['diag'], function (diag) {
 
                 // Get the candidate's attachments
                 attachmentsDeferred = $.Deferred();
-                objectAttachmentsUrl = that.featureServiceUrl + objectId + "/attachments?f=json&callback=?";
+                objectAttachmentsUrl = dataAccess.featureServiceUrl + objectId + "/attachments?f=json&callback=?";
                 $.getJSON(objectAttachmentsUrl, "jsonp", function (results) {
                     var attachments = [];
 
@@ -149,17 +152,17 @@ define(['diag'], function (diag) {
                             // Watch for request to reverse order of attachments
                             var doReversal = false;
                             if (feature && feature.attributes && feature.attributes.REVERSE) {
-                                doReversal = that._toBoolean(feature.attributes.REVERSE, false);
+                                doReversal = dataAccess.toBoolean(feature.attributes.REVERSE, false);
                             }
 
                             // Build list of attachments
                             if (doReversal) {
                                 results.attachmentInfos.reverse();
                             }
-                            $.each(results.attachmentInfos, function (idx, attachment) {
+                            $.each(results.attachmentInfos, function (ignore, attachment) {
                                 attachments.push({
                                     id: attachment.id,
-                                    url: that.featureServiceUrl + objectId + "/attachments/" + attachment.id
+                                    url: dataAccess.featureServiceUrl + objectId + "/attachments/" + attachment.id
                                 });
                             });
                             attachmentsDeferred.resolve(attachments);
@@ -195,35 +198,37 @@ define(['diag'], function (diag) {
             var deferred, url, update;
             deferred = $.Deferred();
 
-            update = "f=json&id=" + that.featureServiceLayerId + "&updates=%5B" + that._stringifyForApplyEdits(candidate.obj) + "%5D";
-            url = (that.proxyProgram ? that.proxyProgram + "?" : "") + that.featureServiceUrl + "applyEdits";
+            update = "f=json&id=" + dataAccess.featureServiceLayerId + "&updates=%5B" + dataAccess.stringifyForApplyEdits(candidate.obj) + "%5D";
+            url = (dataAccess.proxyProgram
+                ? dataAccess.proxyProgram + "?"
+                : "") + dataAccess.featureServiceUrl + "applyEdits";
             $.post(url, update, function (results, status) {
                 // seek
                 //   * status === "success"
-                //   * results.updateResults[0].objectId === candidate.obj[that.objectIdField]
+                //   * results.updateResults[0].objectId === candidate.obj[dataAccess.objectIdField]
                 //   * results.updateResults[0].success === true
-                diag.append("update obj #" + candidate.obj.attributes[that.objectIdField] + " result: ");  //???
-                if (status === "success" && results && results.updateResults.length > 0) {  //???
-                    if (results.updateResults[0].success === true  //???
-                            && results.updateResults[0].objectId === candidate.obj.attributes[that.objectIdField]) {  //???
-                        diag.appendWithLF("OK");  //???
+                diag.append("update obj #" + candidate.obj.attributes[dataAccess.objectIdField] + " result: ");
+                if (status === "success" && results && results.updateResults.length > 0) {
+                    if (results.updateResults[0].success === true
+                            && results.updateResults[0].objectId === candidate.obj.attributes[dataAccess.objectIdField]) {
+                        diag.appendWithLF("OK");
                         deferred.resolve();
-                    } else if (results.updateResults[0].error) {  //???
-                        diag.appendWithLF("fail #" + results.updateResults[0].error.code  //???
-                            + " (" + results.updateResults[0].error.description + ")");  //???
+                    } else if (results.updateResults[0].error) {
+                        diag.appendWithLF("fail #" + results.updateResults[0].error.code
+                                + " (" + results.updateResults[0].error.description + ")");
                         deferred.reject();
-                    } else {  //???
-                        diag.appendWithLF("unspecified update fail");  //???
+                    } else {
+                        diag.appendWithLF("unspecified fail");
                         deferred.reject();
-                    }  //???
-                } else {  //???
-                    diag.appendWithLF("overall fail: " + status);  //???
+                    }
+                } else {
+                    diag.appendWithLF("overall fail: " + status);
                     deferred.reject();
-                }  //???
+                }
             }, "json").fail(function (err) {
                 // Unable to POST; can be IE 9 proxy problem
-                diag.appendWithLF("POST fail: " + JSON.stringify(err));  //???
-                diag.appendWithLF("failing URL: " + url);  //???
+                diag.appendWithLF("update obj #" + candidate.obj.attributes[dataAccess.objectIdField]
+                        + " POST fail: " + JSON.stringify(err) + "; failing URL: " + url);
                 deferred.reject();
             });
 
@@ -236,8 +241,9 @@ define(['diag'], function (diag) {
          * Converts a value into the escaped form required by updates to a feature service.
          * @param {null|string|object} value Value to escape
          * @return {string} Escaped value
+         * @private
          */
-        _stringifyForApplyEdits: function (value) {
+        stringifyForApplyEdits: function (value) {
             var isFirst = true, result = "";
 
             if (value === null) {
@@ -248,7 +254,9 @@ define(['diag'], function (diag) {
                 result += '%7B';
                 $.each(value, function (part) {
                     if (value.hasOwnProperty(part)) {
-                        result += (isFirst ? '' : '%2C') + part + '%3A' + that._stringifyForApplyEdits(value[part]);
+                        result += (isFirst
+                            ? ''
+                            : '%2C') + part + '%3A' + dataAccess.stringifyForApplyEdits(value[part]);
                         isFirst = false;
                     }
                 });
@@ -265,8 +273,9 @@ define(['diag'], function (diag) {
          * that is interpreted and returned; if neither a boolean nor a usable string nor a number, falls back to defaultValue
          * @param {boolean} [defaultValue] A true or false that is returned if boolValue can't be used; if not defined, true
          * is returned
+         * @private
          */
-        _toBoolean: function (boolValue, defaultValue) {
+        toBoolean: function (boolValue, defaultValue) {
             var lowercaseValue;
 
             // Shortcut true|false
@@ -297,4 +306,5 @@ define(['diag'], function (diag) {
         }
 
     };
+    return dataAccess;
 });
