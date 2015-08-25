@@ -4,7 +4,7 @@ Photo Survey is a configurable JavaScript application designed to crowdsource pr
 
 This application includes data management tools designed to process street-level photos and publish pre-authored survey questions.
 
-* Try the [Photo Surveyy (Local Government) application](http://links.esri.com/localgovernment/tryit/PhotoSurvey/)
+* Try the [Photo Survey (Local Government) application](http://links.esri.com/localgovernment/tryit/PhotoSurvey/)
 
 [![Image of the Photo Survey application](photo-survey.png "Photo Survey application")](http://links.esri.com/localgovernment/tryit/PhotoSurvey/)
 
