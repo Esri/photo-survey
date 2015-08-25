@@ -11,7 +11,7 @@ This application includes data management tools designed to process street-level
 ## Features
 
 * Conduct focused property surveys (for example: identify blight, damaged structures, or construction activity.)
-* Leverages location-enabled photos produced by many commercially available cameras and simplifies data processing so street-level photo collections can be gathered on a regular basis
+* Leverage location-enabled photos produced by commercially available cameras and simplify data processing so street-level photo collections can be gathered on a regular basis
 
 
 ## Requirements
