@@ -21,6 +21,8 @@ This application includes data management tools designed to process street-level
 You can start using the application now by setting it up on a web server running Microsoft Internet Information Services (IIS) and using sample services supplied by Esri.
 You'll need to convert to an application in IIS and use the ASP .NET 4.0 or 4.5. application pool.
 
+**Start now using your own services and maps**
+
 For more information on requirements and publication steps, see [Photo Survey for Local Government](http://links.esri.com/localgovernment/help/PhotoSurvey/) help
 
 ## Resources
