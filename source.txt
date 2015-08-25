@@ -5,9 +5,8 @@ origin	git@github.com:ArcGIS/photo-survey.git (push)
 branch 
 Sep_2015_prerelease
 . 
-commit 6170dbdc6a3cf70a8f1cc7619f1bf65b6ecfddaa
-Merge: b81c2c8 b798bcb
+commit 2a1dc9bd99bed52555a8a7e9a7ce3dad17faf5f2
 Author: MikeTschudi <mtschudi@esri.com>
-Date:   Thu Aug 20 14:01:34 2015 -0700
+Date:   Tue Aug 25 10:36:31 2015 -0700
 
-    Merge branch 'master' into develop
+    Changed source of coded domain label
