@@ -254,7 +254,7 @@ define(function () {
                 if (field.domain && field.domain.codedValues) {
                     fieldDomains[field.name] = {
                         domain: $.map(field.domain.codedValues, function (item) {
-                            return item.code;
+                            return item.name;
                         }).join("|"),
                         important: !field.nullable
                     };
