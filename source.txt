@@ -3,10 +3,10 @@ origin	git@github.com:ArcGIS/photo-survey.git (fetch)
 origin	git@github.com:ArcGIS/photo-survey.git (push)
 . 
 branch 
-Sep_2015_prerelease
+master
 . 
-commit 2a1dc9bd99bed52555a8a7e9a7ce3dad17faf5f2
-Author: MikeTschudi <mtschudi@esri.com>
-Date:   Tue Aug 25 10:36:31 2015 -0700
+commit c6a5b0e6593499ad279d58f0a4e79d589e4ff11a
+Author: Chris Buscaglia <arcgisteamlocalgov@esri.com>
+Date:   Wed Aug 26 08:45:15 2015 -0700
 
-    Changed source of coded domain label
+    Updated Photo (resize)
