@@ -4,12 +4,27 @@ Photo Survey is a configurable JavaScript application designed to crowdsource pr
 
 This application includes data management tools designed to process street-level photos and publish pre-authored survey questions.
 
+* Try the [Photo Survey (Local Government) application](http://links.esri.com/localgovernment/tryit/PhotoSurvey/)
+
+[![Image of the Photo Survey application](photo-survey.png "Photo Survey application")](http://links.esri.com/localgovernment/tryit/PhotoSurvey/)
+
+## Features
+
+* Conduct focused property surveys (for example: identify blight, damaged structures, or construction activity.)
+* Leverage location-enabled photos produced by commercially available cameras and simplify data processing so street-level photo collections can be gathered on a regular basis
+
+
 ## Requirements
 
-* For editing and customizing the scripts - Notepad or a Python Editor (IDE)
-* Basic understanding of GeoProcessing with ArcGIS
-* ArcGIS Desktop 10.2/10.3 including ArcGIS Pro (supporting Python 2.7 & 3.4)
- 
+**Start now using Esri-supplied sample services and maps**
+
+You can start using the application now by setting it up on a web server running Microsoft Internet Information Services (IIS) and using sample services supplied by Esri.
+You'll need to convert to an application in IIS and use the ASP .NET 4.0 or 4.5. application pool.
+
+**Start now using your own services and maps**
+
+For more information on requirements and publication steps, see [Photo Survey for Local Government](http://links.esri.com/localgovernment/help/PhotoSurvey/) help
+
 ## Resources
 
 Learn more about Esri's ArcGIS for [Local Government maps and apps] (http://solutions.arcgis.com/local-government/).
