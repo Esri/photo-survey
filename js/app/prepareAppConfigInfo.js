@@ -113,7 +113,7 @@ define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchC
             });
 
             // Get the configuration file
-            configFileFetch = fetchConfigInfo.getParamsFromConfigFile(configFileFetch);
+            configFileFetch = fetchConfigInfo.getParamsFromConfigFile("js/configuration.json", configFileFetch);
 
             // Once we have config file and online app config (if any), see if we have a webmap
             $.when(configFileFetch, onlineAppFetch).done(function (paramsFromFile, paramsFromOnline) {

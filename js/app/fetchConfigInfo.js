@@ -41,12 +41,12 @@ define(['parseConfigInfo'], function (parseConfigInfo) {
 
         /**
          * Extracts parameters from app's configuration file "js/configuration.json".
+         * @param {string} filename Path to JSON configuration file
          * @param {object} [deferred] Deferred to use for fetch notification; if not supplied, function creates one
          * @return {object} Deferred indicating when parameters are ready; successful resolution includes object with
          * file's contents
          */
-        getParamsFromConfigFile: function (deferred) {
-            var filename = "js/configuration.json";
+        getParamsFromConfigFile: function (filename, deferred) {
             if (!deferred) {
                 deferred = $.Deferred();
             }
