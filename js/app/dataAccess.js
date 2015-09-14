@@ -96,95 +96,99 @@ define(['diag'], function (diag) {
             url = dataAccess.featureServiceUrl + "query?where=" + dataAccess.validCandidateCondition
                     + "&objectIds=&returnIdsOnly=true&returnCountOnly=false&outFields=" + dataAccess.fixedQueryParams
                     + "&callback=?";
-            $.getJSON(url, "jsonp", function (results) {
-                var objectId, attributesDeferred, objectAttrsUrl, attachmentsDeferred, objectAttachmentsUrl;
-
-                if (!results || results.error) {
-                    deferred.reject({
-                        obj: null,
-                        attachments: []
-                    });
-                    return;
-                }
-                if (results.objectIds.length === 0) {
-                    deferred.resolve({
-                        obj: null,
-                        attachments: []
-                    });
-                    return;
-                }
-
-                // Pick a candidate from amongst the available
-                objectId = randomizeSelection
-                    ? results.objectIds[Math.floor(Math.random() * results.objectIds.length)]
-                    : results.objectIds[0];
-
-                // Get the candidate's attributes
-                attributesDeferred = $.Deferred();
-                objectAttrsUrl = dataAccess.featureServiceUrl + "query?objectIds=" + objectId
-                        + "&returnIdsOnly=false&returnCountOnly=false&outFields=*" + dataAccess.fixedQueryParams
-                        + "&callback=?";
-                $.getJSON(objectAttrsUrl, "jsonp", function (results) {
-                    // No attributes is a problem
-                    if (!results || results.error || !results.features || results.features.length === 0) {
-                        attributesDeferred.reject();
-                        return;
-                    }
-
-                    attributesDeferred.resolve(results.features[0]);
-                });
-
-                // Get the candidate's attachments
-                attachmentsDeferred = $.Deferred();
-                objectAttachmentsUrl = dataAccess.featureServiceUrl + objectId + "/attachments?f=json&callback=?";
-                $.getJSON(objectAttachmentsUrl, "jsonp", function (results) {
-                    var attachments = [];
-
-                    if (!results || results.error) {
-                        attachmentsDeferred.reject();
-                        return;
-                    }
-
-                    // Empty list of attachments is possible
-                    if (results && results.attachmentInfos) {
-
-                        attributesDeferred.done(function (feature) {
-                            // Watch for request to reverse order of attachments
-                            var doReversal = false;
-                            if (feature && feature.attributes && feature.attributes.REVERSE) {
-                                doReversal = dataAccess.toBoolean(feature.attributes.REVERSE, false);
-                            }
-
-                            // Build list of attachments
-                            if (doReversal) {
-                                results.attachmentInfos.reverse();
-                            }
-                            $.each(results.attachmentInfos, function (ignore, attachment) {
-                                attachments.push({
-                                    id: attachment.id,
-                                    url: dataAccess.featureServiceUrl + objectId + "/attachments/" + attachment.id
-                                });
-                            });
-                            attachmentsDeferred.resolve(attachments);
-                        }).fail(function () {
-                            attachmentsDeferred.reject();
-                        });
-                    } else {
-                        attachmentsDeferred.resolve(attachments);
-                    }
-                });
-
-                // Return the attributes and attachments
-                $.when(attributesDeferred, attachmentsDeferred).done(function (attributesData, attachmentsData) {
-                    deferred.resolve({
-                        obj: attributesData,
-                        attachments: attachmentsData
-                    });
-                });
-
+            $.getJSON(url, "jsonp", function handleCandidatesClosure (results) {
+                dataAccess.handleCandidates(results, randomizeSelection, deferred);
             });
 
             return deferred;
+        },
+
+        handleCandidates: function (results, randomizeSelection, deferred) {
+            var objectId, attributesDeferred, objectAttrsUrl, attachmentsDeferred, objectAttachmentsUrl;
+
+            if (!results || results.error) {
+                deferred.reject({
+                    obj: null,
+                    attachments: []
+                });
+                return;
+            }
+            if (results.objectIds.length === 0) {
+                deferred.resolve({
+                    obj: null,
+                    attachments: []
+                });
+                return;
+            }
+
+            // Pick a candidate from amongst the available
+            objectId = randomizeSelection
+                ? results.objectIds[Math.floor(Math.random() * results.objectIds.length)]
+                : results.objectIds[0];
+
+            // Get the candidate's attributes
+            attributesDeferred = $.Deferred();
+            objectAttrsUrl = dataAccess.featureServiceUrl + "query?objectIds=" + objectId
+                    + "&returnIdsOnly=false&returnCountOnly=false&outFields=*" + dataAccess.fixedQueryParams
+                    + "&callback=?";
+            $.getJSON(objectAttrsUrl, "jsonp", function (results) {
+                // No attributes is a problem
+                if (!results || results.error || !results.features || results.features.length === 0) {
+                    attributesDeferred.reject();
+                    return;
+                }
+
+                attributesDeferred.resolve(results.features[0]);
+            });
+
+            // Get the candidate's attachments
+            attachmentsDeferred = $.Deferred();
+            objectAttachmentsUrl = dataAccess.featureServiceUrl + objectId + "/attachments?f=json&callback=?";
+            $.getJSON(objectAttachmentsUrl, "jsonp", function (results) {
+                var attachments = [];
+
+                if (!results || results.error) {
+                    attachmentsDeferred.reject();
+                    return;
+                }
+
+                // Empty list of attachments is possible
+                if (results && results.attachmentInfos) {
+
+                    attributesDeferred.done(function (feature) {
+                        // Watch for request to reverse order of attachments
+                        var doReversal = false;
+                        if (feature && feature.attributes && feature.attributes.REVERSE) {
+                            doReversal = dataAccess.toBoolean(feature.attributes.REVERSE, false);
+                        }
+
+                        // Build list of attachments
+                        if (doReversal) {
+                            results.attachmentInfos.reverse();
+                        }
+                        $.each(results.attachmentInfos, function (ignore, attachment) {
+                            attachments.push({
+                                id: attachment.id,
+                                url: dataAccess.featureServiceUrl + objectId + "/attachments/" + attachment.id
+                            });
+                        });
+                        attachmentsDeferred.resolve(attachments);
+                    }).fail(function () {
+                        attachmentsDeferred.reject();
+                    });
+                } else {
+                    attachmentsDeferred.resolve(attachments);
+                }
+            });
+
+            // Return the attributes and attachments
+            $.when(attributesDeferred, attachmentsDeferred).done(function (attributesData, attachmentsData) {
+                deferred.resolve({
+                    obj: attributesData,
+                    attachments: attachmentsData
+                });
+            });
+
         },
 
         /**
