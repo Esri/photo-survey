@@ -50,8 +50,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
 
     // When we have the app parameters, we can continue setting up the app
     appConfigReadies.parametersReady.then(function () {
-        if (prepareAppConfigInfo.appParams.diag !== undefined || prepareAppConfigInfo.appParams.test !== undefined) {diag.init(prepareAppConfigInfo.appParams)};  //???
-        diag.showAsCode("appConfigReadies.parametersReady");  //???
+        if (prepareAppConfigInfo.appParams.diag !== undefined) {diag.init()};
 
         // Update the page's title
         document.title = prepareAppConfigInfo.appParams.title;
@@ -225,7 +224,6 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
     $(document).on('signedIn:user', function (e) {
         appConfigReadies.surveyReady.then(function () {
             var user = handleUserSignin.getUser();
-        //diag.clearCode();  //???
 
             // Make sure that the main content is available
             showMainContent();
@@ -659,4 +657,5 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         });
     }
 
+   return "photo-survey";
 });
