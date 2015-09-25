@@ -531,8 +531,8 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         var start =
             "<div id='qg" + iQuestion + "' class='form-group'>"
             + "<label for='q" + iQuestion + "'>" + questionInfo.question
-            + (questionInfo.important ? "&nbsp;<span class='glyphicon glyphicon-star' title=\""
-            + i18n.tooltips.flag_important_question + "\"></span>" : "")
+            + (questionInfo.important ? "&nbsp;<div class='importantQuestion sprites star' title=\""
+            + i18n.tooltips.flag_important_question + "\"></div>" : "")
             + "</label><br>";
         return start;
     }
