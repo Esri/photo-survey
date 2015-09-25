@@ -153,12 +153,18 @@ header, section, footer, aside, nav, main, article, figure {
     }
 }
 @media only screen and (max-width: 768px) {
+    #signinPage {
+        padding: 10px;
+    }
     .smallSidebar {
         margin: 10px;
         float: none;
     }
 }
 @media only screen and (max-height: 500px) {
+    #signinPage {
+        padding: 10px;
+    }
     .smallSidebar {
         margin: 10px;
     }
