@@ -60,19 +60,19 @@ define(['parseConfigInfo'], function (parseConfigInfo) {
 
         /**
          * Extracts parameters from app in the ArcGIS Online environment.
+         * @param {string} arcgisUrl URL to arcgis items, e.g., "http://www.arcgis.com/sharing/content/items/"
          * @param {string} appId AGOL id of application
          * @param {object} [deferred] Deferred to use for fetch notification; if not supplied, function creates one
          * @return {object} Deferred indicating when parameters are ready; successful resolution includes object with
          * app's data section contents
          */
-        getParamsFromOnlineApp: function (appId, deferred) {
+        getParamsFromOnlineApp: function (arcgisUrl, appId, deferred) {
             if (!deferred) {
                 deferred = $.Deferred();
             }
 
             if (parseConfigInfo.isUsableString(appId)) {
-                $.getJSON("http://www.arcgis.com/sharing/content/items/"
-                        + appId + "/data?f=json&callback=?", "jsonp", function (data) {
+                $.getJSON(arcgisUrl + appId + "/data?f=json&callback=?", "jsonp", function (data) {
                     deferred.resolve((data && data.values) || {});
                 });
             } else {
@@ -84,6 +84,7 @@ define(['parseConfigInfo'], function (parseConfigInfo) {
 
         /**
          * Extracts parameters from webmap.
+         * @param {string} arcgisUrl URL to arcgis items, e.g., "http://www.arcgis.com/sharing/content/items/"
          * @param {string} webmapId Id of webmap
          * @param {object} [paramsDeferred] Deferred to use for parameters fetch notification; if not supplied, function
          * creates one
@@ -96,13 +97,13 @@ define(['parseConfigInfo'], function (parseConfigInfo) {
          * surveyorNameField, bestPhotoField; successful resolution of 'origImageUrl' contains the URL of the original-size
          * image.
          */
-        getParamsFromWebmap: function (webmapId, paramsDeferred, origImageUrlDeferred) {
+        getParamsFromWebmap: function (arcgisUrl, webmapId, paramsDeferred, origImageUrlDeferred) {
             var deferreds = {};
             deferreds.params = paramsDeferred || $.Deferred();
             deferreds.origImageUrl = origImageUrlDeferred || $.Deferred();
 
             if (parseConfigInfo.isUsableString(webmapId)) {
-                $.getJSON("http://www.arcgis.com/sharing/content/items/" + webmapId + "?f=json&callback=?", "jsonp", function (data) {
+                $.getJSON(arcgisUrl + webmapId + "?f=json&callback=?", "jsonp", function (data) {
                     var normalizedData = {}, imageUrl, iExt;
                     if (!data || data.error) {
                         deferreds.params.reject();
@@ -125,7 +126,7 @@ define(['parseConfigInfo'], function (parseConfigInfo) {
                         } else {
                             imageUrl = imageUrl + "_orig";
                         }
-                        imageUrl = "http://www.arcgis.com/sharing/content/items/" + webmapId + "/info/" + imageUrl;
+                        imageUrl = arcgisUrl + webmapId + "/info/" + imageUrl;
 
                         // Test that this URL is valid
                         fetchConfigInfo.testURL(imageUrl, function (isOK) {
@@ -147,19 +148,20 @@ define(['parseConfigInfo'], function (parseConfigInfo) {
 
         /**
          * Gets operational layer and feature service information from parameters in webmap's data section.
+         * @param {string} arcgisUrl URL to arcgis items, e.g., "http://www.arcgis.com/sharing/content/items/"
          * @param {string} webmapId Id of webmap
          * @param {object} [deferred] Deferred to use for fetch notification; if not supplied, function
          * creates one
          * @return {object} Deferred indicating when service information is ready; successful resolution includes object with
          * opLayerParams and featureSvcParams
          */
-        getWebmapData: function (webmapId, deferred) {
+        getWebmapData: function (arcgisUrl, webmapId, deferred) {
             if (!deferred) {
                 deferred = $.Deferred();
             }
 
             if (parseConfigInfo.isUsableString(webmapId)) {
-                $.getJSON("http://www.arcgis.com/sharing/content/items/" + webmapId + "/data?f=json&callback=?", "jsonp", function (data) {
+                $.getJSON(arcgisUrl + webmapId + "/data?f=json&callback=?", "jsonp", function (data) {
                     var featureSvcData = {};
 
                     if (data && data.operationalLayers && data.operationalLayers.length > 0) {

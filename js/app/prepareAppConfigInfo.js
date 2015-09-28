@@ -88,105 +88,113 @@ define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchC
             webmapDataFetch = $.Deferred();
             webmapFetcher = null;
 
-            // Get the URL parameters
-            paramsFromUrl = prepareAppConfigInfo.screenProperties(["webmap", "diag", "test"], fetchConfigInfo.getParamsFromUrl());
-
-            // If webmap specified in the URL, we can start a fetch of its data now
-            if (parseConfigInfo.isUsableString(paramsFromUrl.webmap)) {
-                webmapFetcher = "url";
-                fetchConfigInfo.getParamsFromWebmap(paramsFromUrl.webmap, webmapParamsFetch, webmapOrigImageUrlReady);
-                fetchConfigInfo.getWebmapData(paramsFromUrl.webmap, webmapDataFetch);
-            }
-
-            // If the appId is specified in the URL, fetch its parameters; resolves immediately if no appId
-            onlineAppFetch = $.Deferred();
-            fetchConfigInfo.getParamsFromOnlineApp(paramsFromUrl.appid).done(function (data) {
-                if (!webmapFetcher) {
-                    if (data && data.webmap) {
-                        // Use webmap specified in online app
-                        webmapFetcher = "online";
-                        fetchConfigInfo.getParamsFromWebmap(data.webmap, webmapParamsFetch, webmapOrigImageUrlReady);
-                        fetchConfigInfo.getWebmapData(data.webmap, webmapDataFetch);
-                    }
-                }
-                onlineAppFetch.resolve(data);
-            });
-
             // Get the configuration file
             configFileFetch = fetchConfigInfo.getParamsFromConfigFile("js/configuration.json", configFileFetch);
+            $.when(configFileFetch).done(function (paramsFromFile) {
 
-            // Once we have config file and online app config (if any), see if we have a webmap
-            $.when(configFileFetch, onlineAppFetch).done(function (paramsFromFile, paramsFromOnline) {
-                // If webmapFetcher is still null, that means that the webmap was not specified
-                // in the URL or in the online app; try the config file
-                if (!webmapFetcher) {
-                    if (paramsFromFile.webmap) {
-                        webmapFetcher = "file";
-                        fetchConfigInfo.getParamsFromWebmap(paramsFromFile.webmap, webmapParamsFetch, webmapOrigImageUrlReady);
-                        fetchConfigInfo.getWebmapData(paramsFromFile.webmap, webmapDataFetch);
-                    } else {
-                        // We've no webmap; nothing more that can be done
-                        parametersReady.resolve(false);
-                        surveyReady.resolve(false);
-                        webmapOrigImageUrlReady.resolve(false);
-                    }
+                // Get the URL parameters
+                paramsFromUrl = prepareAppConfigInfo.screenProperties(["webmap", "diag", "test"], fetchConfigInfo.getParamsFromUrl());
+
+                // If webmap specified in the URL, we can start a fetch of its data now
+                if (parseConfigInfo.isUsableString(paramsFromUrl.webmap)) {
+                    webmapFetcher = "url";
+                    fetchConfigInfo.getParamsFromWebmap(paramsFromFile.arcgisUrl,
+                        paramsFromUrl.webmap, webmapParamsFetch, webmapOrigImageUrlReady);
+                    fetchConfigInfo.getWebmapData(paramsFromFile.arcgisUrl,
+                        paramsFromUrl.webmap, webmapDataFetch);
                 }
 
-                // Once we have the webmap, we can assemble the app parameters
-                webmapParamsFetch.done(function (paramsFromWebmap) {
-                    // Parameters priority in increasing-importance order:
-                    //  1. barebones structure appParams
-                    //  2. configuration file
-                    //  3. webmap
-                    //  4. online app
-                    //  5. URL
-                    prepareAppConfigInfo.appParams = $.extend(
-                        prepareAppConfigInfo.appParams,
-                        paramsFromFile,
-                        paramsFromWebmap,
-                        paramsFromOnline,
-                        paramsFromUrl
-                    );
-
-                    // Normalize booleans
-                    prepareAppConfigInfo.appParams.showGuest = prepareAppConfigInfo.toBoolean(prepareAppConfigInfo.appParams.showGuest);
-                    prepareAppConfigInfo.appParams.showFacebook =
-                            prepareAppConfigInfo.appParams.facebookAppId !== null && prepareAppConfigInfo.appParams.facebookAppId.length > 0;
-                    prepareAppConfigInfo.appParams.showGooglePlus =
-                            prepareAppConfigInfo.appParams.googleplusClientId !== null && prepareAppConfigInfo.appParams.googleplusClientId.length > 0;
-                    prepareAppConfigInfo.appParams.showTwitter = prepareAppConfigInfo.toBoolean(prepareAppConfigInfo.appParams.showTwitter);
-                    prepareAppConfigInfo.appParams.allowGuestSubmissions = prepareAppConfigInfo.toBoolean(prepareAppConfigInfo.appParams.allowGuestSubmissions, false);
-                    prepareAppConfigInfo.appParams.thumbnailLimit = prepareAppConfigInfo.toNumber(prepareAppConfigInfo.appParams.thumbnailLimit, -1);
-
-                    parametersReady.resolve(true);
-                }).fail(function () {
-                    parametersReady.resolve(false);
+                // If the appId is specified in the URL, fetch its parameters; resolves immediately if no appId
+                onlineAppFetch = $.Deferred();
+                fetchConfigInfo.getParamsFromOnlineApp(paramsFromFile.arcgisUrl, paramsFromUrl.appid).done(function (data) {
+                    if (!webmapFetcher) {
+                        if (data && data.webmap) {
+                            // Use webmap specified in online app
+                            webmapFetcher = "online";
+                            fetchConfigInfo.getParamsFromWebmap(paramsFromFile.arcgisUrl,
+                                data.webmap, webmapParamsFetch, webmapOrigImageUrlReady);
+                            fetchConfigInfo.getWebmapData(paramsFromFile.arcgisUrl,
+                                data.webmap, webmapDataFetch);
+                        }
+                    }
+                    onlineAppFetch.resolve(data);
                 });
 
-                // Once we have the webmap's data, we can try assemble the survey
-                webmapDataFetch.done(function (data) {
-                    var dictionary;
-
-                    if (data.opLayerParams && data.opLayerParams.popupInfo && data.opLayerParams.popupInfo.description
-                            && data.featureSvcParams && data.featureSvcParams.fields) {
-                        prepareAppConfigInfo.featureSvcParams.url = data.opLayerParams.url;
-                        prepareAppConfigInfo.featureSvcParams.id = data.featureSvcParams.id;
-                        prepareAppConfigInfo.featureSvcParams.objectIdField = data.featureSvcParams.objectIdField;
-                        prepareAppConfigInfo.featureSvcParams.canBeUpdated = data.featureSvcParams.canBeUpdated;
-
-                        // Create dictionary of domains
-                        dictionary = parseConfigInfo.createSurveyDictionary(data.featureSvcParams.fields);
-
-                        // Parse survey
-                        prepareAppConfigInfo.survey = parseConfigInfo.parseSurvey(data.opLayerParams.popupInfo.description, dictionary);
-                        surveyReady.resolve();
-                    } else {
-                        prepareAppConfigInfo.featureSvcParams = {};
-                        prepareAppConfigInfo.survey = {};
-                        surveyReady.reject();
+                // Once we have config file and online app config (if any), see if we have a webmap
+                $.when(onlineAppFetch).done(function (paramsFromOnline) {
+                    // If webmapFetcher is still null, that means that the webmap was not specified
+                    // in the URL or in the online app; try the config file
+                    if (!webmapFetcher) {
+                        if (paramsFromFile.webmap) {
+                            webmapFetcher = "file";
+                            fetchConfigInfo.getParamsFromWebmap(paramsFromFile.arcgisUrl,
+                                paramsFromFile.webmap, webmapParamsFetch, webmapOrigImageUrlReady);
+                            fetchConfigInfo.getWebmapData(paramsFromFile.arcgisUrl,
+                                paramsFromFile.webmap, webmapDataFetch);
+                        } else {
+                            // We've no webmap; nothing more that can be done
+                            parametersReady.resolve(false);
+                            surveyReady.resolve(false);
+                            webmapOrigImageUrlReady.resolve(false);
+                        }
                     }
-                }).fail(function () {
-                    surveyReady.reject();
+
+                    // Once we have the webmap, we can assemble the app parameters
+                    webmapParamsFetch.done(function (paramsFromWebmap) {
+                        // Parameters priority in increasing-importance order:
+                        //  1. barebones structure appParams
+                        //  2. configuration file
+                        //  3. webmap
+                        //  4. online app
+                        //  5. URL
+                        prepareAppConfigInfo.appParams = $.extend(
+                            prepareAppConfigInfo.appParams,
+                            paramsFromFile,
+                            paramsFromWebmap,
+                            paramsFromOnline,
+                            paramsFromUrl
+                        );
+
+                        // Normalize booleans
+                        prepareAppConfigInfo.appParams.showGuest = prepareAppConfigInfo.toBoolean(prepareAppConfigInfo.appParams.showGuest);
+                        prepareAppConfigInfo.appParams.showFacebook =
+                                prepareAppConfigInfo.appParams.facebookAppId !== null && prepareAppConfigInfo.appParams.facebookAppId.length > 0;
+                        prepareAppConfigInfo.appParams.showGooglePlus =
+                                prepareAppConfigInfo.appParams.googleplusClientId !== null && prepareAppConfigInfo.appParams.googleplusClientId.length > 0;
+                        prepareAppConfigInfo.appParams.showTwitter = prepareAppConfigInfo.toBoolean(prepareAppConfigInfo.appParams.showTwitter);
+                        prepareAppConfigInfo.appParams.allowGuestSubmissions = prepareAppConfigInfo.toBoolean(prepareAppConfigInfo.appParams.allowGuestSubmissions, false);
+                        prepareAppConfigInfo.appParams.thumbnailLimit = prepareAppConfigInfo.toNumber(prepareAppConfigInfo.appParams.thumbnailLimit, -1);
+
+                        parametersReady.resolve(true);
+                    }).fail(function () {
+                        parametersReady.resolve(false);
+                    });
+
+                    // Once we have the webmap's data, we can try assemble the survey
+                    webmapDataFetch.done(function (data) {
+                        var dictionary;
+
+                        if (data.opLayerParams && data.opLayerParams.popupInfo && data.opLayerParams.popupInfo.description
+                                && data.featureSvcParams && data.featureSvcParams.fields) {
+                            prepareAppConfigInfo.featureSvcParams.url = data.opLayerParams.url;
+                            prepareAppConfigInfo.featureSvcParams.id = data.featureSvcParams.id;
+                            prepareAppConfigInfo.featureSvcParams.objectIdField = data.featureSvcParams.objectIdField;
+                            prepareAppConfigInfo.featureSvcParams.canBeUpdated = data.featureSvcParams.canBeUpdated;
+
+                            // Create dictionary of domains
+                            dictionary = parseConfigInfo.createSurveyDictionary(data.featureSvcParams.fields);
+
+                            // Parse survey
+                            prepareAppConfigInfo.survey = parseConfigInfo.parseSurvey(data.opLayerParams.popupInfo.description, dictionary);
+                            surveyReady.resolve();
+                        } else {
+                            prepareAppConfigInfo.featureSvcParams = {};
+                            prepareAppConfigInfo.survey = {};
+                            surveyReady.reject();
+                        }
+                    }).fail(function () {
+                        surveyReady.reject();
+                    });
                 });
             });
 
