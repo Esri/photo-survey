@@ -21,7 +21,7 @@ define(['diag'], function (diag) {
     var dataAccess;
     dataAccess = {
 
-        fixedQueryParams: "&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&distance=&units=esriSRUnit_Meter&returnGeometry=false&maxAllowableOffset=&geometryPrecision=&outSR=&returnExtentOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&quantizationParameters=&f=pjson",
+        fixedQueryParams: "&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&distance=&units=esriSRUnit_Meter&returnGeometry=false&maxAllowableOffset=&geometryPrecision=&outSR=&returnExtentOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&quantizationParameters=&f=json",
         featureServiceUrl: null,
         featureServiceLayerId: null,
         objectIdField: null,
@@ -66,7 +66,7 @@ define(['diag'], function (diag) {
             url = dataAccess.featureServiceUrl + "query?where=" + (condition || dataAccess.validCandidateCondition)
                     + "&objectIds=&returnIdsOnly=false&returnCountOnly=true&outFields=" + dataAccess.fixedQueryParams
                     + "&callback=?";
-            $.getJSON(url, "jsonp", function handleObjectCountClosure (results) {
+            $.getJSON(url, function handleObjectCountClosure (results) {
                 dataAccess.handleObjectCount(results, deferred, condition);
             });
 
@@ -107,7 +107,7 @@ define(['diag'], function (diag) {
             url = dataAccess.featureServiceUrl + "query?where=" + dataAccess.validCandidateCondition
                     + "&objectIds=&returnIdsOnly=true&returnCountOnly=false&outFields=" + dataAccess.fixedQueryParams
                     + "&callback=?";
-            $.getJSON(url, "jsonp", function handleCandidatesClosure (results) {
+            $.getJSON(url, function handleCandidatesClosure (results) {
                 dataAccess.handleCandidates(results, randomizeSelection, deferred);
             });
 
@@ -149,14 +149,14 @@ define(['diag'], function (diag) {
             objectAttrsUrl = dataAccess.featureServiceUrl + "query?objectIds=" + objectId
                     + "&returnIdsOnly=false&returnCountOnly=false&outFields=*" + dataAccess.fixedQueryParams
                     + "&callback=?";
-            $.getJSON(objectAttrsUrl, "jsonp", function handleCandidateAttrsClosure (results) {
+            $.getJSON(objectAttrsUrl, function handleCandidateAttrsClosure (results) {
                 dataAccess.handleCandidateAttrs(results, attributesDeferred);
             });
 
             // Get the candidate's attachments
             attachmentsDeferred = $.Deferred();
             objectAttachmentsUrl = dataAccess.featureServiceUrl + objectId + "/attachments?f=json&callback=?";
-            $.getJSON(objectAttachmentsUrl, "jsonp", function handleCandidateAttachmentsClosure (results) {
+            $.getJSON(objectAttachmentsUrl, function handleCandidateAttachmentsClosure (results) {
                 dataAccess.handleCandidateAttachments(objectId, results, attributesDeferred, attachmentsDeferred);
             });
 
