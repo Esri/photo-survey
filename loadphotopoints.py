@@ -126,6 +126,16 @@ arcpy.Delete_management(NEAR)
 PhotoFeatureClass = """{}\\PointAttachmentsTemp""".format(Geodatabase)
 arcpy.GeoTaggedPhotosToPoints_management(DriverPhotos, PhotoFeatureClass, "", "ONLY_GEOTAGGED", "NO_ATTACHMENTS")
 
+#______________________________________________________________________________#
+#
+# If Name is used for ParcelPIN make adjustments
+#______________________________________________________________________________#
+
+if ParcelPIN is "Name":
+	arcpy.AlterField_management(PhotoFeatureClass, ParcelPIN, "Image_Name")
+else:
+	pass
+
 SR = arcpy.Describe(Parcels)
 SRHelper = SR.spatialReference
 PhotoFeatureClass3 = """{}\\PointAttachments2""".format(Geodatabase)
@@ -407,9 +417,12 @@ arcpy.DeleteField_management(ParcelPointHelper, "REVERSE_1")
 arcpy.DeleteField_management(ParcelPointHelper, "PIN_1")
 arcpy.DeleteField_management(ParcelPointHelper, "PATH2")
 
-arcpy.MakeFeatureLayer_management(ParcelPointHelper, "PARCELSFORSELECTION", "Name is NULL")
-arcpy.DeleteRows_management("PARCELSFORSELECTION")
+if ParcelPIN is "Name":
+	arcpy.MakeFeatureLayer_management(ParcelPointHelper, "PARCELSFORSELECTION", "Image_Name is NULL")
+else:
+	arcpy.MakeFeatureLayer_management(ParcelPointHelper, "PARCELSFORSELECTION", "Name is NULL")
 
+arcpy.DeleteRows_management("PARCELSFORSELECTION")
 
 arcpy.AddMessage("Step 10: Cleaning up staging geodatabase")
 
