@@ -414,8 +414,8 @@ arcpy.Delete_management(ParcelsFeatureClass)
 arcpy.Delete_management(ParcelPointClassHelper)
 arcpy.DeleteField_management(ParcelPointHelper, "ORIG_FID")
 arcpy.DeleteField_management(ParcelPointHelper, "REVERSE_1")
-arcpy.DeleteField_management(ParcelPointHelper, "PIN_1")
 arcpy.DeleteField_management(ParcelPointHelper, "PATH2")
+arcpy.DeleteField_management(ParcelPointHelper, ParcelPIN + "_1")
 
 if ParcelPIN is "Name":
 	arcpy.MakeFeatureLayer_management(ParcelPointHelper, "PARCELSFORSELECTION", "Image_Name is NULL")
@@ -423,11 +423,12 @@ else:
 	arcpy.MakeFeatureLayer_management(ParcelPointHelper, "PARCELSFORSELECTION", "Name is NULL")
 
 arcpy.DeleteRows_management("PARCELSFORSELECTION")
-
+arcpy.DeleteField_management(ParcelPointHelper, "Name")
 arcpy.AddMessage("Step 10: Cleaning up staging geodatabase")
 
 arcpy.AddMessage("Step 11: Adding application required fields")
 arcpy.AddField_management(ParcelPointHelper, "BSTPHOTOID", "TEXT", "", "", "5", "Best Photo Identifier", "NULLABLE", "NON_REQUIRED", "")
 arcpy.AddField_management(ParcelPointHelper, "SRVNAME", "TEXT", "", "", "25", "Surveyor Name", "NULLABLE", "NON_REQUIRED", "")
 arcpy.AddMessage("Step 12: Finalizing photo survey feature class")
+
 
