@@ -261,6 +261,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
     });
 
     $(document).on('signedOut:user', function (e) {
+        dataAccess.resetExclusionList();
         handleUserSignin.signOut();
     });
 
@@ -302,10 +303,8 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
             diag.appendWithLF("showing property <i>" + JSON.stringify(candidate.obj.attributes) + "</i> with "  //???
                 + that.numPhotos + " photos");  //???
 
-
             that.candidate = candidate;
             that.iSelectedPhoto = -1;
-
 
             // Gallery
             var carouselSlidesHolder = $("#carouselSlidesHolder")[0];
@@ -330,6 +329,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
             $("#surveyContainer").fadeTo(1000, (isReadOnly ? 0.75 : 1.0));
 
         }).fail(function (error) {
+            $(document).triggerHandler('show:noSurveys');
         });
 
         // Survey
@@ -374,6 +374,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         $(document).triggerHandler('hide:profile');
     });
     $("#skipBtn").on('click', function () {
+        dataAccess.addItemToExclusionList(that.candidate.id);
         $(document).triggerHandler('show:newSurvey');
     });
     $("#submitBtn").on('click', function () {
