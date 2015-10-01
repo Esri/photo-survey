@@ -27,6 +27,7 @@ define(['diag'], function (diag) {
         objectIdField: null,
         validCandidateCondition: null,
         proxyProgram: null,
+        exclusionList: {},
 
         //--------------------------------------------------------------------------------------------------------------------//
 
@@ -50,6 +51,64 @@ define(['diag'], function (diag) {
             dataAccess.objectIdField = objectIdField;
             dataAccess.validCandidateCondition = validCandidateCondition;
             dataAccess.proxyProgram = proxyProgram;
+        },
+
+        /**
+         * Adds an item to the to-be-skipped list.
+         * @param {number} item Object to be skipped; NOP if already in the list
+         */
+        addItemToExclusionList: function (item) {
+            dataAccess.exclusionList[item] = true;
+        },
+
+        /**
+         * Checks if an item is in the to-be-skipped list.
+         * @param {number} item Object to be checked
+         * @return {boolean} True if item is in list
+         */
+        isItemInExclusionList: function (item) {
+            return dataAccess.exclusionList.hasOwnProperty(item);
+        },
+
+        /**
+         * Empties the to-be-skipped list.
+         */
+        resetExclusionList: function () {
+            dataAccess.exclusionList = {};
+        },
+
+        /**
+         * Returns a list that doesn't include the items in the to-be-skipped list.
+         * @param {array} itemList List to be filtered
+         * @return {array} Filtered list
+         */
+        filterList: function (itemList) {
+            return $.grep(itemList, function (element) {
+                return !dataAccess.isItemInExclusionList(element);
+            });
+        },
+
+        /**
+         * Selects an item from a list of items; selection is subject to an exclusion limitation.
+         * @param {array} itemList List of items to choose from
+         * @param {boolean} randomizeSelection True if pseudorandom selection should be used
+         * @return {object} Selected item or null if list is empty or only contains items
+         * that are also in the skip list
+         */
+        pickFromList: function (itemList, randomizeSelection) {
+            var item = null, filteredItems;
+
+            if (itemList.length > 0) {
+                filteredItems = dataAccess.filterList(itemList);
+                if (filteredItems.length > 0) {
+                    // Pick a candidate from amongst the available
+                    item = randomizeSelection
+                        ? filteredItems[Math.floor(Math.random() * filteredItems.length)]
+                        : filteredItems[0];
+                }
+            }
+
+            return item;
         },
 
         /**
@@ -86,7 +145,9 @@ define(['diag'], function (diag) {
          * service is used
          * @return {object} Deferred indicating when candidate is ready; successful resolution includes object with
          * obj and attachments properties; 'obj' contains an attributes property with the candidate's attributes and
-         * attachments contains an array containing objects each of which describes an attachment using id and url properties
+         * attachments contains an array containing objects each of which describes an attachment using id and url properties;
+         * if there are no more candidates, deferred resolves successfully but with 'obj'=null and 'attachments'=[]; if
+         * the fetch fails, the deferred resolves with a failure
          */
         getCandidate: function (randomizeSelection) {
             var deferred, url;
@@ -97,17 +158,11 @@ define(['diag'], function (diag) {
                     + "&objectIds=&returnIdsOnly=true&returnCountOnly=false&outFields=" + dataAccess.fixedQueryParams
                     + "&callback=?";
             $.getJSON(url, "jsonp", function (results) {
-                var objectId, attributesDeferred, objectAttrsUrl, attachmentsDeferred, objectAttachmentsUrl;
+                var objectId = null, attributesDeferred, objectAttrsUrl, attachmentsDeferred, objectAttachmentsUrl;
 
                 if (!results || results.error) {
                     deferred.reject({
-                        obj: null,
-                        attachments: []
-                    });
-                    return;
-                }
-                if (results.objectIds.length === 0) {
-                    deferred.resolve({
+                        id: null,
                         obj: null,
                         attachments: []
                     });
@@ -115,9 +170,17 @@ define(['diag'], function (diag) {
                 }
 
                 // Pick a candidate from amongst the available
-                objectId = randomizeSelection
-                    ? results.objectIds[Math.floor(Math.random() * results.objectIds.length)]
-                    : results.objectIds[0];
+                objectId = dataAccess.pickFromList(results.objectIds, randomizeSelection);
+
+                // No more surveys!
+                if (objectId === null) {
+                    deferred.resolve({
+                        id: null,
+                        obj: null,
+                        attachments: []
+                    });
+                    return;
+                }
 
                 // Get the candidate's attributes
                 attributesDeferred = $.Deferred();
@@ -177,6 +240,7 @@ define(['diag'], function (diag) {
                 // Return the attributes and attachments
                 $.when(attributesDeferred, attachmentsDeferred).done(function (attributesData, attachmentsData) {
                     deferred.resolve({
+                        id: objectId,
                         obj: attributesData,
                         attachments: attachmentsData
                     });
