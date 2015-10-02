@@ -24,194 +24,228 @@ arcpy.env.overwriteOutput = True
 
 # Script arguments (set in the GP tool)
 
-PassengerPhotos = arcpy.GetParameterAsText(0)
-DriverPhotos = arcpy.GetParameterAsText(1)
-AngleField = arcpy.GetParameterAsText(2)
-Geodatabase = arcpy.GetParameterAsText(3)
-Parcels = arcpy.GetParameterAsText(4)
-ParcelPIN = arcpy.GetParameterAsText(5)
-config_file = arcpy.GetParameterAsText(6)
+CameraInput = arcpy.GetParameterAsText(0)
+SinglePhotos = arcpy.GetParameterAsText(1)
+PassengerPhotos = arcpy.GetParameterAsText(2)
+DriverPhotos = arcpy.GetParameterAsText(3)
+AngleField = arcpy.GetParameterAsText(4)
+Geodatabase = arcpy.GetParameterAsText(5)
+Parcels = arcpy.GetParameterAsText(6)
+ParcelPIN = arcpy.GetParameterAsText(7)
+config_file = arcpy.GetParameterAsText(8)
 
 arcpy.AddMessage("Step 1:  Loading input parameters")
 
-# ______________________________________________________________________________#
-#
-# Convert Passenger Photos to Points
-#_______________________________________________________________________________#
+if str (AngleField) == 'true':
+	AngleField = 'Direction'
+else:
+	AngleField = ''
 
-PhotoFeatureClass = """{}\\PointAttachmentsTemp""".format(Geodatabase)
-arcpy.GeoTaggedPhotosToPoints_management(PassengerPhotos, PhotoFeatureClass, "", "ONLY_GEOTAGGED", "NO_ATTACHMENTS")
+if CameraInput == 'Dual Camera':
 
-SR = arcpy.Describe(Parcels)
-SRHelper = SR.spatialReference
-PhotoFeatureClass2 = """{}\\PointAttachments""".format(Geodatabase)
+	# ______________________________________________________________________________#
+	#
+	# Convert Passenger Photos to Points
+	#_______________________________________________________________________________#
 
-arcpy.Project_management(PhotoFeatureClass, PhotoFeatureClass2, SRHelper)
-arcpy.DeleteIdentical_management(PhotoFeatureClass2, "Shape")
-arcpy.Delete_management(PhotoFeatureClass)
+	PhotoFeatureClass = """{}\\PointAttachmentsTemp""".format(Geodatabase)
+	arcpy.GeoTaggedPhotosToPoints_management(PassengerPhotos, PhotoFeatureClass, "", "ONLY_GEOTAGGED", "NO_ATTACHMENTS")
 
-EntGDB = arcpy.Describe(Geodatabase)
-EntGDB.workspaceType
+	#______________________________________________________________________________#
+	#
+	# If Name is used for ParcelPIN make adjustments
+	#______________________________________________________________________________#
 
-if EntGDB is 'RemoteDatabase':
-	arcpy.RegisterAsVersioned_management(PhotoFeatureClass2)
+	if ParcelPIN is "Name":
+		arcpy.AlterField_management(PhotoFeatureClass, ParcelPIN, "Image_Name")
+	else:
+		pass
+
+	SR = arcpy.Describe(Parcels)
+	SRHelper = SR.spatialReference
+	PhotoFeatureClass2 = """{}\\PointAttachments""".format(Geodatabase)
+
+	arcpy.Project_management(PhotoFeatureClass, PhotoFeatureClass2, SRHelper)
+	arcpy.DeleteIdentical_management(PhotoFeatureClass2, "Shape")
+	arcpy.Delete_management(PhotoFeatureClass)
+
+	EntGDB = arcpy.Describe(Geodatabase)
+	EntGDB.workspaceType
+
+	if EntGDB is 'RemoteDatabase':
+		arcpy.RegisterAsVersioned_management(PhotoFeatureClass2)
+	else:
+		pass
+
+	arcpy.AddMessage("Step 2:  Converting Photos to points")
+
+	# Load up the parcel dataset for the property association (and make a copy)
+
+	ParcelsFeatureClass = """{}\\Parcels""".format(Geodatabase)
+	arcpy.CopyFeatures_management(Parcels, ParcelsFeatureClass)
+
+	arcpy.AddMessage("Step 3:  Copying Parcels to staging geodatabase")
+
+	# Snap Passenger Photos to nearest parcel edge (30ft. default)
+
+	shape = arcpy.Describe(PhotoFeatureClass2).ShapeFieldName
+	fields = ['SHAPE@XY', AngleField]
+
+	def shift_photopoints(in_features, x_shift=None, y_shift=None):
+		with arcpy.da.UpdateCursor(in_features, fields) as cursor:
+			for row in cursor:
+				x = row[0][0] + x_shift * math.cos(math.degrees(int(row[1])))
+				y = row[0][1] + y_shift * math.sin(math.degrees(int(row[1])))
+				row[0] = (x, y)
+				cursor.updateRow(row)
+		return
+
+
+	if AngleField:
+
+		shift_photopoints(PhotoFeatureClass2, 15, 15)
+
+	else:
+
+		pass
+
+	snapenv = [ParcelsFeatureClass, "EDGE", "30 Feet"]
+	arcpy.Snap_edit(PhotoFeatureClass2, [snapenv])
+
+
+	Nearhelper = """{}\\NEAR""".format(Geodatabase)
+	NEAR = Nearhelper
+	arcpy.GenerateNearTable_analysis(PhotoFeatureClass2, ParcelsFeatureClass, NEAR,
+									 "5 Feet", "NO_LOCATION", "NO_ANGLE", "CLOSEST", "0", "GEODESIC")
+
+	arcpy.AddMessage("Step 4:  Associating passenger photo points to nearest parcel")
+
+	arcpy.JoinField_management(NEAR, "NEAR_FID", ParcelsFeatureClass, "OBJECTID", ParcelPIN)
+
+	# Export non-matched Photos to table (no GPS, wrong attributes, etc.)
+
+	arcpy.JoinField_management(PhotoFeatureClass2, "OBJECTID", NEAR, "IN_FID")
+	arcpy.TableToTable_conversion(PhotoFeatureClass2, Geodatabase,
+								  "NonMatchedPassengerPhotos", "{0} is Null".format(ParcelPIN), "")
+	arcpy.AddMessage("Step 5:  Reporting non-matched passenger photos to table")
+
+
+	# Cleanup matched Photos (intermediate data)
+
+	arcpy.DeleteField_management(PhotoFeatureClass2, "IN_FID;NEAR_FID;NEAR_DIST")
+	arcpy.AddField_management(PhotoFeatureClass2, "REVERSE", "TEXT", "", "", "5", "", "NULLABLE", "NON_REQUIRED", "")
+	arcpy.CalculateField_management(PhotoFeatureClass2, "REVERSE", "\"YES\"", "PYTHON", "")
+	arcpy.Delete_management(NEAR)
+
+	#______________________________________________________________________________#
+	#
+	# Convert Driver Photos to Points
+	#______________________________________________________________________________#
+
+	PhotoFeatureClass = """{}\\PointAttachmentsTemp""".format(Geodatabase)
+	arcpy.GeoTaggedPhotosToPoints_management(DriverPhotos, PhotoFeatureClass, "", "ONLY_GEOTAGGED", "NO_ATTACHMENTS")
+
+	#______________________________________________________________________________#
+	#
+	# If Name is used for ParcelPIN make adjustments
+	#______________________________________________________________________________#
+
+	if ParcelPIN is "Name":
+		arcpy.AlterField_management(PhotoFeatureClass, ParcelPIN, "Image_Name")
+	else:
+		pass
+
+	SR = arcpy.Describe(Parcels)
+	SRHelper = SR.spatialReference
+	PhotoFeatureClass3 = """{}\\PointAttachments2""".format(Geodatabase)
+
+	arcpy.Project_management(PhotoFeatureClass, PhotoFeatureClass3, SRHelper)
+	arcpy.DeleteIdentical_management(PhotoFeatureClass3, "Shape")
+	arcpy.Delete_management(PhotoFeatureClass)
+	arcpy.MakeFeatureLayer_management(ParcelsFeatureClass, "PARCELSFL")
+	arcpy.SelectLayerByLocation_management("PARCELSFL", "INTERSECT", PhotoFeatureClass2, "", "NEW_SELECTION", "INVERT")
+	arcpy.MakeFeatureLayer_management("PARCELSFL", "PARCELSFL2")
+
+	# Snap Driver Photos to nearest parcel edge (100 ft. default)
+
+	shape = arcpy.Describe(PhotoFeatureClass3).ShapeFieldName
+	fields = ['SHAPE@XY', AngleField]
+
+
+	def shift_photopoints(in_features, x_shift=None, y_shift=None):
+		with arcpy.da.UpdateCursor(in_features, fields) as cursor:
+			for row in cursor:
+				x = row[0][0] + x_shift * math.cos(math.degrees(int(row[1])))
+				y = row[0][1] + y_shift * math.sin(math.degrees(int(row[1])))
+				row[0] = (x, y)
+				cursor.updateRow(row)
+		return
+
+
+	if AngleField:
+
+		shift_photopoints(PhotoFeatureClass3, 15, 15)
+
+	else:
+
+		pass
+
+	snapenv = ["PARCELSFL2", "EDGE", "100 Feet"]
+	arcpy.Snap_edit(PhotoFeatureClass3, [snapenv])
+
+	Nearhelper = """{}\\NEAR""".format(Geodatabase)
+	NEAR = Nearhelper
+	arcpy.GenerateNearTable_analysis(PhotoFeatureClass3, ParcelsFeatureClass, NEAR,
+									 "5 Feet", "NO_LOCATION", "NO_ANGLE", "CLOSEST", "0", "GEODESIC")
+	arcpy.AddMessage("Step 6:  Associating driver photo points to nearest parcel")
+	arcpy.JoinField_management(NEAR, "NEAR_FID", ParcelsFeatureClass, "OBJECTID", ParcelPIN)
+
+	# Export non-matched Photos to table (no GPS, wrong attributes, etc.)
+
+	arcpy.JoinField_management(PhotoFeatureClass3, "OBJECTID", NEAR, "IN_FID")
+	arcpy.TableToTable_conversion(PhotoFeatureClass3, Geodatabase, "NonMatchedDriverPhotos",
+								  "{0} is Null".format(ParcelPIN), "")
+
+	arcpy.AddMessage("Step 7:  Reporting non-matched driver photos to table")
+
+	# Cleanup matched Photos (intermediate data)
+
+	arcpy.DeleteField_management(PhotoFeatureClass3, "IN_FID;NEAR_FID;NEAR_DIST")
+	arcpy.Delete_management(NEAR)
+	arcpy.AddField_management(PhotoFeatureClass2, "Path2", "TEXT", "", "", "150", "", "NULLABLE", "NON_REQUIRED", "")
+	arcpy.CalculateField_management(PhotoFeatureClass2, "Path2", "!Path!", "PYTHON", "")
+	arcpy.AddField_management(PhotoFeatureClass3, "Path2", "TEXT", "", "", "150", "", "NULLABLE", "NON_REQUIRED", "")
+	arcpy.CalculateField_management(PhotoFeatureClass3, "Path2", "!Path!", "PYTHON", "")
+	arcpy.DeleteField_management(PhotoFeatureClass2, "Path")
+	arcpy.DeleteField_management(PhotoFeatureClass3, "Path")
+	arcpy.AddField_management(PhotoFeatureClass3, "REVERSE", "TEXT", "", "", "5", "", "NULLABLE", "NON_REQUIRED", "")
+	arcpy.CalculateField_management(PhotoFeatureClass3, "REVERSE", "\"NO\"", "PYTHON", "")
+
+	arcpy.Append_management(PhotoFeatureClass2, PhotoFeatureClass3, "NO_TEST", "", "")
+
+	#Create Photo Attachments
+
+	ParcelPointClassHelper = """{}\\PointsTemp""".format(Geodatabase)
+	ParcelPointHelper = """{}\\PhotoPoints""".format(Geodatabase)
+	arcpy.CreateFeatureclass_management(Geodatabase, "PhotoPoints", "POINT", "", "", "", Parcels)
+	arcpy.AddField_management(ParcelPointHelper, ParcelPIN, "TEXT", "", "", "50", ParcelPIN, "NULLABLE", "NON_REQUIRED")
+	arcpy.FeatureToPoint_management(ParcelsFeatureClass, ParcelPointClassHelper, "INSIDE")
+
 else:
 	pass
 
-arcpy.AddMessage("Step 2:  Converting Photos to points")
+if CameraInput == 'Single Camera':
 
-# Load up the parcel dataset for the property association (and make a copy)
+	# ______________________________________________________________________________#
+	#
+	# Convert Photos to Points
+	#_______________________________________________________________________________#
 
-ParcelsFeatureClass = """{}\\Parcels""".format(Geodatabase)
-arcpy.CopyFeatures_management(Parcels, ParcelsFeatureClass)
-
-arcpy.AddMessage("Step 3:  Copying Parcels to staging geodatabase")
-
-# Snap Passenger Photos to nearest parcel edge (30ft. default)
-
-shape = arcpy.Describe(PhotoFeatureClass2).ShapeFieldName
-fields = ['SHAPE@XY', AngleField]
-
-def shift_photopoints(in_features, x_shift=None, y_shift=None):
-	with arcpy.da.UpdateCursor(in_features, fields) as cursor:
-		for row in cursor:
-			x = row[0][0] + x_shift * math.cos(math.degrees(int(row[1])))
-			y = row[0][1] + y_shift * math.sin(math.degrees(int(row[1])))
-			row[0] = (x, y)
-			cursor.updateRow(row)
-	return
-
-
-if AngleField:
-
-	shift_photopoints(PhotoFeatureClass2, 15, 15)
+	ParcelPointHelper = """{}\\PhotoPoints""".format(Geodatabase)
+	arcpy.GeoTaggedPhotosToPoints_management(SinglePhotos, ParcelPointHelper, "", "ONLY_GEOTAGGED", "NO_ATTACHMENTS")
 
 else:
-
 	pass
-
-snapenv = [ParcelsFeatureClass, "EDGE", "30 Feet"]
-arcpy.Snap_edit(PhotoFeatureClass2, [snapenv])
-
-
-Nearhelper = """{}\\NEAR""".format(Geodatabase)
-NEAR = Nearhelper
-arcpy.GenerateNearTable_analysis(PhotoFeatureClass2, ParcelsFeatureClass, NEAR,
-								 "5 Feet", "NO_LOCATION", "NO_ANGLE", "CLOSEST", "0", "GEODESIC")
-
-arcpy.AddMessage("Step 4:  Associating passenger photo points to nearest parcel")
-
-arcpy.JoinField_management(NEAR, "NEAR_FID", ParcelsFeatureClass, "OBJECTID", ParcelPIN)
-
-# Export non-matched Photos to table (no GPS, wrong attributes, etc.)
-
-arcpy.JoinField_management(PhotoFeatureClass2, "OBJECTID", NEAR, "IN_FID")
-arcpy.TableToTable_conversion(PhotoFeatureClass2, Geodatabase,
-							  "NonMatchedPassengerPhotos", "{0} is Null".format(ParcelPIN), "")
-arcpy.AddMessage("Step 5:  Reporting non-matched passenger photos to table")
-
-
-# Cleanup matched Photos (intermediate data)
-
-arcpy.DeleteField_management(PhotoFeatureClass2, "IN_FID;NEAR_FID;NEAR_DIST")
-arcpy.AddField_management(PhotoFeatureClass2, "REVERSE", "TEXT", "", "", "5", "", "NULLABLE", "NON_REQUIRED", "")
-arcpy.CalculateField_management(PhotoFeatureClass2, "REVERSE", "\"YES\"", "PYTHON", "")
-arcpy.Delete_management(NEAR)
-
-#______________________________________________________________________________#
-#
-# Convert Driver Photos to Points
-#______________________________________________________________________________#
-
-PhotoFeatureClass = """{}\\PointAttachmentsTemp""".format(Geodatabase)
-arcpy.GeoTaggedPhotosToPoints_management(DriverPhotos, PhotoFeatureClass, "", "ONLY_GEOTAGGED", "NO_ATTACHMENTS")
-
-#______________________________________________________________________________#
-#
-# If Name is used for ParcelPIN make adjustments
-#______________________________________________________________________________#
-
-if ParcelPIN is "Name":
-	arcpy.AlterField_management(PhotoFeatureClass, ParcelPIN, "Image_Name")
-else:
-	pass
-
-SR = arcpy.Describe(Parcels)
-SRHelper = SR.spatialReference
-PhotoFeatureClass3 = """{}\\PointAttachments2""".format(Geodatabase)
-
-arcpy.Project_management(PhotoFeatureClass, PhotoFeatureClass3, SRHelper)
-arcpy.DeleteIdentical_management(PhotoFeatureClass3, "Shape")
-arcpy.Delete_management(PhotoFeatureClass)
-arcpy.MakeFeatureLayer_management(ParcelsFeatureClass, "PARCELSFL")
-arcpy.SelectLayerByLocation_management("PARCELSFL", "INTERSECT", PhotoFeatureClass2, "", "NEW_SELECTION", "INVERT")
-arcpy.MakeFeatureLayer_management("PARCELSFL", "PARCELSFL2")
-
-# Snap Driver Photos to nearest parcel edge (100 ft. default)
-
-shape = arcpy.Describe(PhotoFeatureClass3).ShapeFieldName
-fields = ['SHAPE@XY', AngleField]
-
-
-def shift_photopoints(in_features, x_shift=None, y_shift=None):
-	with arcpy.da.UpdateCursor(in_features, fields) as cursor:
-		for row in cursor:
-			x = row[0][0] + x_shift * math.cos(math.degrees(int(row[1])))
-			y = row[0][1] + y_shift * math.sin(math.degrees(int(row[1])))
-			row[0] = (x, y)
-			cursor.updateRow(row)
-	return
-
-
-if AngleField:
-
-	shift_photopoints(PhotoFeatureClass3, 15, 15)
-
-else:
-
-	pass
-
-snapenv = ["PARCELSFL2", "EDGE", "100 Feet"]
-arcpy.Snap_edit(PhotoFeatureClass3, [snapenv])
-
-Nearhelper = """{}\\NEAR""".format(Geodatabase)
-NEAR = Nearhelper
-arcpy.GenerateNearTable_analysis(PhotoFeatureClass3, ParcelsFeatureClass, NEAR,
-								 "5 Feet", "NO_LOCATION", "NO_ANGLE", "CLOSEST", "0", "GEODESIC")
-arcpy.AddMessage("Step 6:  Associating driver photo points to nearest parcel")
-arcpy.JoinField_management(NEAR, "NEAR_FID", ParcelsFeatureClass, "OBJECTID", ParcelPIN)
-
-# Export non-matched Photos to table (no GPS, wrong attributes, etc.)
-
-arcpy.JoinField_management(PhotoFeatureClass3, "OBJECTID", NEAR, "IN_FID")
-arcpy.TableToTable_conversion(PhotoFeatureClass3, Geodatabase, "NonMatchedDriverPhotos",
-							  "{0} is Null".format(ParcelPIN), "")
-
-arcpy.AddMessage("Step 7:  Reporting non-matched driver photos to table")
-
-# Cleanup matched Photos (intermediate data)
-
-arcpy.DeleteField_management(PhotoFeatureClass3, "IN_FID;NEAR_FID;NEAR_DIST")
-arcpy.Delete_management(NEAR)
-arcpy.AddField_management(PhotoFeatureClass2, "Path2", "TEXT", "", "", "150", "", "NULLABLE", "NON_REQUIRED", "")
-arcpy.CalculateField_management(PhotoFeatureClass2, "Path2", "!Path!", "PYTHON", "")
-arcpy.AddField_management(PhotoFeatureClass3, "Path2", "TEXT", "", "", "150", "", "NULLABLE", "NON_REQUIRED", "")
-arcpy.CalculateField_management(PhotoFeatureClass3, "Path2", "!Path!", "PYTHON", "")
-arcpy.DeleteField_management(PhotoFeatureClass2, "Path")
-arcpy.DeleteField_management(PhotoFeatureClass3, "Path")
-arcpy.AddField_management(PhotoFeatureClass3, "REVERSE", "TEXT", "", "", "5", "", "NULLABLE", "NON_REQUIRED", "")
-arcpy.CalculateField_management(PhotoFeatureClass3, "REVERSE", "\"NO\"", "PYTHON", "")
-
-arcpy.Append_management(PhotoFeatureClass2, PhotoFeatureClass3, "NO_TEST", "", "")
-
-#Create Photo Attachments
-
-ParcelPointClassHelper = """{}\\PointsTemp""".format(Geodatabase)
-ParcelPointHelper = """{}\\PhotoPoints""".format(Geodatabase)
-arcpy.CreateFeatureclass_management(Geodatabase, "PhotoPoints", "POINT", "", "", "", Parcels)
-arcpy.AddField_management(ParcelPointHelper, ParcelPIN, "TEXT", "", "", "50", ParcelPIN, "NULLABLE", "NON_REQUIRED")
-arcpy.FeatureToPoint_management(ParcelsFeatureClass, ParcelPointClassHelper, "INSIDE")
-
 #______________________________________________________________________________#
 #
 # Adding Survey Fields
@@ -395,13 +429,18 @@ else:
 	arcpy.AddField_management(ParcelPointHelper, Field10, "TEXT", "", "", "25", Field10Alias, ValueRequired10)
 	arcpy.AssignDomainToField_management(ParcelPointHelper, Field10, DomainSet10)
 
-arcpy.Append_management(ParcelPointClassHelper, ParcelPointHelper, "NO_TEST")
-arcpy.AddField_management(ParcelPointHelper, "REVERSE", "TEXT", "", "", "5", "", "NULLABLE", "NON_REQUIRED", "")
-arcpy.JoinField_management(ParcelPointHelper, ParcelPIN, PhotoFeatureClass3, ParcelPIN)
-arcpy.CalculateField_management(ParcelPointHelper, "REVERSE", "!REVERSE_1!", "PYTHON", "")
-arcpy.EnableAttachments_management(ParcelPointHelper)
-arcpy.AddAttachments_management(ParcelPointHelper, ParcelPIN, PhotoFeatureClass3, ParcelPIN, "Path2", "")
-arcpy.AddMessage("Step 9:  Creating photo attachments")
+if CameraInput == 'Dual Camera':
+
+	arcpy.Append_management(ParcelPointClassHelper, ParcelPointHelper, "NO_TEST")
+	arcpy.AddField_management(ParcelPointHelper, "REVERSE", "TEXT", "", "", "5", "", "NULLABLE", "NON_REQUIRED", "")
+	arcpy.JoinField_management(ParcelPointHelper, ParcelPIN, PhotoFeatureClass3, ParcelPIN)
+	arcpy.CalculateField_management(ParcelPointHelper, "REVERSE", "!REVERSE_1!", "PYTHON", "")
+	arcpy.EnableAttachments_management(ParcelPointHelper)
+	arcpy.AddAttachments_management(ParcelPointHelper, ParcelPIN, PhotoFeatureClass3, ParcelPIN, "Path2", "")
+	arcpy.AddMessage("Step 9:  Creating photo attachments")
+
+else:
+	pass
 
 #______________________________________________________________________________#
 #
