@@ -242,8 +242,13 @@ if CameraInput == 'Single Camera':
 	#_______________________________________________________________________________#
 
 	ParcelPointHelper = """{}\\PhotoPoints""".format(Geodatabase)
-	arcpy.GeoTaggedPhotosToPoints_management(SinglePhotos, ParcelPointHelper, "", "ONLY_GEOTAGGED", "NO_ATTACHMENTS")
-
+	arcpy.CreateFeatureclass_management(Geodatabase, "PhotoPoints", "Point", "", "DISABLED", "DISABLED",
+										"GEOGCS['GCS_WGS_1984',DATUM['D_WGS_1984',SPHEROID['WGS_1984',6378137.0,298.257223563]],"
+										"PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]],"
+										"VERTCS['WGS_1984',DATUM['D_WGS_1984',SPHEROID['WGS_1984',6378137.0,298.257223563]],"
+										"PARAMETER['Vertical_Shift',0.0],PARAMETER['Direction',1.0],"
+										"UNIT['Meter',1.0]];-400 -400 1000000000;-100000 10000;-100000 10000;8.98315284119522E-09;0.001;0.001;"
+										"IsHighPrecision", "", "0", "0", "0")
 else:
 	pass
 #______________________________________________________________________________#
@@ -260,8 +265,10 @@ if dmCount > 0:
 		arcpy.DeleteDomain_management(Geodatabase, domain)
 else:
 	pass
-
-arcpy.AddMessage("Step 8:  Adding survey questions")
+if CameraInput == "Dual Camera":
+	arcpy.AddMessage("Step 8:  Adding survey questions")
+else:
+	arcpy.AddMessage("Step 2:  Adding Survey questions")
 
 try:
 	config = ConfigParser.ConfigParser()
@@ -381,7 +388,7 @@ DomainSet10 = config.get('FIELD_DOMAIN', "Field10")
 if Field1 == "":
 	pass
 else:
-	arcpy.AddField_management(ParcelPointHelper, Field1, "TEXT", "", "", "25", Field1Alias, ValueRequired1, "REQUIRED", "")
+	arcpy.AddField_management(ParcelPointHelper, Field1, "TEXT", "", "", "25", Field1Alias, ValueRequired1) #"REQUIRED", "")
 	arcpy.AssignDomainToField_management(ParcelPointHelper, Field1, DomainSet1)
 if Field2 == "":
 	pass
@@ -442,32 +449,51 @@ if CameraInput == 'Dual Camera':
 else:
 	pass
 
+if CameraInput == 'Single Camera':
+		arcpy.AddMessage("Step 3:  Creating Photo Attachments")
+		ParcelPointHelperTemp = """{}\\ParcelPointsTemp""".format(Geodatabase)
+		ParcelPointsMerged = """{}\\ParcelPointsMerged""".format(Geodatabase)
+		arcpy.GeoTaggedPhotosToPoints_management(SinglePhotos, ParcelPointHelperTemp, "", "ONLY_GEOTAGGED", "NO_ATTACHMENTS")
+		arcpy.Merge_management(ParcelPointHelperTemp + ';' + ParcelPointHelper, ParcelPointsMerged, "Path \"Path\" true true false 78 Text 0 0 ,First,#,C:\\Data\\TropicThunder\\Staging.gdb\\ParcelPointsTemp,Path,-1,-1;Name \"Name\" true true false 12 Text 0 0 ,First,#,C:\\Data\\TropicThunder\\Staging.gdb\\ParcelPointsTemp,Name,-1,-1;DateTime \"DateTime\" true true false 100 Text 0 0 ,First,#,C:\\Data\\TropicThunder\\Staging.gdb\\ParcelPointsTemp,DateTime,-1,-1;Direction \"Direction\" true true false 8 Double 0 0 ,First,#,C:\\Data\\TropicThunder\\Staging.gdb\\ParcelPointsTemp,Direction,-1,-1;STRUCT \"Structure\" true false false 25 Text 0 0 ,First,#,C:\\Data\\TropicThunder\\Staging.gdb\\PhotoPoints,STRUCT,-1,-1;OVERGROWTH \"Overgrown Lot\" true false false 25 Text 0 0 ,First,#,C:\\Data\\TropicThunder\\Staging.gdb\\PhotoPoints,OVERGROWTH,-1,-1;FOUNDTYPE \"Foundation Type\" true true false 25 Text 0 0 ,First,#,C:\\Data\\TropicThunder\\Staging.gdb\\PhotoPoints,FOUNDTYPE,-1,-1;RFDMG \"Roof Damage\" true true false 25 Text 0 0 ,First,#,C:\\Data\\TropicThunder\\Staging.gdb\\PhotoPoints,RFDMG,-1,-1;EXTDMG \"Exterior Damage\" true true false 25 Text 0 0 ,First,#,C:\\Data\\TropicThunder\\Staging.gdb\\PhotoPoints,EXTDMG,-1,-1;GRAFDMG \"Graffiti Damage\" true true false 25 Text 0 0 ,First,#,C:\\Data\\TropicThunder\\Staging.gdb\\PhotoPoints,GRAFDMG,-1,-1;BOARDED \"Boarded\" true true false 25 Text 0 0 ,First,#,C:\\Data\\TropicThunder\\Staging.gdb\\PhotoPoints,BOARDED,-1,-1")
+		arcpy.EnableAttachments_management(ParcelPointsMerged)
+		arcpy.AddAttachments_management(ParcelPointsMerged, "OBJECTID", ParcelPointsMerged, "OBJECTID", "Path", "")
+		arcpy.Delete_management(ParcelPointHelperTemp)
+		arcpy.Delete_management(ParcelPointHelper)
+		arcpy.Rename_management(ParcelPointsMerged, ParcelPointHelper)
+else:
+	pass
+
 #______________________________________________________________________________#
 #
 # Cleanup Staging GeoDatabase
 #______________________________________________________________________________#
 
-arcpy.Delete_management(PhotoFeatureClass2)
-arcpy.Delete_management(PhotoFeatureClass3)
-arcpy.Delete_management(ParcelsFeatureClass)
-arcpy.Delete_management(ParcelPointClassHelper)
-arcpy.DeleteField_management(ParcelPointHelper, "ORIG_FID")
-arcpy.DeleteField_management(ParcelPointHelper, "REVERSE_1")
-arcpy.DeleteField_management(ParcelPointHelper, "PATH2")
-arcpy.DeleteField_management(ParcelPointHelper, ParcelPIN + "_1")
+if CameraInput == 'Dual Camera':
 
-if ParcelPIN is "Name":
-	arcpy.MakeFeatureLayer_management(ParcelPointHelper, "PARCELSFORSELECTION", "Image_Name is NULL")
+	arcpy.Delete_management(PhotoFeatureClass2)
+	arcpy.Delete_management(PhotoFeatureClass3)
+	arcpy.Delete_management(ParcelsFeatureClass)
+	arcpy.Delete_management(ParcelPointClassHelper)
+	arcpy.DeleteField_management(ParcelPointHelper, "ORIG_FID")
+	arcpy.DeleteField_management(ParcelPointHelper, "REVERSE_1")
+	arcpy.DeleteField_management(ParcelPointHelper, "PATH2")
+	arcpy.DeleteField_management(ParcelPointHelper, ParcelPIN + "_1")
+
+	if ParcelPIN is "Name":
+		arcpy.MakeFeatureLayer_management(ParcelPointHelper, "PARCELSFORSELECTION", "Image_Name is NULL")
+	else:
+		arcpy.MakeFeatureLayer_management(ParcelPointHelper, "PARCELSFORSELECTION", "Name is NULL")
+
+	arcpy.DeleteRows_management("PARCELSFORSELECTION")
+	arcpy.DeleteField_management(ParcelPointHelper, "Name")
+	arcpy.AddMessage("Step 10: Cleaning up staging geodatabase")
+
+	arcpy.AddMessage("Step 11: Adding application required fields")
+	arcpy.AddField_management(ParcelPointHelper, "BSTPHOTOID", "TEXT", "", "", "5", "Best Photo Identifier", "NULLABLE", "NON_REQUIRED", "")
+	arcpy.AddField_management(ParcelPointHelper, "SRVNAME", "TEXT", "", "", "25", "Surveyor Name", "NULLABLE", "NON_REQUIRED", "")
+	arcpy.AddMessage("Step 12: Finalizing photo survey feature class")
+
 else:
-	arcpy.MakeFeatureLayer_management(ParcelPointHelper, "PARCELSFORSELECTION", "Name is NULL")
-
-arcpy.DeleteRows_management("PARCELSFORSELECTION")
-arcpy.DeleteField_management(ParcelPointHelper, "Name")
-arcpy.AddMessage("Step 10: Cleaning up staging geodatabase")
-
-arcpy.AddMessage("Step 11: Adding application required fields")
-arcpy.AddField_management(ParcelPointHelper, "BSTPHOTOID", "TEXT", "", "", "5", "Best Photo Identifier", "NULLABLE", "NON_REQUIRED", "")
-arcpy.AddField_management(ParcelPointHelper, "SRVNAME", "TEXT", "", "", "25", "Surveyor Name", "NULLABLE", "NON_REQUIRED", "")
-arcpy.AddMessage("Step 12: Finalizing photo survey feature class")
+	pass
 
 
