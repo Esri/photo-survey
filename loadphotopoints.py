@@ -450,11 +450,16 @@ else:
 	pass
 
 if CameraInput == 'Single Camera':
-		arcpy.AddMessage("Step 3:  Creating Photo Attachments")
+
+		arcpy.AddMessage("Step 3:  Adding application required fields")
+		arcpy.AddField_management(ParcelPointHelper, "BSTPHOTOID", "TEXT", "", "", "5", "Best Photo Identifier", "NULLABLE", "NON_REQUIRED", "")
+		arcpy.AddField_management(ParcelPointHelper, "SRVNAME", "TEXT", "", "", "25", "Surveyor Name", "NULLABLE", "NON_REQUIRED", "")
+		arcpy.AddMessage("Step 4:  Finalizing photo survey feature class")
+		arcpy.AddMessage("Step 5:  Creating Photo Attachments")
 		ParcelPointHelperTemp = """{}\\ParcelPointsTemp""".format(Geodatabase)
 		ParcelPointsMerged = """{}\\ParcelPointsMerged""".format(Geodatabase)
 		arcpy.GeoTaggedPhotosToPoints_management(SinglePhotos, ParcelPointHelperTemp, "", "ONLY_GEOTAGGED", "NO_ATTACHMENTS")
-		arcpy.Merge_management(ParcelPointHelperTemp + ';' + ParcelPointHelper, ParcelPointsMerged, "Path \"Path\" true true false 78 Text 0 0 ,First,#,C:\\Data\\TropicThunder\\Staging.gdb\\ParcelPointsTemp,Path,-1,-1;Name \"Name\" true true false 12 Text 0 0 ,First,#,C:\\Data\\TropicThunder\\Staging.gdb\\ParcelPointsTemp,Name,-1,-1;DateTime \"DateTime\" true true false 100 Text 0 0 ,First,#,C:\\Data\\TropicThunder\\Staging.gdb\\ParcelPointsTemp,DateTime,-1,-1;Direction \"Direction\" true true false 8 Double 0 0 ,First,#,C:\\Data\\TropicThunder\\Staging.gdb\\ParcelPointsTemp,Direction,-1,-1;STRUCT \"Structure\" true false false 25 Text 0 0 ,First,#,C:\\Data\\TropicThunder\\Staging.gdb\\PhotoPoints,STRUCT,-1,-1;OVERGROWTH \"Overgrown Lot\" true false false 25 Text 0 0 ,First,#,C:\\Data\\TropicThunder\\Staging.gdb\\PhotoPoints,OVERGROWTH,-1,-1;FOUNDTYPE \"Foundation Type\" true true false 25 Text 0 0 ,First,#,C:\\Data\\TropicThunder\\Staging.gdb\\PhotoPoints,FOUNDTYPE,-1,-1;RFDMG \"Roof Damage\" true true false 25 Text 0 0 ,First,#,C:\\Data\\TropicThunder\\Staging.gdb\\PhotoPoints,RFDMG,-1,-1;EXTDMG \"Exterior Damage\" true true false 25 Text 0 0 ,First,#,C:\\Data\\TropicThunder\\Staging.gdb\\PhotoPoints,EXTDMG,-1,-1;GRAFDMG \"Graffiti Damage\" true true false 25 Text 0 0 ,First,#,C:\\Data\\TropicThunder\\Staging.gdb\\PhotoPoints,GRAFDMG,-1,-1;BOARDED \"Boarded\" true true false 25 Text 0 0 ,First,#,C:\\Data\\TropicThunder\\Staging.gdb\\PhotoPoints,BOARDED,-1,-1")
+		arcpy.Merge_management(ParcelPointHelperTemp + ';' + ParcelPointHelper, ParcelPointsMerged)
 		arcpy.EnableAttachments_management(ParcelPointsMerged)
 		arcpy.AddAttachments_management(ParcelPointsMerged, "OBJECTID", ParcelPointsMerged, "OBJECTID", "Path", "")
 		arcpy.Delete_management(ParcelPointHelperTemp)
