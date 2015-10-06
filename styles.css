@@ -52,14 +52,8 @@ body {
 .checkbox, .radio {
     margin-top: 0px;
 }
-.glyphicon.glyphicon-question-sign {
-    color: #007ac2;
-    font-size: 16px;
-    cursor: pointer;
-}
-.glyphicon.glyphicon-star {
-    color: #007ac2;
-    font-size: 10px;
+.importantQuestion {
+    display: inline-block;
     vertical-align: text-top;
 }
 .radio {
@@ -102,7 +96,6 @@ header, section, footer, aside, nav, main, article, figure {
 
 .iconButton, .iconButton:focus, .iconButton:hover {
     border: none;
-    background: none;
     outline-style: none;
 }
 
@@ -160,12 +153,18 @@ header, section, footer, aside, nav, main, article, figure {
     }
 }
 @media only screen and (max-width: 768px) {
+    #signinPage {
+        padding: 10px;
+    }
     .smallSidebar {
         margin: 10px;
         float: none;
     }
 }
 @media only screen and (max-height: 500px) {
+    #signinPage {
+        padding: 10px;
+    }
     .smallSidebar {
         margin: 10px;
     }
@@ -632,16 +631,18 @@ label+.radio {
 
 /* Generated using http://zerosprites.com/ */
 .sprites { background: url(images/sprites.png) no-repeat; }
-.FB-f-Logo__blue_29 { width: 29px; height: 29px; background-position: -72px -61px; }
-.Twitter_logo_blue_29 { width: 29px; height: 29px; background-position: -72px -91px; }
-.empty-heart { width: 64px; height: 60px; background-position: -37px 0; }
-.empty-star { width: 33px; height: 31px; background-position: 0 -53px; }
-.filled-heart { width: 64px; height: 60px; background-position: 0 -117px; }
-.filled-star { width: 33px; height: 31px; background-position: 0 -85px; }
-.gp-29 { width: 29px; height: 29px; background-position: -72px -121px; }
-.guest-user_29 { width: 29px; height: 29px; background-position: -72px -151px; }
-.left-arrow { width: 36px; height: 52px; background-position: 0 0; }
-.right-arrow { width: 36px; height: 52px; background-position: -34px -61px; }
+.FB-f-Logo__blue_29 { width: 29px; height: 29px; background-position: -37px -61px; }
+.Twitter_logo_blue_29 { width: 29px; height: 29px; background-position: -67px -61px; }
+.empty-heart { width: 64px; height: 60px; background-position: 0 0; }
+.empty-star { width: 33px; height: 31px; background-position: -97px -61px; }
+.filled-heart { width: 64px; height: 60px; background-position: -66px 0; }
+.filled-star { width: 33px; height: 31px; background-position: -97px -93px; }
+.gp-29 { width: 29px; height: 29px; background-position: 0 -114px; }
+.guest-user_29 { width: 29px; height: 29px; background-position: -30px -114px; }
+.left-arrow { width: 36px; height: 52px; background-position: 0 -61px; }
+.question-sign { width: 18px; height: 18px; background-position: -37px -91px; }
+.right-arrow { width: 36px; height: 52px; background-position: -60px -91px; }
+.star { width: 12px; height: 11px; background-position: -97px -125px; }
 
 .carousel-arrow {
     position: absolute;
