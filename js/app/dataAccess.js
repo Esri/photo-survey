@@ -200,7 +200,6 @@ define(['diag'], function (diag) {
                 return;
             }
 
-
             // Get its info
             dataAccess.getCandidateInfo(objectId, deferred);
         },
