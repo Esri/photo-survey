@@ -34,6 +34,8 @@ body {
     background-color: #fff;
     border: 1px solid #007ac2;
     border-radius: 0px;
+    max-width: 100%;
+    white-space: normal;
 }
 .btn:hover, .btn:focus {
     color: #007ac2;
