@@ -629,6 +629,21 @@ label+.radio {
     font-size: 13px;
 }
 
+.carousel-arrow {
+    position: absolute;
+    top: 50%;
+    z-index: 5;
+    display: inline-block;
+}
+.carousel-arrow-left {
+    left: 5%;
+}
+.carousel-arrow-right {
+    right: 5%;
+}
+.empty-star { display: inline-block }
+.filled-star { display: inline-block }
+
 /* Generated using http://zerosprites.com/ */
 .sprites { background: url(images/sprites.png) no-repeat; }
 .FB-f-Logo__blue_29 { width: 29px; height: 29px; background-position: -37px -61px; }
@@ -643,13 +658,4 @@ label+.radio {
 .question-sign { width: 18px; height: 18px; background-position: -37px -91px; }
 .right-arrow { width: 36px; height: 52px; background-position: -60px -91px; }
 .star { width: 12px; height: 11px; background-position: -97px -125px; }
-
-.carousel-arrow {
-    position: absolute;
-    top: 50%;
-    z-index: 5;
-    display: inline-block;
-}
-.empty-star { display: inline-block }
-.filled-star { display: inline-block }
 
