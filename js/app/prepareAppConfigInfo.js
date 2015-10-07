@@ -69,19 +69,18 @@ define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchC
 
         /**
          * Initializes the module by fetching parameters from the URL, the configuration file, and the webmap.
-         * @return {object} Object with properties parametersReady, surveyReady, webmapOrigImageUrlReady that contain
+         * @return {object} Object with object properties parametersReady, surveyReady, webmapOrigImageUrlReady that contain
          * Deferreds for when the app's configuration parameters are ready to use, when the survey gleaned from the webmap
          * is ready to use, and when the original-size version of the webmap's thumbnail has been checked and is ready to use,
          * respectively.
          */
         init: function () {
-            var parametersReady, surveyReady, webmapOrigImageUrlReady, webmapParamsFetch, webmapDataFetch, webmapFetcher,
-                    paramsFromUrl, onlineAppFetch, configFileFetch;
+            var webmapParamsFetch, webmapDataFetch, webmapFetcher, paramsFromUrl, onlineAppFetch, configFileFetch;
 
             // Set up external notifications for various stages of preparation
-            parametersReady = $.Deferred();
-            surveyReady = $.Deferred();
-            webmapOrigImageUrlReady = $.Deferred();
+            prepareAppConfigInfo.parametersReady = $.Deferred();
+            prepareAppConfigInfo.surveyReady = $.Deferred();
+            prepareAppConfigInfo.webmapOrigImageUrlReady = $.Deferred();
 
             // Prepare for a webmap fetch as soon as we can
             webmapParamsFetch = $.Deferred();
@@ -99,9 +98,9 @@ define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchC
                 if (parseConfigInfo.isUsableString(paramsFromUrl.webmap)) {
                     webmapFetcher = "url";
                     fetchConfigInfo.getParamsFromWebmap(paramsFromFile.arcgisUrl,
-                        paramsFromUrl.webmap, webmapParamsFetch, webmapOrigImageUrlReady);
+                            paramsFromUrl.webmap, webmapParamsFetch, prepareAppConfigInfo.webmapOrigImageUrlReady);
                     fetchConfigInfo.getWebmapData(paramsFromFile.arcgisUrl,
-                        paramsFromUrl.webmap, webmapDataFetch);
+                            paramsFromUrl.webmap, webmapDataFetch);
                 }
 
                 // If the appId is specified in the URL, fetch its parameters; resolves immediately if no appId
@@ -112,9 +111,9 @@ define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchC
                             // Use webmap specified in online app
                             webmapFetcher = "online";
                             fetchConfigInfo.getParamsFromWebmap(paramsFromFile.arcgisUrl,
-                                data.webmap, webmapParamsFetch, webmapOrigImageUrlReady);
+                                    data.webmap, webmapParamsFetch, prepareAppConfigInfo.webmapOrigImageUrlReady);
                             fetchConfigInfo.getWebmapData(paramsFromFile.arcgisUrl,
-                                data.webmap, webmapDataFetch);
+                                    data.webmap, webmapDataFetch);
                         }
                     }
                     onlineAppFetch.resolve(data);
@@ -128,14 +127,14 @@ define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchC
                         if (paramsFromFile.webmap) {
                             webmapFetcher = "file";
                             fetchConfigInfo.getParamsFromWebmap(paramsFromFile.arcgisUrl,
-                                paramsFromFile.webmap, webmapParamsFetch, webmapOrigImageUrlReady);
+                                    paramsFromFile.webmap, webmapParamsFetch, prepareAppConfigInfo.webmapOrigImageUrlReady);
                             fetchConfigInfo.getWebmapData(paramsFromFile.arcgisUrl,
-                                paramsFromFile.webmap, webmapDataFetch);
+                                    paramsFromFile.webmap, webmapDataFetch);
                         } else {
                             // We've no webmap; nothing more that can be done
-                            parametersReady.resolve(false);
-                            surveyReady.resolve(false);
-                            webmapOrigImageUrlReady.resolve(false);
+                            prepareAppConfigInfo.parametersReady.resolve(false);
+                            prepareAppConfigInfo.surveyReady.resolve(false);
+                            prepareAppConfigInfo.webmapOrigImageUrlReady.resolve(false);
                         }
                     }
 
@@ -165,9 +164,9 @@ define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchC
                         prepareAppConfigInfo.appParams.allowGuestSubmissions = prepareAppConfigInfo.toBoolean(prepareAppConfigInfo.appParams.allowGuestSubmissions, false);
                         prepareAppConfigInfo.appParams.thumbnailLimit = prepareAppConfigInfo.toNumber(prepareAppConfigInfo.appParams.thumbnailLimit, -1);
 
-                        parametersReady.resolve(true);
+                        prepareAppConfigInfo.parametersReady.resolve(true);
                     }).fail(function () {
-                        parametersReady.resolve(false);
+                        prepareAppConfigInfo.parametersReady.resolve(false);
                     });
 
                     // Once we have the webmap's data, we can try assemble the survey
@@ -186,22 +185,22 @@ define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchC
 
                             // Parse survey
                             prepareAppConfigInfo.survey = parseConfigInfo.parseSurvey(data.opLayerParams.popupInfo.description, dictionary);
-                            surveyReady.resolve();
+                            prepareAppConfigInfo.surveyReady.resolve();
                         } else {
                             prepareAppConfigInfo.featureSvcParams = {};
                             prepareAppConfigInfo.survey = {};
-                            surveyReady.reject();
+                            prepareAppConfigInfo.surveyReady.reject();
                         }
                     }).fail(function () {
-                        surveyReady.reject();
+                        prepareAppConfigInfo.surveyReady.reject();
                     });
                 });
             });
 
             return {
-                parametersReady: parametersReady,
-                surveyReady: surveyReady,
-                webmapOrigImageUrlReady: webmapOrigImageUrlReady
+                parametersReady: prepareAppConfigInfo.parametersReady,
+                surveyReady: prepareAppConfigInfo.surveyReady,
+                webmapOrigImageUrlReady: prepareAppConfigInfo.webmapOrigImageUrlReady
             };
         },
 

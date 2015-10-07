@@ -1,5 +1,5 @@
 /*global define,$ */
-/*jslint browser:true,sloppy:true,nomen:true,unparam:true,plusplus:true */
+/*jslint browser:true */
 /** @license
  | Copyright 2015 Esri
  |
@@ -17,7 +17,8 @@
  */
 //============================================================================================================================//
 define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSignin', 'dataAccess', 'diag'],
-    function (i18n, prepareAppConfigInfo, handleUserSignin, dataAccess, diag) {
+        function (i18n, prepareAppConfigInfo, handleUserSignin, dataAccess, diag) {
+    'use strict';
     var main, unsupported = false, needProxy = false, proxyReady;
 
     //------------------------------------------------------------------------------------------------------------------------//
@@ -34,11 +35,17 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
 
 
         showHeart: function (heartId, makeVisible) {
-            document.getElementById(heartId).style.display = makeVisible ? 'block' : 'none';
+            document.getElementById(heartId).style.display = makeVisible
+                ? 'block'
+                : 'none';
         },
 
-        completeSetup: function  () {
-            if (prepareAppConfigInfo.appParams.diag !== undefined) {diag.init()};
+        completeSetup: function () {
+            var socialMediaReady, avatar;
+
+            if (prepareAppConfigInfo.appParams.diag !== undefined) {
+                diag.init();
+            }
 
             // Update the page's title
             document.title = prepareAppConfigInfo.appParams.title;
@@ -58,33 +65,33 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
             }
 
             // Start up the social media connections
-            var socialMediaReady = handleUserSignin.init(prepareAppConfigInfo.appParams, function (notificationType) {
+            socialMediaReady = handleUserSignin.init(prepareAppConfigInfo.appParams, function (notificationType) {
                 // Callback from current social medium
                 switch (notificationType) {
-                    case handleUserSignin.notificationSignIn:
-                        if (!main.signedIn) {
-                            main.signedIn = true;
-                            $(document).triggerHandler('signedIn:user');
-                        }
-                        break;
-                    case handleUserSignin.notificationSignOut:
-                        if (main.signedIn) {
-                            main.signedIn = false;
-                            $("#contentPage").fadeOut("fast");
-                            $("#signinPage").fadeIn();
-                            $(document).triggerHandler('hide:profile');
-                            $("#profileAvatar").css("display", "none");
-                        }
-                        break;
-                    case handleUserSignin.notificationAvatarUpdate:
-                        var avatar = handleUserSignin.getUser().avatar;
-                        if (avatar) {
-                            $("#profileAvatar").css("backgroundImage", "url(" + avatar + ")");
-                            $("#profileAvatar").fadeIn("fast");
-                        } else {
-                            $("#profileAvatar").css("display", "none");
-                        }
-                        break;
+                case handleUserSignin.notificationSignIn:
+                    if (!main.signedIn) {
+                        main.signedIn = true;
+                        $(document).triggerHandler('signedIn:user');
+                    }
+                    break;
+                case handleUserSignin.notificationSignOut:
+                    if (main.signedIn) {
+                        main.signedIn = false;
+                        $("#contentPage").fadeOut("fast");
+                        $("#signinPage").fadeIn();
+                        $(document).triggerHandler('hide:profile');
+                        $("#profileAvatar").css("display", "none");
+                    }
+                    break;
+                case handleUserSignin.notificationAvatarUpdate:
+                    avatar = handleUserSignin.getUser().avatar;
+                    if (avatar) {
+                        $("#profileAvatar").css("backgroundImage", "url(" + avatar + ")");
+                        $("#profileAvatar").fadeIn("fast");
+                    } else {
+                        $("#profileAvatar").css("display", "none");
+                    }
+                    break;
                 }
             });
 
@@ -97,7 +104,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
 
                 // If we're not going to wait for the webmap's original image, just set the splash
                 if (prepareAppConfigInfo.appParams.useWebmapOrigImg) {
-                    appConfigReadies.webmapOrigImageUrlReady.then(function (url) {
+                    prepareAppConfigInfo.webmapOrigImageUrlReady.then(function (url) {
                         if (url) {
                             prepareAppConfigInfo.appParams.splashBackgroundUrl = url;
                         }
@@ -127,10 +134,10 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
                 proxyReady.done(function () {
 
                     // When the feature service and survey are ready, we can set up the module that reads from and writes to the service
-                    appConfigReadies.surveyReady.done(function () {
+                    prepareAppConfigInfo.surveyReady.done(function () {
                         dataAccess.init(prepareAppConfigInfo.featureSvcParams.url, prepareAppConfigInfo.featureSvcParams.id,
-                            prepareAppConfigInfo.featureSvcParams.objectIdField,
-                            prepareAppConfigInfo.appParams.surveyorNameField + "+is+null+or+"
+                                prepareAppConfigInfo.featureSvcParams.objectIdField,
+                                prepareAppConfigInfo.appParams.surveyorNameField + "+is+null+or+"
                                 + prepareAppConfigInfo.appParams.surveyorNameField + "=''", prepareAppConfigInfo.appParams.proxyProgram);
 
                         // Test if there are any surveys remaining to be done
@@ -211,8 +218,12 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
             main.iVisiblePhoto = parseInt($("#carouselSlidesHolder > .item.active")[0].id.substring(1));
 
             // Update left & right sliders for where we are in the carousel to block wrapping of carousel movement
-            $("#leftCarouselCtl").css("display", (main.iVisiblePhoto === 0 ? "none" : "block"));
-            $("#rightCarouselCtl").css("display", (main.iVisiblePhoto === (main.numPhotos - 1) ? "none" : "block"));
+            $("#leftCarouselCtl").css("display", (main.iVisiblePhoto === 0
+                ? "none"
+                : "block"));
+            $("#rightCarouselCtl").css("display", (main.iVisiblePhoto === (main.numPhotos - 1)
+                ? "none"
+                : "block"));
 
             if (prepareAppConfigInfo.appParams.bestPhotoField) {
                 // Update selected photo indicator
@@ -220,7 +231,9 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
                 main.showHeart('emptyHeart', !main.photoSelected);
                 main.showHeart('filledHeart', main.photoSelected);
                 $("#hearts").attr("title",
-                    (main.photoSelected ? i18n.tooltips.button_best_image : i18n.tooltips.button_click_if_best_image));
+                        (main.photoSelected
+                    ? i18n.tooltips.button_best_image
+                    : i18n.tooltips.button_click_if_best_image));
                 $("#hearts")[0].style.display = "block";
             }
         },
@@ -243,11 +256,11 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
                 $("#rankLabel")[0].innerHTML = prepareAppConfigInfo.appParams.contribLevels[level].label;
                 $("#level")[0].innerHTML = i18n.labels.label_level.replace("${0}", level);
                 if (level === 0) {
-                    $("div", ".profileRankStars").removeClass("filled-star").addClass("empty-star")
+                    $("div", ".profileRankStars").removeClass("filled-star").addClass("empty-star");
                 } else {
                     var stars = $("div:eq(" + (level - 1) + ")", ".profileRankStars");
-                    stars.prevAll().andSelf().removeClass("empty-star").addClass("filled-star")
-                    stars.nextAll().removeClass("filled-star").addClass("empty-star")
+                    stars.prevAll().andSelf().removeClass("empty-star").addClass("filled-star");
+                    stars.nextAll().removeClass("filled-star").addClass("empty-star");
                 }
 
                 // If below top level, show how far to next level
@@ -260,7 +273,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
                     $("#profileRankBar").css("display", "block");
 
                     $("#remainingToNextLevel")[0].innerHTML =
-                        i18n.labels.label_remaining_surveys.replace("${0}", remainingToNextLevel);
+                            i18n.labels.label_remaining_surveys.replace("${0}", remainingToNextLevel);
                 } else {
                     $("#remainingToNextLevel")[0].innerHTML = "";
                     $("#profileRankBar").css("display", "none");
@@ -272,19 +285,19 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
             }
         },
 
-        startQuestion: function (surveyContainer, iQuestion, questionInfo) {
+        startQuestion: function (ignore, iQuestion, questionInfo) {
             // <div class='form-group'>
             //   <label for='q1'>Is there a structure on the property? <span class='glyphicon glyphicon-star'></span></label><br>
             var start =
-                "<div id='qg" + iQuestion + "' class='form-group'>"
-                + "<label for='q" + iQuestion + "'>" + questionInfo.question
-                + (questionInfo.important ? "&nbsp;<div class='importantQuestion sprites star' title=\""
-                + i18n.tooltips.flag_important_question + "\"></div>" : "")
-                + "</label><br>";
+                    "<div id='qg" + iQuestion + "' class='form-group'>"
+                    + "<label for='q" + iQuestion + "'>" + questionInfo.question + (questionInfo.important
+                ? "&nbsp;<div class='importantQuestion sprites star' title=\"" + i18n.tooltips.flag_important_question + "\"></div>"
+                : "")
+                    + "</label><br>";
             return start;
         },
 
-        createButtonChoice: function (surveyContainer, iQuestion, questionInfo, isReadOnly) {
+        createButtonChoice: function (ignore, iQuestion, questionInfo, isReadOnly) {
             // <div id='q1' class='btn-group'>
             //   <button type='button' class='btn'>Yes</button>
             //   <button type='button' class='btn'>No</button>
@@ -293,13 +306,15 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
             var buttons = "<div id='q" + iQuestion + "' class='btn-group'>";
             var domain = questionInfo.domain.split('|');
             $.each(domain, function (i, choice) {
-                buttons += "<button type='button' class='btn' value='" + i + "' " + (isReadOnly ? "disabled" : "") + ">" + choice + "</button>";
+                buttons += "<button type='button' class='btn' value='" + i + "' " + (isReadOnly
+                    ? "disabled"
+                    : "") + ">" + choice + "</button>";
             });
             buttons += "</div>";
             return buttons;
         },
 
-        createListChoice: function (surveyContainer, iQuestion, questionInfo, isReadOnly) {
+        createListChoice: function (ignore, iQuestion, questionInfo, isReadOnly) {
             // <div class='radio'><label><input type='radio' name='q1' id='optionFound1' value='0'>Crawlspace</label></div>
             // <div class='radio'><label><input type='radio' name='q1' id='optionFound2' value='1'>Raised</label></div>
             // <div class='radio'><label><input type='radio' name='q1' id='optionFound3' value='2'>Elevated</label></div>
@@ -308,12 +323,14 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
             var list = "";
             var domain = questionInfo.domain.split('|');
             $.each(domain, function (i, choice) {
-                list += "<div class='radio'><label><input type='radio' name='q" + iQuestion + "' value='" + i + "' " + (isReadOnly ? "disabled" : "") + ">" + choice + "</label></div>";
+                list += "<div class='radio'><label><input type='radio' name='q" + iQuestion + "' value='" + i + "' " + (isReadOnly
+                    ? "disabled"
+                    : "") + ">" + choice + "</label></div>";
             });
             return list;
         },
 
-        wrapupQuestion: function (surveyContainer, iQuestion, questionInfo) {
+        wrapupQuestion: function () {
             // </div>
             // <div class='clearfix'></div>
             var wrap = "</div><div class='clearfix'></div>";
@@ -332,8 +349,8 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
 
             // Fix radio-button toggling
             if (questionInfo.style === "button") {
-                $('#q' + iQuestion + ' button').click(function() {
-                    $(this).addClass('active').siblings().removeClass('active');
+                $('#q' + iQuestion + ' button').click(function (evt) {
+                    $(evt.currentTarget).addClass('active').siblings().removeClass('active');
                 });
             }
         },
@@ -344,12 +361,14 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
             //    "'><img src='" + photoUrl + "'></div>";
             // $(carouselSlidesHolder).append(content);
 
-            var content = "<div id='c" + indexInArray + "' class='item" + (isActive ? " active" : "") + "'><img /></div>";
+            var content = "<div id='c" + indexInArray + "' class='item" + (isActive
+                ? " active"
+                : "") + "'><img /></div>";
             $(carouselSlidesHolder).append(content);
 
             var img = $("#c" + indexInArray + " img")[0];
             img.src = photoUrl;
-            $(img).on('error', function (err) {
+            $(img).on('error', function () {
                 img.src = "images/noPhoto.png";
                 $(img).css("margin", "auto");
             });
@@ -358,7 +377,9 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         addPhotoIndicator: function (carouselIndicatorsHolder, indexInArray, isActive, carouselId, photoUrl) {
             // <li data-target='#myCarousel' data-slide-to='0' class='active'></li>
             var content = "<li id='indicator-" + indexInArray + "' data-target='#" + carouselId + "' data-slide-to='" + indexInArray +
-                "'" + (isActive ? " class='active'" : "") + "></li>";
+                    "'" + (isActive
+                ? " class='active'"
+                : "") + "></li>";
             $(carouselIndicatorsHolder).append(content);
             $("#indicator-" + indexInArray).css("background-image", "url(" + photoUrl + ")");
         },
@@ -386,13 +407,13 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         },
 
         testURL: function (url, callback) {
-            $.ajax( {
+            $.ajax({
                 type: 'HEAD',
                 url: url,
-                success: function() {
+                success: function () {
                     callback(true);
                 },
-                error: function() {
+                error: function () {
                     callback(false);
                 }
             });
@@ -413,20 +434,22 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
     $("#signinPage").fadeIn();
 
     // Enable the carousel swipe for mobile
-    $('.carousel').bcSwipe({ threshold: 50 });
+    $('.carousel').bcSwipe({
+        threshold: 50
+    });
 
     // Get app, webmap, feature service
-    var appConfigReadies = prepareAppConfigInfo.init();
+    prepareAppConfigInfo.init();
 
     // When we have the app parameters, we can continue setting up the app
-    appConfigReadies.parametersReady.then(main.completeSetup);
+    prepareAppConfigInfo.parametersReady.then(main.completeSetup);
 
     //------------------------------------------------------------------------------------------------------------------------//
     // Wire up app events
 
     // Using colons for custom event names as recommended by https://learn.jquery.com/events/introduction-to-custom-events/#naming-custom-events
-    $(document).on('signedIn:user', function (e) {
-        appConfigReadies.surveyReady.then(function () {
+    $(document).on('signedIn:user', function () {
+        prepareAppConfigInfo.surveyReady.then(function () {
             var user = handleUserSignin.getUser();
 
             // Make sure that the main content is available
@@ -445,26 +468,26 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
                     $("#ranking").css("display", "none");
                 }
 
-            }).fail(function (error) {
+            }).fail(function () {
                 $("#profileCount").css("display", "none");
                 $("#ranking").css("display", "none");
             });
 
             $("#hearts").css("display", "none");
 
-            $("#signinPage").fadeOut( );
+            $("#signinPage").fadeOut();
         });
-        appConfigReadies.surveyReady.then(function () {
+        prepareAppConfigInfo.surveyReady.then(function () {
             $(document).triggerHandler('show:newSurvey');
         });
     });
 
-    $(document).on('signedOut:user', function (e) {
+    $(document).on('signedOut:user', function () {
         dataAccess.resetExclusionList();
         handleUserSignin.signOut();
     });
 
-    $(document).on('show:noSurveys', function (e) {
+    $(document).on('show:noSurveys', function () {
         // No more surveys available either due to error or completion
         // Hide the main content
         main.hideMainContent();
@@ -474,7 +497,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         $('#additionalInfoPanel').modal('show');
     });
 
-    $(document).on('show:newSurvey', function (e) {
+    $(document).on('show:newSurvey', function () {
         var isReadOnly = !(prepareAppConfigInfo.featureSvcParams.canBeUpdated && handleUserSignin.getUser().canSubmit);
         $("#submitBtn")[0].blur();
 
@@ -486,13 +509,14 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
             // obj:feature{}
             // attachments:[{id,url},...]
             var showThumbnails = (prepareAppConfigInfo.appParams.thumbnailLimit < 0) ||
-                (candidate.attachments.length <= prepareAppConfigInfo.appParams.thumbnailLimit);
+                    (candidate.attachments.length <= prepareAppConfigInfo.appParams.thumbnailLimit);
 
             main.numPhotos = candidate.attachments.length;
             if (!candidate.obj) {
                 $(document).triggerHandler('show:noSurveys');
                 return;
-            } else if (main.numPhotos === 0) {
+            }
+            if (main.numPhotos === 0) {
                 diag.appendWithLF("no photos for property <i>" + JSON.stringify(candidate.obj.attributes) + "</i>");  //???
                 candidate.obj.attributes[prepareAppConfigInfo.appParams.surveyorNameField] = "no photos";
                 dataAccess.updateCandidate(candidate);
@@ -500,7 +524,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
                 return;
             }
             diag.appendWithLF("showing property <i>" + JSON.stringify(candidate.obj.attributes) + "</i> with "  //???
-                + main.numPhotos + " photos");  //???
+                    + main.numPhotos + " photos");  //???
 
             main.candidate = candidate;
             main.iSelectedPhoto = -1;
@@ -511,13 +535,13 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
             var carouselIndicatorsHolder = $("#carouselIndicatorsHolder")[0];
             $(carouselIndicatorsHolder).children().remove();  // remove children and their events
             var initiallyActiveItem =
-                Math.floor((main.numPhotos + 1) / 2) - 1;  // len=1,2: idx=0; len=3,4; idx=1; etc. (idx 0-based)
+                    Math.floor((main.numPhotos + 1) / 2) - 1;  // len=1,2: idx=0; len=3,4; idx=1; etc. (idx 0-based)
 
             $.each(candidate.attachments, function (indexInArray, attachment) {
                 main.addPhoto(carouselSlidesHolder, indexInArray, (initiallyActiveItem === indexInArray), attachment.url);
                 if (showThumbnails) {
                     main.addPhotoIndicator(carouselIndicatorsHolder, indexInArray, (initiallyActiveItem === indexInArray),
-                        "carousel", attachment.url);
+                            "carousel", attachment.url);
                 }
             });
             $("#carousel").trigger('create');
@@ -525,9 +549,11 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
             main.updatePhotoSelectionDisplay();
 
             // Provide some visual feedback for the switch to a new survey
-            $("#surveyContainer").fadeTo(1000, (isReadOnly ? 0.75 : 1.0));
+            $("#surveyContainer").fadeTo(1000, (isReadOnly
+                ? 0.75
+                : 1.0));
 
-        }).fail(function (error) {
+        }).fail(function () {
             $(document).triggerHandler('show:noSurveys');
         });
 
@@ -540,8 +566,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         $(".btn-group").trigger('create');
 
         // Can submit?
-        $("#submitBtn").css("display",
-            isReadOnly
+        $("#submitBtn").css("display", isReadOnly
             ? "none"
             : "inline-block");
 
@@ -549,12 +574,12 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         $("#contentPage").fadeIn("fast");
     });
 
-    $(document).on('show:profile', function (e) {
+    $(document).on('show:profile', function () {
         $("#survey").fadeOut("fast", function () {
             $("#profile").fadeIn("fast");
         });
     });
-    $(document).on('hide:profile', function (e) {
+    $(document).on('hide:profile', function () {
         $("#profile").fadeOut("fast", function () {
             $("#survey").fadeIn("fast");
         });
@@ -574,7 +599,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         $(document).triggerHandler('show:newSurvey');
     });
     $("#submitBtn").on('click', function () {
-        var surveyContainer, msg, iQuestionResult, hasImportants = true, firstMissing;
+        var surveyContainer, iQuestionResult, hasImportants = true, firstMissing;
 
         surveyContainer = $('#surveyContainer');
         $.each(prepareAppConfigInfo.survey, function (iQuestion, questionInfo) {
@@ -627,19 +652,21 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
     $("#hearts").on('click', function () {
         main.photoSelected = !main.photoSelected;
         main.iVisiblePhoto = parseInt($("#carouselSlidesHolder > .item.active")[0].id.substring(1));
-        main.iSelectedPhoto = main.photoSelected ? main.iVisiblePhoto : -1;
+        main.iSelectedPhoto = main.photoSelected
+            ? main.iVisiblePhoto
+            : -1;
         main.updatePhotoSelectionDisplay();
     });
 
     // Manage group of buttons in a radio style
-    $(".btn-group > .btn").click(function(){
-        $(this).addClass("active").siblings().removeClass("active");
+    $(".btn-group > .btn").click(function (evt) {
+        $(evt.currentTarget).addClass("active").siblings().removeClass("active");
     });
 
     $("#carousel").on('slide.bs.carousel', function (data) {
         // Check if we should slide: swipe jumps right into here
         if ((main.iVisiblePhoto === 0 && data.direction === "right")
-            || (main.iVisiblePhoto === (main.numPhotos - 1) && data.direction === "left")) {
+                || (main.iVisiblePhoto === (main.numPhotos - 1) && data.direction === "left")) {
             // Block move
             data.preventDefault();
         } else {
@@ -648,9 +675,9 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         }
     });
 
-    $("#carousel").on('slid.bs.carousel', function (data) {
+    $("#carousel").on('slid.bs.carousel', function () {
         main.updatePhotoSelectionDisplay();
     });
 
-   return main;
+    return main;
 });
