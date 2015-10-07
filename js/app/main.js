@@ -499,9 +499,9 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
 
     $(document).on('show:newSurvey', function () {
         var isReadOnly = !(prepareAppConfigInfo.featureSvcParams.canBeUpdated && handleUserSignin.getUser().canSubmit);
-        $("#submitBtn")[0].blur();
 
         // Provide some visual feedback for the switch to a new survey
+        $("#submitBtn").fadeTo(100, 0.0);
         $("#surveyContainer").fadeTo(100, 0.0);
 
         // Get candidate property
@@ -552,6 +552,9 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
             $("#surveyContainer").fadeTo(1000, (isReadOnly
                 ? 0.75
                 : 1.0));
+            if (!isReadOnly) {
+                $("#submitBtn").fadeTo(1000, 1.0);
+            }
 
         }).fail(function () {
             $(document).triggerHandler('show:noSurveys');
@@ -564,11 +567,6 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
             main.addQuestion(surveyContainer, indexInArray, questionInfo, isReadOnly);
         });
         $(".btn-group").trigger('create');
-
-        // Can submit?
-        $("#submitBtn").css("display", isReadOnly
-            ? "none"
-            : "inline-block");
 
         // Show the content
         $("#contentPage").fadeIn("fast");
