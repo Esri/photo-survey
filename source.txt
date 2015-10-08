@@ -3,10 +3,10 @@ origin	git@github.com:ArcGIS/photo-survey.git (fetch)
 origin	git@github.com:ArcGIS/photo-survey.git (push)
 . 
 branch 
-master
+Oct_2015_release
 . 
-commit c6a5b0e6593499ad279d58f0a4e79d589e4ff11a
-Author: Chris Buscaglia <arcgisteamlocalgov@esri.com>
-Date:   Wed Aug 26 08:45:15 2015 -0700
+commit cee0c01cf3ae12647fc3ca0be280d77d5dfc2b71
+Author: MikeTschudi <mtschudi@esri.com>
+Date:   Wed Oct 7 15:53:03 2015 -0700
 
-    Updated Photo (resize)
+    Replaced weakly-supported blur with fade for submit button

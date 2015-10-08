@@ -21,6 +21,7 @@
         "googleplusLogoutUrl": "https://accounts.google.com/logout",
         "twitterSigninUrl": "https://utility.arcgis.com/tproxy/signin",
         "twitterUserUrl": "https://utility.arcgis.com/tproxy/proxy/1.1/account/verify_credentials.json?q=&include_entities=true&skip_status=true&locale=en",
-        "twitterCallbackUrl": "/oauth-callback-twitter.html"
+        "twitterCallbackUrl": "/oauth-callback-twitter.html",
+        "arcgisUrl": "http://www.arcgis.com/sharing/content/items/"
     }
 }
