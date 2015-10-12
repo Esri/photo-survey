@@ -3,10 +3,10 @@ origin	git@github.com:ArcGIS/photo-survey.git (fetch)
 origin	git@github.com:ArcGIS/photo-survey.git (push)
 . 
 branch 
-Oct_2015_release
+develop
 . 
-commit cee0c01cf3ae12647fc3ca0be280d77d5dfc2b71
+commit c9f7902af27dff8b7f277d8cfbfec6b563c6b3a2
 Author: MikeTschudi <mtschudi@esri.com>
-Date:   Wed Oct 7 15:53:03 2015 -0700
+Date:   Mon Oct 12 13:00:36 2015 -0700
 
-    Replaced weakly-supported blur with fade for submit button
+    Added wait for response from server about submission before getting next survey
