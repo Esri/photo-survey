@@ -41,7 +41,7 @@ if str (AngleField) == 'true':
 else:
 	AngleField = ''
 
-if CameraInput == 'Dual Camera':
+if CameraInput == 'Associate Photo with Parcel':
 
 	# ______________________________________________________________________________#
 	#
@@ -234,7 +234,7 @@ if CameraInput == 'Dual Camera':
 else:
 	pass
 
-if CameraInput == 'Single Camera':
+if CameraInput == 'Associate Photo with Point':
 
 	# ______________________________________________________________________________#
 	#
@@ -265,7 +265,7 @@ if dmCount > 0:
 		arcpy.DeleteDomain_management(Geodatabase, domain)
 else:
 	pass
-if CameraInput == "Dual Camera":
+if CameraInput == "Associate Photo with Parcel":
 	arcpy.AddMessage("Step 8:  Adding survey questions")
 else:
 	arcpy.AddMessage("Step 2:  Adding Survey questions")
@@ -436,7 +436,7 @@ else:
 	arcpy.AddField_management(ParcelPointHelper, Field10, "TEXT", "", "", "25", Field10Alias, ValueRequired10)
 	arcpy.AssignDomainToField_management(ParcelPointHelper, Field10, DomainSet10)
 
-if CameraInput == 'Dual Camera':
+if CameraInput == 'Associate Photo with Parcel':
 
 	arcpy.Append_management(ParcelPointClassHelper, ParcelPointHelper, "NO_TEST")
 	arcpy.AddField_management(ParcelPointHelper, "REVERSE", "TEXT", "", "", "5", "", "NULLABLE", "NON_REQUIRED", "")
@@ -449,7 +449,7 @@ if CameraInput == 'Dual Camera':
 else:
 	pass
 
-if CameraInput == 'Single Camera':
+if CameraInput == 'Associate Photo with Point':
 
 		arcpy.AddMessage("Step 3:  Adding application required fields")
 		arcpy.AddField_management(ParcelPointHelper, "BSTPHOTOID", "TEXT", "", "", "5", "Best Photo Identifier", "NULLABLE", "NON_REQUIRED", "")
@@ -473,7 +473,7 @@ else:
 # Cleanup Staging GeoDatabase
 #______________________________________________________________________________#
 
-if CameraInput == 'Dual Camera':
+if CameraInput == 'Associate Photo with Parcel':
 
 	arcpy.Delete_management(PhotoFeatureClass2)
 	arcpy.Delete_management(PhotoFeatureClass3)
