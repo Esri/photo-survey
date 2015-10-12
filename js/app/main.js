@@ -631,12 +631,12 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
                 main.candidate.obj.attributes[prepareAppConfigInfo.appParams.bestPhotoField] = main.candidate.attachments[main.iSelectedPhoto].id;
             }
             diag.appendWithLF("saving survey for property <i>" + JSON.stringify(main.candidate.obj.attributes) + "</i>");  //???
-            dataAccess.updateCandidate(main.candidate);
+            dataAccess.updateCandidate(main.candidate).then(function () {
+                main.completions += 1;
+                main.updateCount();
 
-            main.completions += 1;
-            main.updateCount();
-
-            $(document).triggerHandler('show:newSurvey');
+                $(document).triggerHandler('show:newSurvey');
+            });
 
         // Jump to the first missing important question otherwise
         // From http://stackoverflow.com/a/6677069
