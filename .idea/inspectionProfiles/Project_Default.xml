@@ -6,6 +6,7 @@
       <option name="ignoredIdentifiers">
         <list>
           <option value="dict.*" />
+          <option value="loadphotopoints.ParcelsFeatureClass3" />
         </list>
       </option>
     </inspection_tool>
