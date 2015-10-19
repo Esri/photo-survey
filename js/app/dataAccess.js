@@ -21,12 +21,13 @@ define(['diag'], function (diag) {
     var dataAccess;
     dataAccess = {
 
-        fixedQueryParams: "&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&distance=&units=esriSRUnit_Meter&returnGeometry=false&maxAllowableOffset=&geometryPrecision=&outSR=&returnExtentOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&quantizationParameters=&f=pjson",
+        fixedQueryParams: "&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&distance=&units=esriSRUnit_Meter&returnGeometry=false&maxAllowableOffset=&geometryPrecision=&outSR=&returnExtentOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&quantizationParameters=&f=json",
         featureServiceUrl: null,
         featureServiceLayerId: null,
         objectIdField: null,
         validCandidateCondition: null,
         proxyProgram: null,
+        exclusionList: {},
 
         //--------------------------------------------------------------------------------------------------------------------//
 
@@ -53,6 +54,64 @@ define(['diag'], function (diag) {
         },
 
         /**
+         * Adds an item to the to-be-skipped list.
+         * @param {number} item Object to be skipped; NOP if already in the list
+         */
+        addItemToExclusionList: function (item) {
+            dataAccess.exclusionList[item] = true;
+        },
+
+        /**
+         * Checks if an item is in the to-be-skipped list.
+         * @param {number} item Object to be checked
+         * @return {boolean} True if item is in list
+         */
+        isItemInExclusionList: function (item) {
+            return dataAccess.exclusionList.hasOwnProperty(item);
+        },
+
+        /**
+         * Empties the to-be-skipped list.
+         */
+        resetExclusionList: function () {
+            dataAccess.exclusionList = {};
+        },
+
+        /**
+         * Returns a list that doesn't include the items in the to-be-skipped list.
+         * @param {array} itemList List to be filtered
+         * @return {array} Filtered list
+         */
+        filterList: function (itemList) {
+            return $.grep(itemList, function (element) {
+                return !dataAccess.isItemInExclusionList(element);
+            });
+        },
+
+        /**
+         * Selects an item from a list of items; selection is subject to an exclusion limitation.
+         * @param {array} itemList List of items to choose from
+         * @param {boolean} randomizeSelection True if pseudorandom selection should be used
+         * @return {object} Selected item or null if list is empty or only contains items
+         * that are also in the skip list
+         */
+        pickFromList: function (itemList, randomizeSelection) {
+            var item = null, filteredItems;
+
+            if (itemList.length > 0) {
+                filteredItems = dataAccess.filterList(itemList);
+                if (filteredItems.length > 0) {
+                    // Pick a candidate from amongst the available
+                    item = randomizeSelection
+                        ? filteredItems[Math.floor(Math.random() * filteredItems.length)]
+                        : filteredItems[0];
+                }
+            }
+
+            return item;
+        },
+
+        /**
          * Gets the number of features satisfying a condition.
          * @param {string} [condition] Condition to test; if omitted, the validCandidateCondition provided to this module's
          * init() function is used; a sample condition is "SRVNAME='" + username + "'", where SRVNAME is the name of the
@@ -66,17 +125,28 @@ define(['diag'], function (diag) {
             url = dataAccess.featureServiceUrl + "query?where=" + (condition || dataAccess.validCandidateCondition)
                     + "&objectIds=&returnIdsOnly=false&returnCountOnly=true&outFields=" + dataAccess.fixedQueryParams
                     + "&callback=?";
-            $.getJSON(url, "jsonp", function (results) {
-                if (!results || results.error) {
-                    deferred.reject(-1);
-                }
-                diag.appendWithLF("surveys " + (condition
-                    ? "for \"" + condition + "\""
-                    : "available") + ": " + results.count);
-                deferred.resolve(results.count);
+            $.getJSON(url, function handleObjectCountClosure(results) {
+                dataAccess.handleObjectCount(results, deferred, condition);
             });
 
             return deferred;
+        },
+
+        /**
+         * Handles the callback for an object-count query.
+         * @param {object} results Results provided by callback; .error if there's an error; .count contains count
+         * otherwise
+         * @param {object} deferred Deferred to receive results of interpreting results
+         * @param {string} condition Condition used in query for diagnostic display
+         */
+        handleObjectCount: function (results, deferred, condition) {
+            if (!results || results.error) {
+                deferred.reject(-1);
+            }
+            diag.appendWithLF("surveys " + (condition
+                ? "for \"" + condition + "\""
+                : "available") + ": " + results.count);
+            deferred.resolve(results.count);
         },
 
         /**
@@ -86,7 +156,9 @@ define(['diag'], function (diag) {
          * service is used
          * @return {object} Deferred indicating when candidate is ready; successful resolution includes object with
          * obj and attachments properties; 'obj' contains an attributes property with the candidate's attributes and
-         * attachments contains an array containing objects each of which describes an attachment using id and url properties
+         * attachments contains an array containing objects each of which describes an attachment using id and url properties;
+         * if there are no more candidates, deferred resolves successfully but with 'obj'=null and 'attachments'=[]; if
+         * the fetch fails, the deferred resolves with a failure
          */
         getCandidate: function (randomizeSelection) {
             var deferred, url;
@@ -96,95 +168,116 @@ define(['diag'], function (diag) {
             url = dataAccess.featureServiceUrl + "query?where=" + dataAccess.validCandidateCondition
                     + "&objectIds=&returnIdsOnly=true&returnCountOnly=false&outFields=" + dataAccess.fixedQueryParams
                     + "&callback=?";
-            $.getJSON(url, "jsonp", function (results) {
-                var objectId, attributesDeferred, objectAttrsUrl, attachmentsDeferred, objectAttachmentsUrl;
-
-                if (!results || results.error) {
-                    deferred.reject({
-                        obj: null,
-                        attachments: []
-                    });
-                    return;
-                }
-                if (results.objectIds.length === 0) {
-                    deferred.resolve({
-                        obj: null,
-                        attachments: []
-                    });
-                    return;
-                }
-
-                // Pick a candidate from amongst the available
-                objectId = randomizeSelection
-                    ? results.objectIds[Math.floor(Math.random() * results.objectIds.length)]
-                    : results.objectIds[0];
-
-                // Get the candidate's attributes
-                attributesDeferred = $.Deferred();
-                objectAttrsUrl = dataAccess.featureServiceUrl + "query?objectIds=" + objectId
-                        + "&returnIdsOnly=false&returnCountOnly=false&outFields=*" + dataAccess.fixedQueryParams
-                        + "&callback=?";
-                $.getJSON(objectAttrsUrl, "jsonp", function (results) {
-                    // No attributes is a problem
-                    if (!results || results.error || !results.features || results.features.length === 0) {
-                        attributesDeferred.reject();
-                        return;
-                    }
-
-                    attributesDeferred.resolve(results.features[0]);
-                });
-
-                // Get the candidate's attachments
-                attachmentsDeferred = $.Deferred();
-                objectAttachmentsUrl = dataAccess.featureServiceUrl + objectId + "/attachments?f=json&callback=?";
-                $.getJSON(objectAttachmentsUrl, "jsonp", function (results) {
-                    var attachments = [];
-
-                    if (!results || results.error) {
-                        attachmentsDeferred.reject();
-                        return;
-                    }
-
-                    // Empty list of attachments is possible
-                    if (results && results.attachmentInfos) {
-
-                        attributesDeferred.done(function (feature) {
-                            // Watch for request to reverse order of attachments
-                            var doReversal = false;
-                            if (feature && feature.attributes && feature.attributes.REVERSE) {
-                                doReversal = dataAccess.toBoolean(feature.attributes.REVERSE, false);
-                            }
-
-                            // Build list of attachments
-                            if (doReversal) {
-                                results.attachmentInfos.reverse();
-                            }
-                            $.each(results.attachmentInfos, function (ignore, attachment) {
-                                attachments.push({
-                                    id: attachment.id,
-                                    url: dataAccess.featureServiceUrl + objectId + "/attachments/" + attachment.id
-                                });
-                            });
-                            attachmentsDeferred.resolve(attachments);
-                        }).fail(function () {
-                            attachmentsDeferred.reject();
-                        });
-                    } else {
-                        attachmentsDeferred.resolve(attachments);
-                    }
-                });
-
-                // Return the attributes and attachments
-                $.when(attributesDeferred, attachmentsDeferred).done(function (attributesData, attachmentsData) {
-                    deferred.resolve({
-                        obj: attributesData,
-                        attachments: attachmentsData
-                    });
-                });
-
+            $.getJSON(url, function handleCandidatesClosure(results) {
+                dataAccess.handleCandidates(results, randomizeSelection, deferred);
             });
 
             return deferred;
+        },
+
+        handleCandidates: function (results, randomizeSelection, deferred) {
+            var objectId;
+
+            if (!results || results.error) {
+                deferred.reject({
+                    id: null,
+                    obj: null,
+                    attachments: []
+                });
+                return;
+            }
+
+            // Pick a candidate from amongst the available
+            objectId = dataAccess.pickFromList(results.objectIds, randomizeSelection);
+
+            // No more surveys!
+            if (objectId === null) {
+                deferred.resolve({
+                    id: null,
+                    obj: null,
+                    attachments: []
+                });
+                return;
+            }
+
+            // Get its info
+            dataAccess.getCandidateInfo(objectId, deferred);
+        },
+
+        getCandidateInfo: function (objectId, deferred) {
+            var attributesDeferred, objectAttrsUrl, attachmentsDeferred, objectAttachmentsUrl;
+
+            // Get the candidate's attributes
+            attributesDeferred = $.Deferred();
+            objectAttrsUrl = dataAccess.featureServiceUrl + "query?objectIds=" + objectId
+                    + "&returnIdsOnly=false&returnCountOnly=false&outFields=*" + dataAccess.fixedQueryParams
+                    + "&callback=?";
+            $.getJSON(objectAttrsUrl, function handleCandidateAttrsClosure(results) {
+                dataAccess.handleCandidateAttrs(results, attributesDeferred);
+            });
+
+            // Get the candidate's attachments
+            attachmentsDeferred = $.Deferred();
+            objectAttachmentsUrl = dataAccess.featureServiceUrl + objectId + "/attachments?f=json&callback=?";
+            $.getJSON(objectAttachmentsUrl, function handleCandidateAttachmentsClosure(results) {
+                dataAccess.handleCandidateAttachments(objectId, results, attributesDeferred, attachmentsDeferred);
+            });
+
+            // Return the attributes and attachments
+            $.when(attributesDeferred, attachmentsDeferred).done(function (attributesData, attachmentsData) {
+                deferred.resolve({
+                    id: objectId,
+                    obj: attributesData,
+                    attachments: attachmentsData
+                });
+            });
+        },
+
+        handleCandidateAttrs: function (results, attributesDeferred) {
+            // No attributes is a problem
+            if (!results || results.error || !results.features || results.features.length === 0) {
+                attributesDeferred.reject();
+                return;
+            }
+
+            attributesDeferred.resolve(results.features[0]);
+        },
+
+        handleCandidateAttachments: function (objectId, results, attributesDeferred, attachmentsDeferred) {
+            var attachments = [];
+
+            if (!results || results.error) {
+                attachmentsDeferred.reject();
+                return;
+            }
+
+            // Empty list of attachments is possible
+            if (results && results.attachmentInfos) {
+
+                attributesDeferred.done(function (feature) {
+                    // Watch for request to reverse order of attachments
+                    var doReversal = false;
+                    if (feature && feature.attributes && feature.attributes.REVERSE) {
+                        doReversal = dataAccess.toBoolean(feature.attributes.REVERSE, false);
+                    }
+
+                    // Build list of attachments
+                    if (doReversal) {
+                        results.attachmentInfos.reverse();
+                    }
+                    $.each(results.attachmentInfos, function (ignore, attachment) {
+                        attachments.push({
+                            id: attachment.id,
+                            url: dataAccess.featureServiceUrl + objectId + "/attachments/" + attachment.id
+                        });
+                    });
+                    attachmentsDeferred.resolve(attachments);
+                }).fail(function () {
+                    attachmentsDeferred.reject();
+                });
+            } else {
+                attachmentsDeferred.resolve(attachments);
+            }
         },
 
         /**

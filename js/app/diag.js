@@ -16,9 +16,9 @@
  | limitations under the License.
  */
 //============================================================================================================================//
-define(['lib/barcode.min'], function (barcode) {
+define([], function () {
     'use strict';
-    var showDiag = false, showTest = false, diag;
+    var showDiag = false, diag;
     diag = {
 
         //--------------------------------------------------------------------------------------------------------------------//
@@ -26,32 +26,17 @@ define(['lib/barcode.min'], function (barcode) {
         /**
          * Initializes the module by creating the diagnostic modal display and its trigger button.
          */
-        init: function (appParams) {
-            var barcodeDir = "h";
-
-            showDiag = appParams.diag !== undefined;
-            showTest = appParams.test !== undefined;
-
-            if (showDiag) {
-                // Create the display modal box and the button to trigger it
-                $("body").append("<button id='diagnosticButton' style='z-index:2000;position:absolute;left:0;top:0;width:32px;"
-                        + "height:32px;background-color:transparent' data-toggle='modal' data-target='#diagnosticPanel' class='iconButton'></button>"
-                        + "<div id='diagnosticPanel' class='modal fade' role='dialog'>"
-                        + "  <div class='modal-dialog'>"
-                        + "    <div id='diagnosticLog' class='modal-content' style='padding:8px;word-wrap:break-word;'></div>"
-                        + "  </div>"
-                        + "</div>");
-                $("#diagnosticPanel").modal({show: false});
-            }
-
-            if (showTest) {
-                if (appParams.test === "v") {
-                    barcodeDir = "v";
-                }
-                // Create the barcode display box
-                $("head").append("<link href='js/lib/barcode.min.css' rel='stylesheet'>");
-                $("body").append("<span class='barcode128" + barcodeDir + "' id='barcode'></span>");
-            }
+        init: function () {
+            // Create the display modal box and the button to trigger it
+            $("body").append("<button id='diagnosticButton' style='z-index:2000;position:absolute;left:0;top:0;width:32px;"
+                    + "height:32px;background-color:transparent' data-toggle='modal' data-target='#diagnosticPanel' class='iconButton'></button>"
+                    + "<div id='diagnosticPanel' class='modal fade' role='dialog'>"
+                    + "  <div class='modal-dialog'>"
+                    + "    <div id='diagnosticLog' class='modal-content' style='padding:8px;word-wrap:break-word;'></div>"
+                    + "  </div>"
+                    + "</div>");
+            $("#diagnosticPanel").modal({show: false});
+            showDiag = true;
         },
 
         /**
@@ -77,29 +62,6 @@ define(['lib/barcode.min'], function (barcode) {
          */
         appendLine: function () {
             diag.append("<hr>");
-        },
-
-        /**
-         * Displays the supplied text as a code-128 barcode.
-         * @param {string} text Text to convert and display
-         */
-        showAsCode: function (text) {
-            if (showTest) {
-                var codeContainer = $("#barcode");
-                codeContainer[0].innerHTML = barcode.code128(text);
-                codeContainer.css("display", "block");
-            }
-        },
-
-        /**
-         * Clears and hides the code-128 barcode.
-         */
-        clearCode: function () {
-            if (showTest) {
-                var codeContainer = $("#barcode");
-                codeContainer[0].innerHTML = "";
-                codeContainer.css("display", "none");
-            }
         }
 
     };
