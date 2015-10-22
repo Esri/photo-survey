@@ -67,6 +67,9 @@ body {
 .modal-header {
     font-weight: bolder;
 }
+.carousel-inner>.item>a>img, .carousel-inner>.item>img, .img-responsive {
+    width: 100%;
+}
 
 /* ---------- general page ---------- */
 
