@@ -5,9 +5,8 @@ origin	git@github.com:ArcGIS/photo-survey.git (push)
 branch 
 develop
 . 
-commit b463392d5106c47d156762afc097d54ab5a0b9db
-Merge: 66d3f72 c469e11
+commit 2c07dc72cad1da3708c618ca443516609b449aed
 Author: MikeTschudi <mtschudi@esri.com>
-Date:   Mon Oct 19 09:15:22 2015 -0700
+Date:   Thu Oct 22 09:01:16 2015 -0700
 
-    Merge branch 'master' into develop
+    Changed image to fit width of container rather than just be limited by it
