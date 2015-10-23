@@ -3,10 +3,10 @@ origin	git@github.com:ArcGIS/photo-survey.git (fetch)
 origin	git@github.com:ArcGIS/photo-survey.git (push)
 . 
 branch 
-develop
+scrollable-photo
 . 
-commit 2c07dc72cad1da3708c618ca443516609b449aed
+commit 5de69e9bd4439a8a626327b678856ae4370397e5
 Author: MikeTschudi <mtschudi@esri.com>
-Date:   Thu Oct 22 09:01:16 2015 -0700
+Date:   Fri Oct 23 09:19:39 2015 -0700
 
-    Changed image to fit width of container rather than just be limited by it
+    Added vertical scrollbar to photo and adjusted position of photo-advance bar as needed
