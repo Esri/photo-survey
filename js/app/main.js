@@ -209,10 +209,12 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
 
                 $("#surveysCompleted")[0].innerHTML = i18n.labels.label_surveys_completed;
                 $("#closeProfileBtn")[0].innerHTML = i18n.labels.button_returnToSurvey;
-
             });
         },
 
+        /**
+         * Updates the carousel photo-switching bars and the best-photo icon.
+         */
         updatePhotoSelectionDisplay: function () {
             // After carousel slide
             main.iVisiblePhoto = parseInt($("#carouselSlidesHolder > .item.active")[0].id.substring(1));
@@ -236,6 +238,9 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
                     : i18n.tooltips.button_click_if_best_image));
                 $("#hearts")[0].style.display = "block";
             }
+
+            // Adjust the carousel photo-advance bar's position based on whether or not there's a scrollbar for the photo
+            main.adjustCarouselAdvanceForScrollbar();
         },
 
         updateCount: function () {
@@ -372,6 +377,12 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
                 img.src = "images/noPhoto.png";
                 $(img).css("margin", "auto");
             });
+
+            if (isActive) {
+                // Adjust the carousel photo-advance bar's position based on whether or not there's a scrollbar for the photo;
+                // wait until the active image is loaded
+                $(img).load(main.adjustCarouselAdvanceForScrollbar);
+            }
         },
 
         addPhotoIndicator: function (carouselIndicatorsHolder, indexInArray, isActive, carouselId, photoUrl) {
@@ -417,7 +428,23 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
                     callback(false);
                 }
             });
+        },
+
+        /**
+         * Adjusts the position of the right-side photo-advance bar for the presence of a scrollbar for the current photo
+         * so that it doesn't sit on top of the scrollbar.
+         */
+        adjustCarouselAdvanceForScrollbar: function () {
+            var carouselHolder = $("#carouselSlidesHolder");
+            if (carouselHolder && carouselHolder.length > 0) {
+                if (carouselHolder.hasScrollbar()) {
+                    $("#rightCarouselCtl").css("right", "16px");
+                } else {
+                    $("#rightCarouselCtl").css("right", "0px");
+                }
+            }
         }
+
     };
 
     //------------------------------------------------------------------------------------------------------------------------//
@@ -546,6 +573,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
             });
             $("#carousel").trigger('create');
 
+            // Update the carousel photo-switching bars and the best-photo icon
             main.updatePhotoSelectionDisplay();
 
             // Provide some visual feedback for the switch to a new survey
@@ -677,6 +705,24 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
     $("#carousel").on('slid.bs.carousel', function () {
         main.updatePhotoSelectionDisplay();
     });
+
+    // Adjust the carousel photo-advance bar's position based on whether or not there's a scrollbar for the current photo
+    $(window).resize(main.adjustCarouselAdvanceForScrollbar);
+
+
+    //------------------------------------------------------------------------------------------------------------------------//
+    // Track the scrollbar presence in the photo
+
+    // Used like $('#my-id').hasScrollbar();
+    // By timmfin http://stackoverflow.com/a/2588918
+    // With Safari browser padding adjustment removed
+    jQuery.fn.hasScrollbar = function() {
+        var scrollHeight = this.get(0).scrollHeight;
+        if (this.height() < scrollHeight)
+            return true;
+        else
+            return false;
+    }
 
     return main;
 });
