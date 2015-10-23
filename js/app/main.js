@@ -593,6 +593,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         $(document).triggerHandler('hide:profile');
     });
     $("#skipBtn").on('click', function () {
+        $("#skipBtn").blur();
         dataAccess.addItemToExclusionList(main.candidate.id);
         $(document).triggerHandler('show:newSurvey');
     });
