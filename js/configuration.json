@@ -9,7 +9,7 @@
         "proxyProgram": "proxy/proxy.ashx",
 
         "randomizeSelection": true,
-        "allowGuestSubmissions": false,
+        "allowGuestSubmissions": true,
         "thumbnailLimit": "10",
 
         "showGuest": "true",
