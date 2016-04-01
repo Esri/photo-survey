@@ -32,12 +32,19 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         candidate: null,
         signedIn: false,
         completions: 0,
+        overviewMap: null,
+        overviewMapVisible: true,
 
 
-        showHeart: function (heartId, makeVisible) {
-            document.getElementById(heartId).style.display = makeVisible
+        showIcon: function (iconId, makeVisible) {
+            document.getElementById(iconId).style.display = makeVisible
                 ? 'block'
                 : 'none';
+        },
+
+        updateIconToggle: function (state, onIconId, offIconId) {
+            main.showIcon(onIconId, state);
+            main.showIcon(offIconId, !state);
         },
 
         completeSetup: function () {
@@ -185,6 +192,30 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
                         $("#helpBody")[0].innerHTML = prepareAppConfigInfo.appParams.helpText;
                     }
 
+                    // Prepare overview map and its frame's visibility control
+                    main.overviewMap = L.map('overviewMap');
+                    L.esri.basemapLayer("Streets").addTo(main.overviewMap);
+
+                    if (main.overviewMapVisible) {
+                        $("#overviewMap").css("visibility", "visible");
+                    } else {
+                        $("#overviewMap").css("visibility", "hidden");
+                    }
+                    main.updateIconToggle(main.overviewMapVisible, 'hideOverview', 'showOverview');
+
+                    $('#showOverview').on('click', function () {
+                        $("#overviewMap").css("display", "block");
+                        main.overviewMapVisible = true;
+                        main.updateIconToggle(main.overviewMapVisible, 'hideOverview', 'showOverview');
+                    });
+
+                    $('#hideOverview').on('click', function () {
+                        $("#overviewMap").css("display", "none");
+                        main.overviewMapVisible = false;
+                        main.updateIconToggle(main.overviewMapVisible, 'hideOverview', 'showOverview');
+                    });
+
+
                 }).fail(function () {
                     // If proxy not available, tell the user
                     $("#signinLoginPrompt").fadeOut("fast", function () {
@@ -228,8 +259,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
             if (prepareAppConfigInfo.appParams.bestPhotoField) {
                 // Update selected photo indicator
                 main.photoSelected = main.iVisiblePhoto === main.iSelectedPhoto;
-                main.showHeart('emptyHeart', !main.photoSelected);
-                main.showHeart('filledHeart', main.photoSelected);
+                main.updateIconToggle(main.photoSelected, 'filledHeart', 'emptyHeart');
                 $("#hearts").attr("title",
                         (main.photoSelected
                     ? i18n.tooltips.button_best_image
@@ -511,6 +541,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
             var showThumbnails = (prepareAppConfigInfo.appParams.thumbnailLimit < 0) ||
                     (candidate.attachments.length <= prepareAppConfigInfo.appParams.thumbnailLimit);
 
+            // Do we have a valid candidate?
             main.numPhotos = candidate.attachments.length;
             if (!candidate.obj) {
                 $(document).triggerHandler('show:noSurveys');
@@ -528,6 +559,10 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
 
             main.candidate = candidate;
             main.iSelectedPhoto = -1;
+
+            // Jump the overview map to candidate.obj.geometry after transforming to lat/long;
+            // we've asked the server to give us the geometry in lat/long (outSR=4326) for Leaflet
+            main.overviewMap.setView([candidate.obj.geometry.y, candidate.obj.geometry.x], 16);
 
             // Gallery
             var carouselSlidesHolder = $("#carouselSlidesHolder")[0];
