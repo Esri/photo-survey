@@ -128,6 +128,7 @@ header, section, footer, aside, nav, main, article, figure {
     top: 8px;
     width: 200px;
     height: 200px;
+    visibility: hidden;
 }
 #showHideOverview {
     position: absolute;
@@ -137,6 +138,7 @@ header, section, footer, aside, nav, main, article, figure {
     height: 16px;
     z-index: 1000;
     cursor: pointer;
+    visibility: hidden;
 }
 #crosshair {
     position: absolute;
