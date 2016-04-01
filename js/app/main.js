@@ -196,6 +196,16 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
                         $("#helpBody")[0].innerHTML = prepareAppConfigInfo.appParams.helpText;
                     }
 
+                }).fail(function () {
+                    // If proxy not available, tell the user
+                    $("#signinLoginPrompt").fadeOut("fast", function () {
+                        $("#signinLoginPrompt")[0].innerHTML = i18n.signin.needProxy;
+                        $("#signinLoginPrompt").fadeIn("fast");
+                    });
+                });
+
+                // Create overview map if desired
+                if (prepareAppConfigInfo.appParams.includeOverviewMap) {
                     // Prepare overview map and its frame's visibility control
                     main.overviewMap.map = L.map('overviewMap');
                     L.esri.basemapLayer(main.overviewMap.basemap).addTo(main.overviewMap.map);
@@ -206,6 +216,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
                         $("#overviewMap").css("visibility", "hidden");
                     }
                     main.updateIconToggle(main.overviewMap.visible, 'hideOverview', 'showOverview');
+                    $("#showHideOverview").css("visibility", "visible");
 
                     $('#showOverview').on('click', function () {
                         $("#overviewMap").css("visibility", "visible");
@@ -218,15 +229,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
                         main.overviewMap.visible = false;
                         main.updateIconToggle(main.overviewMap.visible, 'hideOverview', 'showOverview');
                     });
-
-
-                }).fail(function () {
-                    // If proxy not available, tell the user
-                    $("#signinLoginPrompt").fadeOut("fast", function () {
-                        $("#signinLoginPrompt")[0].innerHTML = i18n.signin.needProxy;
-                        $("#signinLoginPrompt").fadeIn("fast");
-                    });
-                });
+                }
 
                 // i18n updates
                 $("#previousImageBtn")[0].title = i18n.tooltips.button_previous_image;
@@ -564,9 +567,11 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
             main.candidate = candidate;
             main.iSelectedPhoto = -1;
 
-            // Jump the overview map to candidate.obj.geometry after transforming to lat/long;
-            // we've asked the server to give us the geometry in lat/long (outSR=4326) for Leaflet
-            main.overviewMap.map.setView([candidate.obj.geometry.y, candidate.obj.geometry.x], main.overviewMap.zoom);
+            if (prepareAppConfigInfo.appParams.includeOverviewMap) {
+                // Jump the overview map to candidate.obj.geometry after transforming to lat/long;
+                // we've asked the server to give us the geometry in lat/long (outSR=4326) for Leaflet
+                main.overviewMap.map.setView([candidate.obj.geometry.y, candidate.obj.geometry.x], main.overviewMap.zoom);
+            }
 
             // Gallery
             var carouselSlidesHolder = $("#carouselSlidesHolder")[0];
