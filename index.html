@@ -22,6 +22,7 @@
     <meta name="fragment" content="!">
     <title>Photo Survey</title>
 
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/leaflet/1.0.0-beta.2/leaflet.css" />
     <link href="js/lib/bootstrap.min.css" rel="stylesheet">
     <link href="styles.css" rel="stylesheet">
 </head>
@@ -68,6 +69,13 @@
                 <div id="hearts" class="heartsTL heartsBackground">
                     <span id="emptyHeart" class="heart sprites empty-heart" aria-hidden="false"></span>
                     <span id="filledHeart" class="heart sprites filled-heart" aria-hidden="false"></span>
+                </div>
+                <div id="overviewMap">
+                    <span id="crosshair">+</span>
+                </div>
+                <div id="showHideOverview">
+                    <span id="showOverview" class="showHideOverview sprites showOverview"></span>
+                    <span id="hideOverview" class="showHideOverview sprites hideOverview"></span>
                 </div>
             </article>
 

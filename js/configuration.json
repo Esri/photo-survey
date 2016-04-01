@@ -5,6 +5,7 @@
         "webmap": "f6a4a4c4252c44029b9f41bde775154f",
         "splashBackgroundUrl": "images/splash.jpg",
         "useWebmapOrigImg": true,
+        "includeOverviewMap": true,
 
         "proxyProgram": "proxy/proxy.ashx",
 
