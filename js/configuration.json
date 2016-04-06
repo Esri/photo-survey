@@ -5,6 +5,10 @@
         "webmap": "f6a4a4c4252c44029b9f41bde775154f",
         "splashBackgroundUrl": "images/splash.jpg",
         "useWebmapOrigImg": true,
+        "includeOverviewMap": true,
+        "overviewMapInitiallyOpen": false,
+        "overviewMapBasemap": "Streets",
+        "overviewMapZoom": 16,
 
         "proxyProgram": "proxy/proxy.ashx",
 
