@@ -32,12 +32,25 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         candidate: null,
         signedIn: false,
         completions: 0,
+        overviewMap: null,
+        overviewMapVisible: false,
 
 
-        showHeart: function (heartId, makeVisible) {
-            document.getElementById(heartId).style.display = makeVisible
+        showIcon: function (iconId, makeVisible) {
+            document.getElementById(iconId).style.display = makeVisible
                 ? 'block'
                 : 'none';
+        },
+
+        updateIconToggle: function (state, onIconId, offIconId) {
+            main.showIcon(onIconId, state);
+            main.showIcon(offIconId, !state);
+        },
+
+        showOverviewMap: function (show) {
+            main.overviewMapVisible = show;
+            $("#overviewMap").css("visibility", show ? "visible" : "hidden");
+            main.updateIconToggle(show, 'hideOverview', 'showOverview');
         },
 
         completeSetup: function () {
@@ -193,6 +206,27 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
                     });
                 });
 
+                // Create overview map if desired
+                if (prepareAppConfigInfo.appParams.includeOverviewMap) {
+                    // Prepare overview map and set its initial visibility
+                    main.overviewMap = L.map('overviewMap');
+                    L.esri.basemapLayer(prepareAppConfigInfo.appParams.overviewMapBasemap).addTo(main.overviewMap);
+
+                    main.showOverviewMap(prepareAppConfigInfo.appParams.overviewMapInitiallyOpen);
+
+                    // Show the container for the show & hide icons, which is outside of the overview map's frame,
+                    // and enable the icons
+                    $("#showHideOverview").css("visibility", "visible");
+
+                    $('#showOverview').on('click', function () {
+                        main.showOverviewMap(true);
+                    });
+
+                    $('#hideOverview').on('click', function () {
+                        main.showOverviewMap(false);
+                    });
+                }
+
                 // i18n updates
                 $("#previousImageBtn")[0].title = i18n.tooltips.button_previous_image;
                 $("#nextImageBtn")[0].title = i18n.tooltips.button_next_image;
@@ -228,8 +262,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
             if (prepareAppConfigInfo.appParams.bestPhotoField) {
                 // Update selected photo indicator
                 main.photoSelected = main.iVisiblePhoto === main.iSelectedPhoto;
-                main.showHeart('emptyHeart', !main.photoSelected);
-                main.showHeart('filledHeart', main.photoSelected);
+                main.updateIconToggle(main.photoSelected, 'filledHeart', 'emptyHeart');
                 $("#hearts").attr("title",
                         (main.photoSelected
                     ? i18n.tooltips.button_best_image
@@ -511,6 +544,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
             var showThumbnails = (prepareAppConfigInfo.appParams.thumbnailLimit < 0) ||
                     (candidate.attachments.length <= prepareAppConfigInfo.appParams.thumbnailLimit);
 
+            // Do we have a valid candidate?
             main.numPhotos = candidate.attachments.length;
             if (!candidate.obj) {
                 $(document).triggerHandler('show:noSurveys');
@@ -528,6 +562,13 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
 
             main.candidate = candidate;
             main.iSelectedPhoto = -1;
+
+            if (prepareAppConfigInfo.appParams.includeOverviewMap) {
+                // Jump the overview map to candidate.obj.geometry after transforming to lat/long;
+                // we've asked the server to give us the geometry in lat/long (outSR=4326) for Leaflet
+                main.overviewMap.setView([candidate.obj.geometry.y, candidate.obj.geometry.x],
+                    prepareAppConfigInfo.appParams.overviewMapZoom);
+            }
 
             // Gallery
             var carouselSlidesHolder = $("#carouselSlidesHolder")[0];
