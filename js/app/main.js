@@ -32,12 +32,8 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         candidate: null,
         signedIn: false,
         completions: 0,
-        overviewMap: {
-            map: null,
-            basemap: "Streets",
-            visible: false,
-            zoom: 16
-        },
+        overviewMap: null,
+        overviewMapVisible: false,
 
 
         showIcon: function (iconId, makeVisible) {
@@ -49,6 +45,12 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         updateIconToggle: function (state, onIconId, offIconId) {
             main.showIcon(onIconId, state);
             main.showIcon(offIconId, !state);
+        },
+
+        showOverviewMap: function (show) {
+            main.overviewMapVisible = show;
+            $("#overviewMap").css("visibility", show ? "visible" : "hidden");
+            main.updateIconToggle(show, 'hideOverview', 'showOverview');
         },
 
         completeSetup: function () {
@@ -206,28 +208,22 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
 
                 // Create overview map if desired
                 if (prepareAppConfigInfo.appParams.includeOverviewMap) {
-                    // Prepare overview map and its frame's visibility control
-                    main.overviewMap.map = L.map('overviewMap');
-                    L.esri.basemapLayer(main.overviewMap.basemap).addTo(main.overviewMap.map);
+                    // Prepare overview map and set its initial visibility
+                    main.overviewMap = L.map('overviewMap');
+                    L.esri.basemapLayer(prepareAppConfigInfo.appParams.overviewMapBasemap).addTo(main.overviewMap);
 
-                    if (main.overviewMap.visible) {
-                        $("#overviewMap").css("visibility", "visible");
-                    } else {
-                        $("#overviewMap").css("visibility", "hidden");
-                    }
-                    main.updateIconToggle(main.overviewMap.visible, 'hideOverview', 'showOverview');
+                    main.showOverviewMap(prepareAppConfigInfo.appParams.overviewMapInitiallyOpen);
+
+                    // Show the container for the show & hide icons, which is outside of the overview map's frame,
+                    // and enable the icons
                     $("#showHideOverview").css("visibility", "visible");
 
                     $('#showOverview').on('click', function () {
-                        $("#overviewMap").css("visibility", "visible");
-                        main.overviewMap.visible = true;
-                        main.updateIconToggle(main.overviewMap.visible, 'hideOverview', 'showOverview');
+                        main.showOverviewMap(true);
                     });
 
                     $('#hideOverview').on('click', function () {
-                        $("#overviewMap").css("visibility", "hidden");
-                        main.overviewMap.visible = false;
-                        main.updateIconToggle(main.overviewMap.visible, 'hideOverview', 'showOverview');
+                        main.showOverviewMap(false);
                     });
                 }
 
@@ -570,7 +566,8 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
             if (prepareAppConfigInfo.appParams.includeOverviewMap) {
                 // Jump the overview map to candidate.obj.geometry after transforming to lat/long;
                 // we've asked the server to give us the geometry in lat/long (outSR=4326) for Leaflet
-                main.overviewMap.map.setView([candidate.obj.geometry.y, candidate.obj.geometry.x], main.overviewMap.zoom);
+                main.overviewMap.setView([candidate.obj.geometry.y, candidate.obj.geometry.x],
+                    prepareAppConfigInfo.appParams.overviewMapZoom);
             }
 
             // Gallery
