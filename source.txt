@@ -1,12 +1,8 @@
-From git repository 
-origin	git@github.com:ArcGIS/photo-survey.git (fetch)
-origin	git@github.com:ArcGIS/photo-survey.git (push)
-. 
-branch 
-inset-map
-. 
-commit 35c8bee35a97984c83b82182694bfde262e48de0
+From git branch 
+develop
+commit 1a9b1faeb7bca2b0d1eacb64e0719d9322d4bb8d
+Merge: 15297c5 db9070b
 Author: MikeTschudi <mtschudi@esri.com>
-Date:   Fri Apr 1 15:14:05 2016 -0700
+Date:   Wed Apr 6 12:21:59 2016 -0700
 
-    Added master switch in configuration.json for presence of overview map
+    Merge branch 'inset-map' into develop
