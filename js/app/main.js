@@ -16,8 +16,8 @@
  | limitations under the License.
  */
 //============================================================================================================================//
-define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSignin', 'dataAccess', 'diag'],
-        function (i18n, prepareAppConfigInfo, handleUserSignin, dataAccess, diag) {
+define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSignin', 'dataAccess', 'survey', 'diag'],
+        function (i18n, prepareAppConfigInfo, handleUserSignin, dataAccess, survey, diag) {
     'use strict';
     var main, unsupported = false, needProxy = false, proxyReady;
 
@@ -318,76 +318,6 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
             }
         },
 
-        startQuestion: function (ignore, iQuestion, questionInfo) {
-            // <div class='form-group'>
-            //   <label for='q1'>Is there a structure on the property? <span class='glyphicon glyphicon-star'></span></label><br>
-            var start =
-                    "<div id='qg" + iQuestion + "' class='form-group'>"
-                    + "<label for='q" + iQuestion + "'>" + questionInfo.question + (questionInfo.important
-                ? "&nbsp;<div class='importantQuestion sprites star' title=\"" + i18n.tooltips.flag_important_question + "\"></div>"
-                : "")
-                    + "</label><br>";
-            return start;
-        },
-
-        createButtonChoice: function (ignore, iQuestion, questionInfo, isReadOnly) {
-            // <div id='q1' class='btn-group'>
-            //   <button type='button' class='btn'>Yes</button>
-            //   <button type='button' class='btn'>No</button>
-            //   <button type='button' class='btn'>Not sure</button>
-            // </div>
-            var buttons = "<div id='q" + iQuestion + "' class='btn-group'>";
-            var domain = questionInfo.domain.split('|');
-            $.each(domain, function (i, choice) {
-                buttons += "<button type='button' class='btn' value='" + i + "' " + (isReadOnly
-                    ? "disabled"
-                    : "") + ">" + choice + "</button>";
-            });
-            buttons += "</div>";
-            return buttons;
-        },
-
-        createListChoice: function (ignore, iQuestion, questionInfo, isReadOnly) {
-            // <div class='radio'><label><input type='radio' name='q1' id='optionFound1' value='0'>Crawlspace</label></div>
-            // <div class='radio'><label><input type='radio' name='q1' id='optionFound2' value='1'>Raised</label></div>
-            // <div class='radio'><label><input type='radio' name='q1' id='optionFound3' value='2'>Elevated</label></div>
-            // <div class='radio'><label><input type='radio' name='q1' id='optionFound4' value='3'>Slab on grade</label></div>
-            // <div class='radio'><label><input type='radio' name='q1' id='optionFound0' value='4'>Not sure</label></div>
-            var list = "";
-            var domain = questionInfo.domain.split('|');
-            $.each(domain, function (i, choice) {
-                list += "<div class='radio'><label><input type='radio' name='q" + iQuestion + "' value='" + i + "' " + (isReadOnly
-                    ? "disabled"
-                    : "") + ">" + choice + "</label></div>";
-            });
-            return list;
-        },
-
-        wrapupQuestion: function () {
-            // </div>
-            // <div class='clearfix'></div>
-            var wrap = "</div><div class='clearfix'></div>";
-            return wrap;
-        },
-
-        addQuestion: function (surveyContainer, iQuestion, questionInfo, isReadOnly) {
-            var question = main.startQuestion(surveyContainer, iQuestion, questionInfo);
-            if (questionInfo.style === "button") {
-                question += main.createButtonChoice(surveyContainer, iQuestion, questionInfo, isReadOnly);
-            } else {
-                question += main.createListChoice(surveyContainer, iQuestion, questionInfo, isReadOnly);
-            }
-            question += main.wrapupQuestion(surveyContainer, iQuestion, questionInfo);
-            $(surveyContainer).append(question);
-
-            // Fix radio-button toggling
-            if (questionInfo.style === "button") {
-                $('#q' + iQuestion + ' button').click(function (evt) {
-                    $(evt.currentTarget).addClass('active').siblings().removeClass('active');
-                });
-            }
-        },
-
         addPhoto: function (carouselSlidesHolder, indexInArray, isActive, photoUrl) {
             // <div id='carousel0' class='item active'><img src='__test/VIRB0125.JPG' alt='VIRB0125.JPG'></div>
             // var content = "<div id='c" + indexInArray + "' class='item" + (isActive ? " active" : "") +
@@ -601,13 +531,8 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
             $(document).triggerHandler('show:noSurveys');
         });
 
-        // Survey
-        var surveyContainer = $("#surveyContainer")[0];
-        $(surveyContainer).children().remove();  // remove children and their events
-        $.each(prepareAppConfigInfo.survey, function (indexInArray, questionInfo) {
-            main.addQuestion(surveyContainer, indexInArray, questionInfo, isReadOnly);
-        });
-        $(".btn-group").trigger('create');
+        // Create survey
+        survey.create($("#surveyContainer")[0], prepareAppConfigInfo.survey, isReadOnly);
 
         // Show the content
         $("#contentPage").fadeIn("fast");
@@ -639,35 +564,11 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         $(document).triggerHandler('show:newSurvey');
     });
     $("#submitBtn").on('click', function () {
-        var surveyContainer, iQuestionResult, hasImportants = true, firstMissing;
-
-        surveyContainer = $('#surveyContainer');
-        $.each(prepareAppConfigInfo.survey, function (iQuestion, questionInfo) {
-            if (questionInfo.style === "button") {
-                iQuestionResult = $('#q' + iQuestion + ' .active', surveyContainer).val();
-            } else {
-                iQuestionResult = $('input[name=q' + iQuestion + ']:checked', surveyContainer).val();
-            }
-            if (iQuestionResult) {
-                main.candidate.obj.attributes[questionInfo.field] = questionInfo.domain.split("|")[iQuestionResult];
-            }
-
-            // Flag missing importants
-            if (questionInfo.important) {
-                if (iQuestionResult) {
-                    $("#qg" + iQuestion).removeClass("flag-error");
-                } else {
-                    $("#qg" + iQuestion).addClass("flag-error");
-                    hasImportants = false;
-                    if (firstMissing === undefined) {
-                        firstMissing = $("#qg" + iQuestion)[0];
-                    }
-                }
-            }
-        });
+        var firstMissing =
+            survey.validate($('#surveyContainer'), prepareAppConfigInfo.survey, main.candidate.obj.attributes);
 
         // Submit the survey if it has the important responses
-        if (hasImportants) {
+        if (firstMissing === undefined) {
             main.candidate.obj.attributes[prepareAppConfigInfo.appParams.surveyorNameField] = handleUserSignin.getUser().name;
             if (main.iSelectedPhoto >= 0) {
                 main.candidate.obj.attributes[prepareAppConfigInfo.appParams.bestPhotoField] = main.candidate.attachments[main.iSelectedPhoto].id;
