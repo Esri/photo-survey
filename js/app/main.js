@@ -535,7 +535,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         });
 
         // Create survey
-        survey.create($("#surveyContainer")[0], prepareAppConfigInfo.survey, isReadOnly);
+        survey.createNewForm($("#surveyContainer")[0], prepareAppConfigInfo.survey, isReadOnly);
 
         // Show the content
         $("#contentPage").fadeIn("fast");
@@ -568,7 +568,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
     });
     $("#submitBtn").on('click', function () {
         var firstMissing =
-            survey.validate($('#surveyContainer'), prepareAppConfigInfo.survey, main.candidate.obj.attributes);
+            survey.validateForm($('#surveyContainer'), prepareAppConfigInfo.survey, main.candidate.obj.attributes);
 
         // Submit the survey if it has the important responses
         if (firstMissing === undefined) {
