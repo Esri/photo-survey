@@ -25,6 +25,14 @@ define([], function () {
 
         //--------------------------------------------------------------------------------------------------------------------//
 
+        /**
+         * Creates a survey form in the specified element.
+         * @param {div} surveyContainer Element to receive survey form; its contents are completely replaced by the
+         * new survey
+         * @param {array} surveyDefinition List of survey question objects, each of which contains question, field,
+         * style, domain, important
+         * @param {boolean} isReadOnly Indicates if survey form elements are read-only
+         */
         create: function (surveyContainer, surveyDefinition, isReadOnly) {
             // Remove children and their events
             $(surveyContainer).children().remove();
@@ -38,6 +46,14 @@ define([], function () {
             $(".btn-group").trigger('create');
         },
 
+        /**
+         * Validates a survey form in the specified element.
+         * @param {div} surveyContainer Element containing survey form
+         * @param {array} surveyDefinition List of survey question objects, each of which contains question, field,
+         * style, domain, important
+         * @param {object} objAttributes Attributes of item being surveyed; attributes are updated with the values
+         * in the form
+         */
         validate: function (surveyContainer, surveyDefinition, objAttributes) {
             var iQuestionResult, firstMissing;
 
@@ -70,14 +86,21 @@ define([], function () {
 
         //--------------------------------------------------------------------------------------------------------------------//
 
+        /**
+         * Creates a survey form in the specified element.
+         * @param {div} surveyContainer Element containing survey form
+         * @param {number} iQuestion Zero-based question number
+         * @param {object} questionInfo Survey question, which contains question, field, style, domain, important
+         * @param {boolean} isReadOnly Indicates if survey form elements are read-only
+         */
         _addQuestion: function (surveyContainer, iQuestion, questionInfo, isReadOnly) {
-            var question = survey._startQuestion(surveyContainer, iQuestion, questionInfo);
+            var question = survey._startQuestion(iQuestion, questionInfo);
             if (questionInfo.style === "button") {
-                question += survey._createButtonChoice(surveyContainer, iQuestion, questionInfo, isReadOnly);
+                question += survey._createButtonChoice(iQuestion, questionInfo, isReadOnly);
             } else {
-                question += survey._createListChoice(surveyContainer, iQuestion, questionInfo, isReadOnly);
+                question += survey._createListChoice(iQuestion, questionInfo, isReadOnly);
             }
-            question += survey._wrapupQuestion(surveyContainer, iQuestion, questionInfo);
+            question += survey._wrapupQuestion();
             $(surveyContainer).append(question);
 
             // Fix radio-button toggling
@@ -88,7 +111,13 @@ define([], function () {
             }
         },
 
-        _startQuestion: function (ignore, iQuestion, questionInfo) {
+        /**
+         * Starts the HTML for a survey question with its label.
+         * @param {number} iQuestion Zero-based question number
+         * @param {object} questionInfo Survey question, which contains question, field, style, domain, important
+         * @return {object} HTML for question's label and the start of its div
+         */
+        _startQuestion: function (iQuestion, questionInfo) {
             // <div class='form-group'>
             //   <label for='q1'>Is there a structure on the property? <span class='glyphicon glyphicon-star'></span></label><br>
             var start =
@@ -102,7 +131,14 @@ define([], function () {
             return start;
         },
 
-        _createButtonChoice: function (ignore, iQuestion, questionInfo, isReadOnly) {
+        /**
+         * Creates a survey question's response item's HTML: a set of button-style radio buttons.
+         * @param {number} iQuestion Zero-based question number
+         * @param {object} questionInfo Survey question, which contains question, field, style, domain, important
+         * @param {boolean} isReadOnly Indicates if survey form elements are read-only
+         * @return {object} HTML for radio buttons
+         */
+        _createButtonChoice: function (iQuestion, questionInfo, isReadOnly) {
             // <div id='q1' class='btn-group'>
             //   <button type='button' class='btn'>Yes</button>
             //   <button type='button' class='btn'>No</button>
@@ -119,7 +155,14 @@ define([], function () {
             return buttons;
         },
 
-        _createListChoice: function (ignore, iQuestion, questionInfo, isReadOnly) {
+        /**
+         * Creates a survey question's response response item's HTML: a set of list-style radio buttons.
+         * @param {number} iQuestion Zero-based question number
+         * @param {object} questionInfo Survey question, which contains question, field, style, domain, important
+         * @param {boolean} isReadOnly Indicates if survey form elements are read-only
+         * @return {object} HTML for radio buttons
+         */
+        _createListChoice: function (iQuestion, questionInfo, isReadOnly) {
             // <div class='radio'><label><input type='radio' name='q1' id='optionFound1' value='0'>Crawlspace</label></div>
             // <div class='radio'><label><input type='radio' name='q1' id='optionFound2' value='1'>Raised</label></div>
             // <div class='radio'><label><input type='radio' name='q1' id='optionFound3' value='2'>Elevated</label></div>
@@ -136,6 +179,10 @@ define([], function () {
             return list;
         },
 
+        /**
+         * Completes the HTML for a survey question.
+         * @return {object} HTML for the end of its div
+         */
         _wrapupQuestion: function () {
             // </div>
             // <div class='clearfix'></div>
@@ -143,6 +190,11 @@ define([], function () {
             return wrap;
         },
 
+        /**
+         * Removes HTML from a string.
+         * @param {string} html String to sanitize
+         * @return {string} Sanitized string
+         */
         _sanitizeHTML: function (html) {
             return $('<div/>').text(html).html();
         }
