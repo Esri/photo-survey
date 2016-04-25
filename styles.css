@@ -1,4 +1,4 @@
-﻿/*
+/*
  | Copyright 2015 Esri
  |
  | Licensed under the Apache License, Version 2.0 (the "License");
@@ -578,7 +578,7 @@ label+.radio {
 .form-frame {
     background-color: #f8f8f8;
     border: 1px solid #ccc;
-    margin: 0px -8px;
+    margin: 0px -6px;
     padding: 8px;
 }
 .action-bar {
