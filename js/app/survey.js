@@ -21,7 +21,7 @@ define([], function () {
     var survey;
     survey = {
 
-        _i18n: null,
+        i18n: null,
 
         //--------------------------------------------------------------------------------------------------------------------//
 
@@ -125,7 +125,7 @@ define([], function () {
                 + "<label for='q" + iQuestion + "'>" + survey._sanitizeHTML(questionInfo.question)
                 + (questionInfo.important
                 ? "&nbsp;<div class='importantQuestion sprites star' title=\""
-                + survey._i18n.tooltips.flag_important_question + "\"></div>"
+                + survey.i18n.tooltips.flag_important_question + "\"></div>"
                 : "")
                     + "</label><br>";
             return start;

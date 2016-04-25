@@ -408,7 +408,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
     prepareAppConfigInfo.parametersReady.then(main.completeSetup);
 
     // Provide the i18n strings to the survey
-    survey._i18n = i18n;
+    survey.i18n = i18n;
 
     //------------------------------------------------------------------------------------------------------------------------//
     // Wire up app events
