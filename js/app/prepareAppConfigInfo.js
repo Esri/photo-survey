@@ -188,7 +188,7 @@ define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchC
                             prepareAppConfigInfo.surveyReady.resolve();
                         } else {
                             prepareAppConfigInfo.featureSvcParams = {};
-                            prepareAppConfigInfo.survey = {};
+                            prepareAppConfigInfo.survey = [];
                             prepareAppConfigInfo.surveyReady.reject();
                         }
                     }).fail(function () {
