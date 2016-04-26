@@ -21,7 +21,7 @@ define([], function () {
     var survey;
     survey = {
 
-        i18n: null,
+        flag_important_question: "Please answer this question",
 
         //--------------------------------------------------------------------------------------------------------------------//
 
@@ -244,7 +244,7 @@ define([], function () {
                 "<div id='qg" + iQuestion + "' class='form-group'>"
                 + "<label for='q" + iQuestion + "'>" + questionInfo.question + (questionInfo.important
                 ? "&nbsp;<div class='importantQuestion sprites star' title=\""
-                + survey.i18n.tooltips.flag_important_question + "\"></div>"
+                + survey.flag_important_question + "\"></div>"
                 : "")
                     + "</label><br>";
             return start;
