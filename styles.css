@@ -153,12 +153,6 @@ header, section, footer, aside, nav, main, article, figure {
     z-index: 1000;
 }
 
-/*
-.leaflet-map-pane {
-    transform: translate3d(150px, 150px, 0px);
-}
-*/
-
 /* ---------- splash ---------- */
 
 .pageFill {
@@ -473,14 +467,6 @@ header, section, footer, aside, nav, main, article, figure {
 #filledHeart {
     color: white;
 }
-/*.glyphicon-heart-empty {
-    filter: alpha(opacity=50);
-    opacity: .5;
-}
-.glyphicon.glyphicon-heart-empty:hover {
-    filter: alpha(opacity=100);
-    opacity: 1;
-}*/
 .dimmed {
     filter: alpha(opacity=50);
     opacity: .5;
