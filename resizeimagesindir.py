@@ -26,9 +26,6 @@ for file_in_dir in files_in_dir:
 		elif height > width:
 			WIDTHSIZE = (MAXSIZE * width) / height
 
-	print
-	file_in_dir + " - " + str(width) + " - " + str(height) + " - " + str(WIDTHSIZE) + " - " + str(HEIGHTSIZE)
-
 	im = im.resize((WIDTHSIZE, int(HEIGHTSIZE)), Image.ANTIALIAS)
 
 	im.save(outdir + "\\" + file_in_dir, "jpeg", quality=100)
