@@ -220,6 +220,10 @@ define([], function () {
                 question += survey._createListChoice(iQuestion, questionInfo, isReadOnly);
             } else if (questionInfo.style === "dropdown") {
                 question += survey._createDropdownChoice(iQuestion, questionInfo, isReadOnly);
+            } else if (questionInfo.style === "number") {
+                question += survey._createNumberInput(iQuestion, questionInfo, isReadOnly);
+            } else if (questionInfo.style === "text") {
+                question += survey._createTextLineInput(iQuestion, questionInfo, isReadOnly);
             }
             question += survey._wrapupQuestion();
             $(surveyContainer).append(question);
@@ -324,6 +328,34 @@ define([], function () {
                     : "") + ">" + choice + "</option>";
             });
             list += "</select>";
+            return list;
+        },
+
+        /**
+         * Creates a survey question's response response item's HTML: a number input field.
+         * @param {number} iQuestion Zero-based question number
+         * @param {object} questionInfo Survey question, which contains question, field, style, domain, important
+         * @param {boolean} isReadOnly Indicates if survey form elements are read-only
+         * @return {object} HTML for radio buttons
+         * @private
+         */
+        _createNumberInput: function (iQuestion, questionInfo, isReadOnly) {
+            // <input id='q1' type='number' class='number-input'>
+            var list = "<input id='q" + iQuestion + "' type='number' class='number-input'>";
+            return list;
+        },
+
+        /**
+         * Creates a survey question's response response item's HTML: a single-line text input field.
+         * @param {number} iQuestion Zero-based question number
+         * @param {object} questionInfo Survey question, which contains question, field, style, domain, important
+         * @param {boolean} isReadOnly Indicates if survey form elements are read-only
+         * @return {object} HTML for radio buttons
+         * @private
+         */
+        _createTextLineInput: function (iQuestion, questionInfo, isReadOnly) {
+            // <input id='q1' type='text' class='text-input'>
+            var list = "<input id='q" + iQuestion + "' type='text' class='text-input'>";
             return list;
         },
 
