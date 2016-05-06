@@ -16,7 +16,7 @@
  | limitations under the License.
  */
 //============================================================================================================================//
-define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchConfigInfo) {
+define(['parseConfigInfo', 'fetchConfigInfo', 'survey'], function (parseConfigInfo, fetchConfigInfo, survey) {
     'use strict';
     var prepareAppConfigInfo;
     prepareAppConfigInfo = {
@@ -180,15 +180,13 @@ define(['parseConfigInfo', 'fetchConfigInfo'], function (parseConfigInfo, fetchC
                             prepareAppConfigInfo.featureSvcParams.objectIdField = data.featureSvcParams.objectIdField;
                             prepareAppConfigInfo.featureSvcParams.canBeUpdated = data.featureSvcParams.canBeUpdated;
 
-                            // Create dictionary of domains
-                            dictionary = parseConfigInfo.createSurveyDictionary(data.featureSvcParams.fields);
-
-                            // Parse survey
-                            prepareAppConfigInfo.survey = parseConfigInfo.parseSurvey(data.opLayerParams.popupInfo.description, dictionary);
+                            // Create survey
+                            prepareAppConfigInfo.survey = survey.createSurvey(
+                                data.opLayerParams.popupInfo.description, data.featureSvcParams.fields);
                             prepareAppConfigInfo.surveyReady.resolve();
                         } else {
                             prepareAppConfigInfo.featureSvcParams = {};
-                            prepareAppConfigInfo.survey = {};
+                            prepareAppConfigInfo.survey = [];
                             prepareAppConfigInfo.surveyReady.reject();
                         }
                     }).fail(function () {
