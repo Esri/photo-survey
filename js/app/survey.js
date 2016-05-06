@@ -216,8 +216,10 @@ define([], function () {
             var question = survey._startQuestion(iQuestion, questionInfo);
             if (questionInfo.style === "button") {
                 question += survey._createButtonChoice(iQuestion, questionInfo, isReadOnly);
-            } else {
+            } else if (questionInfo.style === "list") {
                 question += survey._createListChoice(iQuestion, questionInfo, isReadOnly);
+            } else if (questionInfo.style === "dropdown") {
+                question += survey._createDropdownChoice(iQuestion, questionInfo, isReadOnly);
             }
             question += survey._wrapupQuestion();
             $(surveyContainer).append(question);
@@ -297,6 +299,31 @@ define([], function () {
                     ? "disabled"
                     : "") + ">" + choice + "</label></div>";
             });
+            return list;
+        },
+
+        /**
+         * Creates a survey question's response response item's HTML: a dropdown list of options.
+         * @param {number} iQuestion Zero-based question number
+         * @param {object} questionInfo Survey question, which contains question, field, style, domain, important
+         * @param {boolean} isReadOnly Indicates if survey form elements are read-only
+         * @return {object} HTML for radio buttons
+         * @private
+         */
+        _createDropdownChoice: function (iQuestion, questionInfo, isReadOnly) {
+            // <select id='q1' class='dropdown-group'>
+            //   <option value='Yes'>Yes</option>
+            //   <option value='No'>No</option>
+            //   <option value='Notsure'>Not sure</option>
+            // </select>
+            var list = "<select id='q" + iQuestion + "' class='dropdown-group'>";
+            var domain = questionInfo.domain.split('|');
+            $.each(domain, function (i, choice) {
+                list += "<option value='" + choice + "' " + (isReadOnly
+                    ? "disabled"
+                    : "") + ">" + choice + "</option>";
+            });
+            list += "</select>";
             return list;
         },
 

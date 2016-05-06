@@ -64,6 +64,15 @@ body {
 .radio+.radio {
     margin-top: 0px;
 }
+.dropdown-group {
+    font-size: 12px;
+    font-weight: bold;
+    color: #007ac2;
+    background-color: #fff;
+    border: 1px solid #007ac2;
+    white-space: normal;
+    min-height: 2.6em;
+}
 .modal-header {
     font-weight: bolder;
 }
