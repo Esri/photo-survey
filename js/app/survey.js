@@ -73,13 +73,27 @@ define([], function () {
             var iQuestionResult, firstMissing;
 
             $.each(surveyDefinition, function (iQuestion, questionInfo) {
+                // Extract the value from the item
                 if (questionInfo.style === "button") {
                     iQuestionResult = $('#q' + iQuestion + ' .active', surveyContainer).val();
-                } else {
+                } else if (questionInfo.style === "list") {
                     iQuestionResult = $('input[name=q' + iQuestion + ']:checked', surveyContainer).val();
+                } else if (questionInfo.style === "dropdown") {
+                    iQuestionResult = $('#q' + iQuestion, surveyContainer).val();
+                } else if (questionInfo.style === "number") {
+                    iQuestionResult = $('#q' + iQuestion, surveyContainer).val();
+                } else if (questionInfo.style === "text") {
+                    iQuestionResult = $('#q' + iQuestion, surveyContainer).val();
                 }
+
                 if (iQuestionResult) {
-                    objAttributes[questionInfo.field] = questionInfo.domain.split("|")[iQuestionResult];
+                    if (questionInfo.style === "number") {
+                        objAttributes[questionInfo.field] = parseFloat(iQuestionResult);
+                    } else if (questionInfo.style === "text" || questionInfo.style === "dropdown") {
+                        objAttributes[questionInfo.field] = iQuestionResult;
+                    } else {  // "button" or "list"
+                        objAttributes[questionInfo.field] = questionInfo.domain.split("|")[iQuestionResult];
+                    }
                 }
 
                 // Flag missing importants
@@ -106,21 +120,28 @@ define([], function () {
          * skips fields without coded-value domains.
          * @param {array} featureSvcFields List of fields such as the one supplied by a feature service
          * @return {object} Object containing the field names as its properties; each property's value consists of the
-         * '|'-separated coded values in the field's domain
+         * '|'-separated coded values in the field's domain and a flag indicating if the field is flagged as important
          * @private
          */
         _createSurveyDictionary: function (featureSvcFields) {
             var fieldDomains = {};
+
             $.each(featureSvcFields, function (ignore, field) {
+                var domain = null;
                 if (field.domain && field.domain.codedValues) {
-                    fieldDomains[field.name] = {
-                        domain: $.map(field.domain.codedValues, function (item) {
-                            return item.name;
-                        }).join("|"),
-                        important: !field.nullable
-                    };
+                    domain = $.map(field.domain.codedValues, function (item) {
+                        return item.name;
+                    }).join("|");
+                } else if (field.length) {
+                    domain = field.length;
                 }
+
+                fieldDomains[field.name] = {
+                    domain: domain,
+                    important: !field.nullable
+                };
             });
+
             return fieldDomains;
         },
 
