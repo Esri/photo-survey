@@ -190,7 +190,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
                     });
 
                     // Don't need help button if there's no help to display
-                    if (prepareAppConfigInfo.appParams.helpText.length === 0) {
+                    if (!prepareAppConfigInfo.appParams.helpText || prepareAppConfigInfo.appParams.helpText.length === 0) {
                         $("#helpButton").css("display", "none");
                     } else {
                         $("#helpButton")[0].title = i18n.tooltips.button_additionalInfo;
