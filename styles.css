@@ -104,9 +104,11 @@ body {
 
 .image-before {
     padding-bottom: 4px;
+    max-width: 100%;
 }
 .image-after {
     padding-top: 4px;
+    max-width: 100%;
 }
 
 /* ---------- general page ---------- */
