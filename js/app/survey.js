@@ -196,7 +196,8 @@ define([], function () {
             // 3. Separate into question, field, and style
             // e.g., "Is there a Structure on the Property? {Structure} {button}"
             $.each(surveyLines, function (ignore, line) {
-                var paramParts, trimmedParts, fieldName, surveyQuestion;
+                var paramParts, trimmedParts, fieldName, surveyQuestion, part2, part3;
+
                 paramParts = line.split("{");
                 trimmedParts = [];
                 $.each(paramParts, function (ignore, part) {
@@ -208,16 +209,30 @@ define([], function () {
 
                 // Should have three parts now: question, field, style; we can add in the question's
                 // domain and importance from the fieldDomain dictionary created just above
-                if (trimmedParts.length === 3) {
+                if (trimmedParts.length >= 3) {
                     fieldName = trimmedParts[1];
                     if (fieldDomains[fieldName]) {
                         surveyQuestion = {
                             question: trimmedParts[0],
                             field: fieldName,
-                            style: trimmedParts[2],
                             domain: fieldDomains[fieldName].domain,
                             important: fieldDomains[fieldName].important
                         };
+
+                        part2 = trimmedParts[2];
+                        surveyQuestion.style = part2;
+                        if (trimmedParts.length > 3) {
+                            part3 = trimmedParts[3];
+                            if (part3.startsWith("image=")) {
+                                surveyQuestion.startsWithImage = false;
+                                surveyQuestion.image = part3.substring(6);
+                            } else if (part2.startsWith("image=")) {
+                                surveyQuestion.startsWithImage = true;
+                                surveyQuestion.style = part3;
+                                surveyQuestion.image = part2.substring(6);
+                            }
+                        }
+
                         surveyQuestions.push(surveyQuestion);
                     }
                 }
@@ -246,7 +261,7 @@ define([], function () {
             } else if (questionInfo.style === "text") {
                 question += survey._createTextLineInput(iQuestion, questionInfo, isReadOnly);
             }
-            question += survey._wrapupQuestion();
+            question += survey._wrapupQuestion(iQuestion, questionInfo, isReadOnly);
             $(surveyContainer).append(question);
 
             // Fix radio-button toggling
@@ -274,6 +289,9 @@ define([], function () {
                 + survey.flag_important_question + "\"></div>"
                 : "")
                     + "</label><br>";
+            if (questionInfo.image && questionInfo.image.length > 0 && questionInfo.startsWithImage) {
+                start += "<img src='" + questionInfo.image + "' class='image-before'/><br>";
+            }
             return start;
         },
 
@@ -382,13 +400,20 @@ define([], function () {
 
         /**
          * Completes the HTML for a survey question.
+         * @param {number} iQuestion Zero-based question number
+         * @param {object} questionInfo Survey question, which contains question, field, style, domain, important
+         * @param {boolean} isReadOnly Indicates if survey form elements are read-only
          * @return {object} HTML for the end of its div
          * @private
          */
-        _wrapupQuestion: function () {
+        _wrapupQuestion: function (iQuestion, questionInfo, isReadOnly) {
             // </div>
             // <div class='clearfix'></div>
-            var wrap = "</div><div class='clearfix'></div>";
+            var wrap = "";
+            if (questionInfo.image && questionInfo.image.length > 0 && !questionInfo.startsWithImage) {
+                wrap += "<img src='" + questionInfo.image + "' class='image-after'/><br>";
+            }
+            wrap += "</div><div class='clearfix'></div>";
             return wrap;
         },
 

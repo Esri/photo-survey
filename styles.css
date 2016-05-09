@@ -102,6 +102,13 @@ body {
     width: 100%;
 }
 
+.image-before {
+    padding-bottom: 4px;
+}
+.image-after {
+    padding-top: 4px;
+}
+
 /* ---------- general page ---------- */
 
 header, section, footer, aside, nav, main, article, figure {
