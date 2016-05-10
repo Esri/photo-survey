@@ -1,8 +1,15 @@
-From git branch 
+From git repository 
+origin	git@github.com:ArcGIS/photo-survey.git (fetch)
+origin	git@github.com:ArcGIS/photo-survey.git (push)
+. 
+branch 
 develop
-commit 1a9b1faeb7bca2b0d1eacb64e0719d9322d4bb8d
-Merge: 15297c5 db9070b
+. 
+commit 9d73d12afe6aacd9388081cd2469a0dfccaa3488
+Merge: 137fa19 4682ddd
 Author: MikeTschudi <mtschudi@esri.com>
-Date:   Wed Apr 6 12:21:59 2016 -0700
+Date:   Tue May 10 14:39:11 2016 -0700
 
-    Merge branch 'inset-map' into develop
+    Merge branch 'new-survey-field-types' into develop
+    
+    #29, #49, #54

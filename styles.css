@@ -1,4 +1,4 @@
-﻿/*
+/*
  | Copyright 2015 Esri
  |
  | Licensed under the Apache License, Version 2.0 (the "License");
@@ -64,11 +64,51 @@ body {
 .radio+.radio {
     margin-top: 0px;
 }
+.dropdown-group {
+    font-size: 12px;
+    font-weight: bold;
+    color: #007ac2;
+    background-color: #fff;
+    border: 1px solid #007ac2;
+    white-space: normal;
+    min-height: 2.6em;
+}
+.number-input {
+    font-size: 12px;
+    font-weight: bold;
+    color: #007ac2;
+    background-color: #fff;
+    border: 1px solid #007ac2;
+    white-space: normal;
+    min-height: 2.6em;
+    padding-left: 4px;
+    max-width: 100%;
+}
+.text-input {
+    font-size: 12px;
+    font-weight: bold;
+    color: #007ac2;
+    background-color: #fff;
+    border: 1px solid #007ac2;
+    white-space: normal;
+    min-height: 2.6em;
+    padding-left: 4px;
+    width: 100%;
+}
 .modal-header {
     font-weight: bolder;
 }
 .carousel-inner>.item>a>img, .carousel-inner>.item>img, .img-responsive {
     width: 100%;
+}
+
+.image-before {
+    padding-bottom: 4px;
+    max-width: 100%;
+}
+.image-after {
+    padding-top: 4px;
+    max-width: 100%;
 }
 
 /* ---------- general page ---------- */
@@ -152,12 +192,6 @@ header, section, footer, aside, nav, main, article, figure {
     font-size: 24px;
     z-index: 1000;
 }
-
-/*
-.leaflet-map-pane {
-    transform: translate3d(150px, 150px, 0px);
-}
-*/
 
 /* ---------- splash ---------- */
 
@@ -473,14 +507,6 @@ header, section, footer, aside, nav, main, article, figure {
 #filledHeart {
     color: white;
 }
-/*.glyphicon-heart-empty {
-    filter: alpha(opacity=50);
-    opacity: .5;
-}
-.glyphicon.glyphicon-heart-empty:hover {
-    filter: alpha(opacity=100);
-    opacity: 1;
-}*/
 .dimmed {
     filter: alpha(opacity=50);
     opacity: .5;
@@ -578,7 +604,7 @@ label+.radio {
 .form-frame {
     background-color: #f8f8f8;
     border: 1px solid #ccc;
-    margin: 0px -8px;
+    margin: 0px -6px;
     padding: 8px;
 }
 .action-bar {
