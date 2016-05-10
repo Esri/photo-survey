@@ -224,12 +224,14 @@ define(['diag'], function (diag) {
             });
 
             // Return the attributes and attachments
-            $.when(attributesDeferred, attachmentsDeferred).done(function (attributesData, attachmentsData) {
+            $.when(attributesDeferred, attachmentsDeferred).then(function (attributesData, attachmentsData) {
                 deferred.resolve({
                     id: objectId,
                     obj: attributesData,
                     attachments: attachmentsData
                 });
+            }, function () {
+                deferred.reject();
             });
         },
 
@@ -247,14 +249,14 @@ define(['diag'], function (diag) {
             var attachments = [];
 
             if (!results || results.error) {
-                attachmentsDeferred.reject();
+                attachmentsDeferred.resolve(null);
                 return;
             }
 
             // Empty list of attachments is possible
             if (results && results.attachmentInfos) {
 
-                attributesDeferred.done(function (feature) {
+                attributesDeferred.then(function (feature) {
                     // Watch for request to reverse order of attachments
                     var doReversal = false;
                     if (feature && feature.attributes && feature.attributes.REVERSE) {
@@ -272,8 +274,8 @@ define(['diag'], function (diag) {
                         });
                     });
                     attachmentsDeferred.resolve(attachments);
-                }).fail(function () {
-                    attachmentsDeferred.reject();
+                }, function () {
+                    attachmentsDeferred.resolve(null);
                 });
             } else {
                 attachmentsDeferred.resolve(attachments);

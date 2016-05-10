@@ -73,13 +73,27 @@ define([], function () {
             var iQuestionResult, firstMissing;
 
             $.each(surveyDefinition, function (iQuestion, questionInfo) {
+                // Extract the value from the item
                 if (questionInfo.style === "button") {
                     iQuestionResult = $('#q' + iQuestion + ' .active', surveyContainer).val();
-                } else {
+                } else if (questionInfo.style === "list") {
                     iQuestionResult = $('input[name=q' + iQuestion + ']:checked', surveyContainer).val();
+                } else if (questionInfo.style === "dropdown") {
+                    iQuestionResult = $('#q' + iQuestion, surveyContainer).val();
+                } else if (questionInfo.style === "number") {
+                    iQuestionResult = $('#q' + iQuestion, surveyContainer).val();
+                } else if (questionInfo.style === "text") {
+                    iQuestionResult = $('#q' + iQuestion, surveyContainer).val();
                 }
+
                 if (iQuestionResult) {
-                    objAttributes[questionInfo.field] = questionInfo.domain.split("|")[iQuestionResult];
+                    if (questionInfo.style === "number") {
+                        objAttributes[questionInfo.field] = parseFloat(iQuestionResult);
+                    } else if (questionInfo.style === "text" || questionInfo.style === "dropdown") {
+                        objAttributes[questionInfo.field] = iQuestionResult;
+                    } else {  // "button" or "list"
+                        objAttributes[questionInfo.field] = questionInfo.domain.split("|")[iQuestionResult];
+                    }
                 }
 
                 // Flag missing importants
@@ -106,21 +120,29 @@ define([], function () {
          * skips fields without coded-value domains.
          * @param {array} featureSvcFields List of fields such as the one supplied by a feature service
          * @return {object} Object containing the field names as its properties; each property's value consists of the
-         * '|'-separated coded values in the field's domain
+         * '|'-separated coded values in the field's domain and a flag indicating if the field is flagged as important;
+         * if field is not coded, then its length is returned
          * @private
          */
         _createSurveyDictionary: function (featureSvcFields) {
             var fieldDomains = {};
+
             $.each(featureSvcFields, function (ignore, field) {
+                var domain = null;
                 if (field.domain && field.domain.codedValues) {
-                    fieldDomains[field.name] = {
-                        domain: $.map(field.domain.codedValues, function (item) {
-                            return item.name;
-                        }).join("|"),
-                        important: !field.nullable
-                    };
+                    domain = $.map(field.domain.codedValues, function (item) {
+                        return item.name;
+                    }).join("|");
+                } else if (field.length) {
+                    domain = field.length;
                 }
+
+                fieldDomains[field.name] = {
+                    domain: domain,
+                    important: !field.nullable
+                };
             });
+
             return fieldDomains;
         },
 
@@ -175,7 +197,8 @@ define([], function () {
             // 3. Separate into question, field, and style
             // e.g., "Is there a Structure on the Property? {Structure} {button}"
             $.each(surveyLines, function (ignore, line) {
-                var paramParts, trimmedParts, fieldName, surveyQuestion;
+                var paramParts, trimmedParts, fieldName, surveyQuestion, part2, part3;
+
                 paramParts = line.split("{");
                 trimmedParts = [];
                 $.each(paramParts, function (ignore, part) {
@@ -187,16 +210,30 @@ define([], function () {
 
                 // Should have three parts now: question, field, style; we can add in the question's
                 // domain and importance from the fieldDomain dictionary created just above
-                if (trimmedParts.length === 3) {
+                if (trimmedParts.length >= 3) {
                     fieldName = trimmedParts[1];
                     if (fieldDomains[fieldName]) {
                         surveyQuestion = {
                             question: trimmedParts[0],
                             field: fieldName,
-                            style: trimmedParts[2],
                             domain: fieldDomains[fieldName].domain,
                             important: fieldDomains[fieldName].important
                         };
+
+                        part2 = trimmedParts[2];
+                        surveyQuestion.style = part2;
+                        if (trimmedParts.length > 3) {
+                            part3 = trimmedParts[3];
+                            if (part3.startsWith("image=")) {
+                                surveyQuestion.startsWithImage = false;
+                                surveyQuestion.image = part3.substring(6);
+                            } else if (part2.startsWith("image=")) {
+                                surveyQuestion.startsWithImage = true;
+                                surveyQuestion.style = part3;
+                                surveyQuestion.image = part2.substring(6);
+                            }
+                        }
+
                         surveyQuestions.push(surveyQuestion);
                     }
                 }
@@ -216,10 +253,16 @@ define([], function () {
             var question = survey._startQuestion(iQuestion, questionInfo);
             if (questionInfo.style === "button") {
                 question += survey._createButtonChoice(iQuestion, questionInfo, isReadOnly);
-            } else {
+            } else if (questionInfo.style === "list") {
                 question += survey._createListChoice(iQuestion, questionInfo, isReadOnly);
+            } else if (questionInfo.style === "dropdown") {
+                question += survey._createDropdownChoice(iQuestion, questionInfo, isReadOnly);
+            } else if (questionInfo.style === "number") {
+                question += survey._createNumberInput(iQuestion, questionInfo, isReadOnly);
+            } else if (questionInfo.style === "text") {
+                question += survey._createTextLineInput(iQuestion, questionInfo, isReadOnly);
             }
-            question += survey._wrapupQuestion();
+            question += survey._wrapupQuestion(iQuestion, questionInfo, isReadOnly);
             $(surveyContainer).append(question);
 
             // Fix radio-button toggling
@@ -234,7 +277,7 @@ define([], function () {
          * Starts the HTML for a survey question with its label.
          * @param {number} iQuestion Zero-based question number
          * @param {object} questionInfo Survey question, which contains question, field, style, domain, important
-         * @return {object} HTML for question's label and the start of its div
+         * @return {string} HTML for question's label and the start of its div
          * @private
          */
         _startQuestion: function (iQuestion, questionInfo) {
@@ -247,6 +290,9 @@ define([], function () {
                 + survey.flag_important_question + "\"></div>"
                 : "")
                     + "</label><br>";
+            if (questionInfo.image && questionInfo.image.length > 0 && questionInfo.startsWithImage) {
+                start += "<img src='" + questionInfo.image + "' class='image-before'/><br>";
+            }
             return start;
         },
 
@@ -255,7 +301,7 @@ define([], function () {
          * @param {number} iQuestion Zero-based question number
          * @param {object} questionInfo Survey question, which contains question, field, style, domain, important
          * @param {boolean} isReadOnly Indicates if survey form elements are read-only
-         * @return {object} HTML for radio buttons
+         * @return {string} HTML for radio buttons
          * @private
          */
         _createButtonChoice: function (iQuestion, questionInfo, isReadOnly) {
@@ -280,7 +326,7 @@ define([], function () {
          * @param {number} iQuestion Zero-based question number
          * @param {object} questionInfo Survey question, which contains question, field, style, domain, important
          * @param {boolean} isReadOnly Indicates if survey form elements are read-only
-         * @return {object} HTML for radio buttons
+         * @return {string} HTML for radio buttons
          * @private
          */
         _createListChoice: function (iQuestion, questionInfo, isReadOnly) {
@@ -301,14 +347,74 @@ define([], function () {
         },
 
         /**
-         * Completes the HTML for a survey question.
-         * @return {object} HTML for the end of its div
+         * Creates a survey question's response response item's HTML: a dropdown list of options.
+         * @param {number} iQuestion Zero-based question number
+         * @param {object} questionInfo Survey question, which contains question, field, style, domain, important
+         * @param {boolean} isReadOnly Indicates if survey form elements are read-only
+         * @return {object} HTML for radio buttons
          * @private
          */
-        _wrapupQuestion: function () {
+        _createDropdownChoice: function (iQuestion, questionInfo, isReadOnly) {
+            // <select id='q1' class='dropdown-group'>
+            //   <option value='Yes'>Yes</option>
+            //   <option value='No'>No</option>
+            //   <option value='Notsure'>Not sure</option>
+            // </select>
+            var list = "<select id='q" + iQuestion + "' class='dropdown-group'>";
+            var domain = questionInfo.domain.split('|');
+            $.each(domain, function (i, choice) {
+                list += "<option value='" + choice + "' " + (isReadOnly
+                    ? "disabled"
+                    : "") + ">" + choice + "</option>";
+            });
+            list += "</select>";
+            return list;
+        },
+
+        /**
+         * Creates a survey question's response response item's HTML: a number input field.
+         * @param {number} iQuestion Zero-based question number
+         * @param {object} questionInfo Survey question, which contains question, field, style, domain, important
+         * @param {boolean} isReadOnly Indicates if survey form elements are read-only
+         * @return {object} HTML for radio buttons
+         * @private
+         */
+        _createNumberInput: function (iQuestion, questionInfo, isReadOnly) {
+            // <input id='q1' type='number' class='number-input'>
+            var list = "<input id='q" + iQuestion + "' type='number' class='number-input'>";
+            return list;
+        },
+
+        /**
+         * Creates a survey question's response response item's HTML: a single-line text input field.
+         * @param {number} iQuestion Zero-based question number
+         * @param {object} questionInfo Survey question, which contains question, field, style, domain, important
+         * @param {boolean} isReadOnly Indicates if survey form elements are read-only
+         * @return {object} HTML for radio buttons
+         * @private
+         */
+        _createTextLineInput: function (iQuestion, questionInfo, isReadOnly) {
+            // <input id='q1' type='text' class='text-input'>
+            var list = "<input id='q" + iQuestion + "' type='text' class='text-input'>";
+            return list;
+        },
+
+        /**
+         * Completes the HTML for a survey question.
+         * @param {number} iQuestion Zero-based question number
+         * @param {object} questionInfo Survey question, which contains question, field, style, domain, important
+         * @param {boolean} isReadOnly Indicates if survey form elements are read-only
+         * @return {string} HTML for the end of its div
+         * @private
+         */
+        _wrapupQuestion: function (iQuestion, questionInfo, isReadOnly) {
             // </div>
             // <div class='clearfix'></div>
-            var wrap = "</div><div class='clearfix'></div>";
+            var wrap = "";
+            if (questionInfo.image && questionInfo.image.length > 0 && !questionInfo.startsWithImage) {
+                wrap += "<img src='" + questionInfo.image + "' class='image-after'/><br>";
+            }
+            wrap += "</div><div class='clearfix'></div>";
             return wrap;
         },
 
@@ -320,7 +426,7 @@ define([], function () {
          */
         _textOnly: function (original) {
             return $("<div>" + original + "</div>").text();
-        },
+        }
 
     };
     return survey;

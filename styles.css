@@ -64,11 +64,51 @@ body {
 .radio+.radio {
     margin-top: 0px;
 }
+.dropdown-group {
+    font-size: 12px;
+    font-weight: bold;
+    color: #007ac2;
+    background-color: #fff;
+    border: 1px solid #007ac2;
+    white-space: normal;
+    min-height: 2.6em;
+}
+.number-input {
+    font-size: 12px;
+    font-weight: bold;
+    color: #007ac2;
+    background-color: #fff;
+    border: 1px solid #007ac2;
+    white-space: normal;
+    min-height: 2.6em;
+    padding-left: 4px;
+    max-width: 100%;
+}
+.text-input {
+    font-size: 12px;
+    font-weight: bold;
+    color: #007ac2;
+    background-color: #fff;
+    border: 1px solid #007ac2;
+    white-space: normal;
+    min-height: 2.6em;
+    padding-left: 4px;
+    width: 100%;
+}
 .modal-header {
     font-weight: bolder;
 }
 .carousel-inner>.item>a>img, .carousel-inner>.item>img, .img-responsive {
     width: 100%;
+}
+
+.image-before {
+    padding-bottom: 4px;
+    max-width: 100%;
+}
+.image-after {
+    padding-top: 4px;
+    max-width: 100%;
 }
 
 /* ---------- general page ---------- */

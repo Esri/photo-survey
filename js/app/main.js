@@ -169,7 +169,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
                                         $("#signinLoginPrompt").fadeIn("fast");
                                         $("#socialMediaButtonArea").fadeIn("fast");
                                     });
-                                }).fail(function () {
+                                }, function () {
                                     // Switch to the no-surveys message
                                     $("#signinLoginPrompt").fadeOut("fast", function () {
                                         $("#signinLoginPrompt")[0].innerHTML = i18n.signin.noMoreSurveys;
@@ -190,7 +190,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
                     });
 
                     // Don't need help button if there's no help to display
-                    if (prepareAppConfigInfo.appParams.helpText.length === 0) {
+                    if (!prepareAppConfigInfo.appParams.helpText || prepareAppConfigInfo.appParams.helpText.length === 0) {
                         $("#helpButton").css("display", "none");
                     } else {
                         $("#helpButton")[0].title = i18n.tooltips.button_additionalInfo;
@@ -434,7 +434,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
                     $("#ranking").css("display", "none");
                 }
 
-            }).fail(function () {
+            }, function () {
                 $("#profileCount").css("display", "none");
                 $("#ranking").css("display", "none");
             });
@@ -474,15 +474,14 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         dataAccess.getCandidate(prepareAppConfigInfo.appParams.randomizeSelection).then(function (candidate) {
             // obj:feature{}
             // attachments:[{id,url},...]
-            var showThumbnails = (prepareAppConfigInfo.appParams.thumbnailLimit < 0) ||
-                    (candidate.attachments.length <= prepareAppConfigInfo.appParams.thumbnailLimit);
 
             // Do we have a valid candidate?
-            main.numPhotos = candidate.attachments.length;
             if (!candidate.obj) {
                 $(document).triggerHandler('show:noSurveys');
                 return;
             }
+
+            main.numPhotos = candidate.attachments ? candidate.attachments.length : 0;
             if (main.numPhotos === 0) {
                 diag.appendWithLF("no photos for property <i>" + JSON.stringify(candidate.obj.attributes) + "</i>");  //???
                 candidate.obj.attributes[prepareAppConfigInfo.appParams.surveyorNameField] = "no photos";
@@ -511,6 +510,9 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
             var initiallyActiveItem =
                     Math.floor((main.numPhotos + 1) / 2) - 1;  // len=1,2: idx=0; len=3,4; idx=1; etc. (idx 0-based)
 
+            var showThumbnails = (prepareAppConfigInfo.appParams.thumbnailLimit < 0) ||
+                    (candidate.attachments.length <= prepareAppConfigInfo.appParams.thumbnailLimit);
+
             $.each(candidate.attachments, function (indexInArray, attachment) {
                 main.addPhoto(carouselSlidesHolder, indexInArray, (initiallyActiveItem === indexInArray), attachment.url);
                 if (showThumbnails) {
@@ -530,7 +532,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
                 $("#submitBtn").fadeTo(1000, 1.0);
             }
 
-        }).fail(function () {
+        }, function () {
             $(document).triggerHandler('show:noSurveys');
         });
 
