@@ -120,7 +120,8 @@ define([], function () {
          * skips fields without coded-value domains.
          * @param {array} featureSvcFields List of fields such as the one supplied by a feature service
          * @return {object} Object containing the field names as its properties; each property's value consists of the
-         * '|'-separated coded values in the field's domain and a flag indicating if the field is flagged as important
+         * '|'-separated coded values in the field's domain and a flag indicating if the field is flagged as important;
+         * if field is not coded, then its length is returned
          * @private
          */
         _createSurveyDictionary: function (featureSvcFields) {
@@ -276,7 +277,7 @@ define([], function () {
          * Starts the HTML for a survey question with its label.
          * @param {number} iQuestion Zero-based question number
          * @param {object} questionInfo Survey question, which contains question, field, style, domain, important
-         * @return {object} HTML for question's label and the start of its div
+         * @return {string} HTML for question's label and the start of its div
          * @private
          */
         _startQuestion: function (iQuestion, questionInfo) {
@@ -300,7 +301,7 @@ define([], function () {
          * @param {number} iQuestion Zero-based question number
          * @param {object} questionInfo Survey question, which contains question, field, style, domain, important
          * @param {boolean} isReadOnly Indicates if survey form elements are read-only
-         * @return {object} HTML for radio buttons
+         * @return {string} HTML for radio buttons
          * @private
          */
         _createButtonChoice: function (iQuestion, questionInfo, isReadOnly) {
@@ -325,7 +326,7 @@ define([], function () {
          * @param {number} iQuestion Zero-based question number
          * @param {object} questionInfo Survey question, which contains question, field, style, domain, important
          * @param {boolean} isReadOnly Indicates if survey form elements are read-only
-         * @return {object} HTML for radio buttons
+         * @return {string} HTML for radio buttons
          * @private
          */
         _createListChoice: function (iQuestion, questionInfo, isReadOnly) {
@@ -403,7 +404,7 @@ define([], function () {
          * @param {number} iQuestion Zero-based question number
          * @param {object} questionInfo Survey question, which contains question, field, style, domain, important
          * @param {boolean} isReadOnly Indicates if survey form elements are read-only
-         * @return {object} HTML for the end of its div
+         * @return {string} HTML for the end of its div
          * @private
          */
         _wrapupQuestion: function (iQuestion, questionInfo, isReadOnly) {
@@ -425,7 +426,7 @@ define([], function () {
          */
         _textOnly: function (original) {
             return $("<div>" + original + "</div>").text();
-        },
+        }
 
     };
     return survey;
