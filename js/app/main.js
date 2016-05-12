@@ -467,7 +467,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         var isReadOnly = !(prepareAppConfigInfo.featureSvcParams.canBeUpdated && handleUserSignin.getUser().canSubmit);
 
         // Provide some visual feedback for the switch to a new survey
-        $("#submitBtn").fadeTo(100, 0.0);
+        $("#submitBtn").fadeTo(100, 0.0).blur();
         $("#surveyContainer").fadeTo(100, 0.0);
 
         // Get candidate property
