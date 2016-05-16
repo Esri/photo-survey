@@ -270,6 +270,12 @@ define([], function () {
                 $('#q' + iQuestion + ' button').click(function (evt) {
                     $(evt.currentTarget).addClass('active').siblings().removeClass('active');
                 });
+
+            // Start with nothing selected in dropdown
+            } else if (questionInfo.style === "dropdown") {
+                $("#q" + iQuestion).each(function (indexInArray, input) {
+                    input.selectedIndex = -1;
+                });
             }
         },
 
