@@ -1,12 +1,9 @@
-From git repository 
-origin	git@github.com:ArcGIS/photo-survey.git (fetch)
-origin	git@github.com:ArcGIS/photo-survey.git (push)
-. 
-branch 
+From git branch 
 develop
-. 
-commit 64dd2114dd23483867cc5dc2b6ade6dbb8059c50
+commit 3a8cc843fb42f4e986859a61a24180f8e7b3716e
 Author: MikeTschudi <mtschudi@esri.com>
-Date:   Mon May 16 08:44:14 2016 -0700
+Date:   Mon May 16 09:35:26 2016 -0700
 
-    Updated leaflet library
+    Added options to overview map so that it doesn't use cursor position for mouse-based zooming
+    
+    #56
