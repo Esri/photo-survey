@@ -209,7 +209,10 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
                 // Create overview map if desired
                 if (prepareAppConfigInfo.appParams.includeOverviewMap) {
                     // Prepare overview map and set its initial visibility
-                    main.overviewMap = L.map('overviewMap');
+                    main.overviewMap = L.map('overviewMap', {
+                        scrollWheelZoom: "center",
+                        doubleClickZoom: "center"
+                    });
                     L.esri.basemapLayer(prepareAppConfigInfo.appParams.overviewMapBasemap).addTo(main.overviewMap);
 
                     main.showOverviewMap(prepareAppConfigInfo.appParams.overviewMapInitiallyOpen);
