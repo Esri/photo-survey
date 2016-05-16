@@ -5,11 +5,8 @@ origin	git@github.com:ArcGIS/photo-survey.git (push)
 branch 
 develop
 . 
-commit 9d73d12afe6aacd9388081cd2469a0dfccaa3488
-Merge: 137fa19 4682ddd
+commit 64dd2114dd23483867cc5dc2b6ade6dbb8059c50
 Author: MikeTschudi <mtschudi@esri.com>
-Date:   Tue May 10 14:39:11 2016 -0700
+Date:   Mon May 16 08:44:14 2016 -0700
 
-    Merge branch 'new-survey-field-types' into develop
-    
-    #29, #49, #54
+    Updated leaflet library
