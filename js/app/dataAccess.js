@@ -344,7 +344,7 @@ define(['diag'], function (diag) {
             if (value === null) {
                 result += 'null';
             } else if (typeof value === "string") {
-                result += '%22' + value + '%22';
+                result += '%22' + encodeURIComponent(value) + '%22';
             } else if (typeof value === "object") {
                 result += '%7B';
                 $.each(value, function (part) {
