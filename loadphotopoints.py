@@ -410,52 +410,101 @@ DomainSet10 = config.get('FIELD_DOMAIN', "Field10")
 if Field1 == "":
 	pass
 else:
-	arcpy.AddField_management(ParcelPointHelper, Field1, "TEXT", "", "", "25", Field1Alias, ValueRequired1) #"REQUIRED", "")
+	arcpy.AddField_management(ParcelPointHelper, Field1, "TEXT", "", "", "25", Field1Alias, ValueRequired1)
+
+if DomainSet1 == "":
+    pass
+else:
 	arcpy.AssignDomainToField_management(ParcelPointHelper, Field1, DomainSet1)
+
 if Field2 == "":
 	pass
 else:
 	arcpy.AddField_management(ParcelPointHelper, Field2, "TEXT", "", "", "25", Field2Alias, ValueRequired2)
+
+if DomainSet2 == "":
+    pass
+else:
 	arcpy.AssignDomainToField_management(ParcelPointHelper, Field2, DomainSet2)
+
 if Field3 == "":
 	pass
 else:
 	arcpy.AddField_management(ParcelPointHelper, Field3, "TEXT", "", "", "25", Field3Alias, ValueRequired3)
+
+if DomainSet3 == "":
+    pass
+else:
 	arcpy.AssignDomainToField_management(ParcelPointHelper, Field3, DomainSet3)
+
 if Field4 == "":
 	pass
 else:
 	arcpy.AddField_management(ParcelPointHelper, Field4, "TEXT", "", "", "25", Field4Alias, ValueRequired4)
-	arcpy.AssignDomainToField_management(ParcelPointHelper, Field4, DomainSet4)
+
+if DomainSet4 == "":
+    pass
+else:
+    arcpy.AssignDomainToField_management(ParcelPointHelper, Field4, DomainSet4)
+
 if Field5 == "":
 	pass
 else:
 	arcpy.AddField_management(ParcelPointHelper, Field5, "TEXT", "", "", "25", Field5Alias, ValueRequired5)
+
+if DomainSet5 == "":
+    pass
+else:
 	arcpy.AssignDomainToField_management(ParcelPointHelper, Field5, DomainSet5)
+
 if Field6 == "":
 	pass
 else:
 	arcpy.AddField_management(ParcelPointHelper, Field6, "TEXT", "", "", "25", Field6Alias, ValueRequired6)
+
+if DomainSet6 == "":
+    pass
+else:
 	arcpy.AssignDomainToField_management(ParcelPointHelper, Field6, DomainSet6)
+
 if Field7 == "":
 	pass
 else:
 	arcpy.AddField_management(ParcelPointHelper, Field7, "TEXT", "", "", "25", Field7Alias, ValueRequired7)
+
+if DomainSet7 == "":
+    pass
+else:
 	arcpy.AssignDomainToField_management(ParcelPointHelper, Field7, DomainSet7)
+
 if Field8 == "":
 	pass
 else:
 	arcpy.AddField_management(ParcelPointHelper, Field8, "TEXT", "", "", "25", Field8Alias, ValueRequired8)
+
+if DomainSet8 == "":
+    pass
+else:
 	arcpy.AssignDomainToField_management(ParcelPointHelper, Field8, DomainSet8)
+
 if Field9 == "":
 	pass
 else:
 	arcpy.AddField_management(ParcelPointHelper, Field9, "TEXT", "", "", "25", Field9Alias, ValueRequired9)
+
+if DomainSet9 == "":
+    pass
+else:
 	arcpy.AssignDomainToField_management(ParcelPointHelper, Field9, DomainSet9)
+
 if Field10 == "":
 	pass
 else:
 	arcpy.AddField_management(ParcelPointHelper, Field10, "TEXT", "", "", "25", Field10Alias, ValueRequired10)
+
+if DomainSet10 == "":
+    pass
+else:
 	arcpy.AssignDomainToField_management(ParcelPointHelper, Field10, DomainSet10)
 
 if CameraInput == 'Associate Photo with Parcel':
