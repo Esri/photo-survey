@@ -235,7 +235,7 @@ if CameraInput == 'Associate Photo with Parcel':
 else:
 	pass
 
-if CameraInput == 'Associate Photo with Point':
+if CameraInput == 'Associate Geotagged Photo with Point (photo has location)':
 
 	# ______________________________________________________________________________#
 	#
@@ -254,7 +254,7 @@ else:
 	pass
 
 
-if CameraInput == 'Associate Photo with Point (no coordinates)':
+if CameraInput == 'Associate Non-Geotagged Photo with specified Point (no location)':
 
 	# ______________________________________________________________________________#
 	#
@@ -520,7 +520,7 @@ if CameraInput == 'Associate Photo with Parcel':
 else:
 	pass
 
-if CameraInput == 'Associate Photo with Point':
+if CameraInput == 'Associate Geotagged Photo with Point (photo has location)':
 
     arcpy.AddMessage("Step 3:  Adding application required fields")
     arcpy.AddField_management(ParcelPointHelper, "BSTPHOTOID", "TEXT", "", "", "5", "Best Photo Identifier", "NULLABLE", "NON_REQUIRED", "")
@@ -540,7 +540,7 @@ if CameraInput == 'Associate Photo with Point':
 else:
 	pass
 
-if CameraInput == 'Associate Photo with Point (no coordinates)':
+if CameraInput == 'Associate Non-Geotagged Photo with specified Point (no location)':
 
 
     arcpy.AddMessage("Step 3:  Adding application required fields")
