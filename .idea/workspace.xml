@@ -27,8 +27,8 @@
       <file leaf-file-name="loadphotopoints.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/loadphotopoints.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-9.555288" vertical-offset="14355" max-vertical-offset="16794">
-              <caret line="94" column="51" selection-start-line="94" selection-start-column="51" selection-end-line="94" selection-end-column="51" />
+            <state vertical-scroll-proportion="0.45923913" vertical-offset="13965" max-vertical-offset="16929">
+              <caret line="540" column="4" selection-start-line="540" selection-start-column="4" selection-end-line="540" selection-end-column="4" />
               <folding />
             </state>
           </provider>
@@ -57,17 +57,17 @@
         <option value="$PROJECT_DIR$/Validation" />
         <option value="C:/Data/HARDCODEDloadphotopoints.py" />
         <option value="$PROJECT_DIR$/VALIDATION2" />
-        <option value="$PROJECT_DIR$/loadphotopoints.py" />
         <option value="$PROJECT_DIR$/resizeimages.py" />
         <option value="$PROJECT_DIR$/resizeimagesindir.py" />
+        <option value="$PROJECT_DIR$/loadphotopoints.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="-8" />
-    <option name="y" value="-8" />
+    <option name="x" value="-521" />
+    <option name="y" value="152" />
     <option name="width" value="2576" />
-    <option name="height" value="1416" />
+    <option name="height" value="1272" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
@@ -398,7 +398,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="2576" height="1416" extended-state="0" />
+    <frame x="-521" y="152" width="2576" height="1272" extended-state="0" />
     <editor active="false" />
     <layout>
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -453,6 +453,14 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/resizeimagesindir.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="945">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/resizeimagesindir.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="999">
@@ -824,13 +832,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://C:/Data/HARDCODEDloadphotopoints.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="442" max-vertical-offset="8092">
-          <caret line="30" column="15" selection-start-line="30" selection-start-column="15" selection-end-line="30" selection-end-column="15" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/resizeimagesindir.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1273">
@@ -841,8 +842,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/loadphotopoints.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-9.555288" vertical-offset="14355" max-vertical-offset="16794">
-          <caret line="94" column="51" selection-start-line="94" selection-start-column="51" selection-end-line="94" selection-end-column="51" />
+        <state vertical-scroll-proportion="0.45923913" vertical-offset="13965" max-vertical-offset="16929">
+          <caret line="540" column="4" selection-start-line="540" selection-start-column="4" selection-end-line="540" selection-end-column="4" />
           <folding />
         </state>
       </provider>
