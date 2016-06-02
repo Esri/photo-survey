@@ -531,12 +531,16 @@ if CameraInput == 'Associate Geotagged Photo with Point (photo has location)':
     ParcelPointsMerged = """{}\\ParcelPointsMerged""".format(Geodatabase)
     arcpy.GeoTaggedPhotosToPoints_management(SinglePhotos, ParcelPointHelperTemp, "", "ONLY_GEOTAGGED", "NO_ATTACHMENTS")
     arcpy.Merge_management(ParcelPointHelperTemp + ';' + ParcelPointHelper, ParcelPointsMerged)
-    arcpy.EnableAttachments_management(ParcelPointsMerged)
-    arcpy.AddAttachments_management(ParcelPointsMerged, "OBJECTID", ParcelPointsMerged, "OBJECTID", "Path", "")
+    PointsMerged2 = """{}\\PhotoPoint""".format(Geodatabase)
+    arcpy.Rename_management(ParcelPointsMerged, PointsMerged2)
+    arcpy.EnableAttachments_management(PointsMerged2)
+    arcpy.AddAttachments_management(PointsMerged2, "OBJECTID", PointsMerged2, "OBJECTID", "Path", "")
     arcpy.Delete_management(ParcelPointHelperTemp)
     arcpy.Delete_management(ParcelPointHelper)
-    arcpy.Rename_management(ParcelPointsMerged, ParcelPointHelper)
-    arcpy.DeleteField_management(ParcelPointHelper, "Path")
+    arcpy.DeleteField_management(PointsMerged2, "Path")
+    arcpy.Rename_management(PointsMerged2, ParcelPointHelper)
+
+
 else:
 	pass
 
@@ -552,7 +556,7 @@ if CameraInput == 'Associate Non-Geotagged Photo with specified Point (no locati
     PointsMerged = """{}\\PointsMerged""".format(Geodatabase)
     arcpy.GeoTaggedPhotosToPoints_management(SinglePhotos, PointHelperTemp, "", "ALL_PHOTOS", "NO_ATTACHMENTS")
     arcpy.Merge_management(PointHelperTemp + ';' + ParcelPointHelper, PointsMerged)
-    PointsMerged2 = """{}\\Photo""".format(Geodatabase)
+    PointsMerged2 = """{}\\PhotoPoint""".format(Geodatabase)
     arcpy.Rename_management(PointsMerged, PointsMerged2)
     arcpy.EnableAttachments_management(PointsMerged2)
     arcpy.AddAttachments_management(PointsMerged2, "OBJECTID", PointsMerged2, "OBJECTID", "Path", "")
@@ -615,6 +619,7 @@ if CameraInput == 'Associate Photo with Parcel':
 
 else:
 	pass
+
 
 
 
