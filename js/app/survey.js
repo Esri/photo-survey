@@ -33,6 +33,9 @@ define([], function () {
          * properties
          */
         createSurvey: function (surveyDescription, featureSvcFields) {
+            // Patch older browsers
+            survey._installPolyfills();
+
             // Create dictionary of domains
             var dictionary = survey._createSurveyDictionary(featureSvcFields);
 
@@ -114,6 +117,16 @@ define([], function () {
         },
 
         //--------------------------------------------------------------------------------------------------------------------//
+
+        _installPolyfills: function () {
+            // source: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/startsWith
+            if (!String.prototype.startsWith) {
+                String.prototype.startsWith = function(searchString, position){
+                    position = position || 0;
+                    return this.substr(position, searchString.length) === searchString;
+                };
+            }
+        },
 
         /**
          * Converts a list of feature service fields into a dictionary of fields with their domains and nullability;
