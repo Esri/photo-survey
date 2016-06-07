@@ -290,10 +290,16 @@ define(['diag'], function (diag) {
          * @return {object} Deferred to provide information about success or failure of update
          */
         updateCandidate: function (candidate) {
-            var deferred, url, update;
+            var deferred, url, update, updatePacket;
             deferred = $.Deferred();
 
-            update = "f=json&id=" + dataAccess.featureServiceLayerId + "&updates=%5B" + dataAccess.stringifyForApplyEdits(candidate.obj) + "%5D";
+            // Create update content from attributes only--we don't need or want to send coordinates
+            updatePacket = {
+                attributes: candidate.obj.attributes
+            };
+            update = "f=json&id=" + dataAccess.featureServiceLayerId + "&updates=%5B" + dataAccess.stringifyForApplyEdits(updatePacket) + "%5D";
+
+            // POST the update
             url = (dataAccess.proxyProgram
                 ? dataAccess.proxyProgram + "?"
                 : "") + dataAccess.featureServiceUrl + "applyEdits";
