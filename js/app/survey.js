@@ -282,12 +282,24 @@ define([], function () {
             if (questionInfo.style === "button") {
                 $('#q' + iQuestion + ' button').click(function (evt) {
                     $(evt.currentTarget).addClass('active').siblings().removeClass('active');
+                    $("#qg" + iQuestion).removeClass("flag-error");
                 });
 
-            // Start with nothing selected in dropdown
-            } else if (questionInfo.style === "dropdown") {
-                $("#q" + iQuestion).each(function (indexInArray, input) {
-                    input.selectedIndex = -1;
+            } else if (questionInfo.style === "list") {
+                $("[name=q" + iQuestion + "]").click(function (evt) {
+                    $("#qg" + iQuestion).removeClass("flag-error");
+                });
+
+            } else {
+                // Start with nothing selected in dropdown
+                if (questionInfo.style === "dropdown") {
+                    $("#q" + iQuestion).each(function (indexInArray, input) {
+                        input.selectedIndex = -1;
+                    });
+                }
+
+                $('#q' + iQuestion).change(function (evt) {
+                    $("#qg" + iQuestion).removeClass("flag-error");
                 });
             }
         },
