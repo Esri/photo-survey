@@ -2,10 +2,10 @@
     "source": "dbd49c155bf249f79bf1e518d56dbbb2",
     "folderId": "052b07ec56b3462c943adcc6959354ec",
     "values": {
-        "webmap": "f6a4a4c4252c44029b9f41bde775154f",
+        "webmap": "cd5b373b40104bfc8a7ead8637e6473f",
         "splashBackgroundUrl": "images/splash.jpg",
         "useWebmapOrigImg": true,
-        "includeOverviewMap": true,
+        "includeOverviewMap": false,
         "overviewMapInitiallyOpen": false,
         "overviewMapBasemap": "Streets",
         "overviewMapZoom": 16,
@@ -13,7 +13,7 @@
         "proxyProgram": "proxy/proxy.ashx",
 
         "randomizeSelection": true,
-        "allowGuestSubmissions": false,
+        "allowGuestSubmissions": true,
         "thumbnailLimit": "10",
 
         "showGuest": "true",
