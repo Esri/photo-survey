@@ -335,33 +335,28 @@ Domain5Values = config.get('DOMAIN_VALUES', "Domain5")
 if Domain1Values == "":
 	pass
 else:
-	DomainDict1 = ast.literal_eval(Domain1Values)
-	for codex in DomainDict1:
-		arcpy.AddCodedValueToDomain_management(Geodatabase, Domain1, codex, DomainDict1[codex])
+	DomainList1 = ast.literal_eval(Domain1Values)
+	for codex in DomainList1:
 if Domain2Values == "":
 	pass
 else:
-	DomainDict2 = ast.literal_eval(Domain2Values)
-	for codex in DomainDict2:
-		arcpy.AddCodedValueToDomain_management(Geodatabase, Domain2, codex, DomainDict2[codex])
+	DomainList2 = ast.literal_eval(Domain2Values)
+	for codex in DomainList2:
 if Domain3Values == "":
 	pass
 else:
-	DomainDict3 = ast.literal_eval(Domain3Values)
-	for codex in DomainDict3:
-		arcpy.AddCodedValueToDomain_management(Geodatabase, Domain3, codex, DomainDict3[codex])
+	DomainList3 = ast.literal_eval(Domain3Values)
+	for codex in DomainList3:
 if Domain4Values == "":
 	pass
 else:
-	DomainDict4 = ast.literal_eval(Domain4Values)
-	for codex in DomainDict4:
-		arcpy.AddCodedValueToDomain_management(Geodatabase, Domain4, codex, DomainDict4[codex])
+	DomainList4 = ast.literal_eval(Domain4Values)
+	for codex in DomainList4:
 if Domain5Values == "":
 	pass
 else:
-	DomainDict5 = ast.literal_eval(Domain5Values)
-	for codex in DomainDict5:
-		arcpy.AddCodedValueToDomain_management(Geodatabase, Domain5, codex, DomainDict5[codex])
+	DomainList5 = ast.literal_eval(Domain5Values)
+	for codex in DomainList5:
 
 Field1  = config.get('FIELDS', "Field1")
 Field2  = config.get('FIELDS', "Field2")
