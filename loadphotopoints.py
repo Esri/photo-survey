@@ -337,26 +337,31 @@ if Domain1Values == "":
 else:
 	DomainList1 = ast.literal_eval(Domain1Values)
 	for codex in DomainList1:
+		arcpy.AddCodedValueToDomain_management(Geodatabase, Domain1, codex, codex)
 if Domain2Values == "":
 	pass
 else:
 	DomainList2 = ast.literal_eval(Domain2Values)
 	for codex in DomainList2:
+		arcpy.AddCodedValueToDomain_management(Geodatabase, Domain2, codex, codex)
 if Domain3Values == "":
 	pass
 else:
 	DomainList3 = ast.literal_eval(Domain3Values)
 	for codex in DomainList3:
+		arcpy.AddCodedValueToDomain_management(Geodatabase, Domain3, codex, codex)
 if Domain4Values == "":
 	pass
 else:
 	DomainList4 = ast.literal_eval(Domain4Values)
 	for codex in DomainList4:
+		arcpy.AddCodedValueToDomain_management(Geodatabase, Domain4, codex, codex)
 if Domain5Values == "":
 	pass
 else:
 	DomainList5 = ast.literal_eval(Domain5Values)
 	for codex in DomainList5:
+		arcpy.AddCodedValueToDomain_management(Geodatabase, Domain5, codex, codex)
 
 Field1  = config.get('FIELDS', "Field1")
 Field2  = config.get('FIELDS', "Field2")
