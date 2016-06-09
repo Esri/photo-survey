@@ -1,0 +1,31 @@
+﻿{
+    "source": "dbd49c155bf249f79bf1e518d56dbbb2",
+    "folderId": "052b07ec56b3462c943adcc6959354ec",
+    "values": {
+        "webmap": "96ed6a0ffce244c094c00f627c233d3b",
+        "splashBackgroundUrl": "images/splash.jpg",
+        "useWebmapOrigImg": true,
+        "includeOverviewMap": false,
+        "overviewMapInitiallyOpen": false,
+        "overviewMapBasemap": "Streets",
+        "overviewMapZoom": 16,
+
+        "proxyProgram": "proxy/proxy.ashx",
+
+        "randomizeSelection": true,
+        "allowGuestSubmissions": true,
+        "thumbnailLimit": "10",
+
+        "showGuest": "true",
+        "facebookAppId": "",
+        "googleplusClientId": "",
+        "showTwitter": "true",
+
+
+        "googleplusLogoutUrl": "https://accounts.google.com/logout",
+        "twitterSigninUrl": "https://utility.arcgis.com/tproxy/signin",
+        "twitterUserUrl": "https://utility.arcgis.com/tproxy/proxy/1.1/account/verify_credentials.json?q=&include_entities=true&skip_status=true&locale=en",
+        "twitterCallbackUrl": "/oauth-callback-twitter.html",
+        "arcgisUrl": "//www.arcgis.com/sharing/content/items/"
+    }
+}
