@@ -29,7 +29,7 @@ For more information on requirements and publication steps, see [Photo Survey fo
 
 ## Resources
 
-Learn more about Esri's ArcGIS for [Local Government](http://solutions.arcgis.com/local-government/) and [State Government](http://solutions.arcgis.com/state-government/) maps and apps .
+Learn more about Esri's ArcGIS for [Local Government](http://solutions.arcgis.com/local-government/) and [State Government](http://solutions.arcgis.com/state-government/) maps and apps.
 
 * Show me a [list] (http://esri.github.io/#Local-Government) of other Local Government GitHub repositories.
 * Show me a [list] (http://esri.github.io/#State-Government) of other State Government GitHub repositories.
