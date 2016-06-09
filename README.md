@@ -1,10 +1,12 @@
 # photo-survey
 
-Photo Survey is a configurable JavaScript application designed to crowdsource property damage assessments, inventory blighted properties, target reappraisal efforts, and identify structures that could pose safety concerns.
+Photo Survey is a configurable JavaScript application designed to crowdsource property damage assessments, inventory blighted properties, target reappraisal efforts, identify structures that could pose safety concerns, as well as gather information from photos collected from camera traps, such as wildlife photos.
 
-This application includes data management tools designed to process street-level photos and publish pre-authored survey questions.
+This application includes data management tools designed to process photos and publish pre-authored survey questions.
 
 * Try the [Photo Survey (Local Government) application](http://links.esri.com/localgovernment/tryit/PhotoSurvey/)
+* Try the [Damage Assessment Survey application](http://links.esri.com/stategovernment/tryit/PhotoSurvey/)
+* Try the [Wildlife Photo Survey application](http://links.esri.com/stategovernment/tryit/wildlifephotosurvey)
 
 [![Image of the Photo Survey application](photo-survey.png "Photo Survey application")](http://links.esri.com/localgovernment/tryit/PhotoSurvey/)
 
@@ -23,13 +25,24 @@ You'll need to convert to an application in IIS and use the ASP .NET 4.0 or 4.5.
 
 **Start now using your own services and maps**
 
-For more information on requirements and publication steps, see [Photo Survey for Local Government](http://links.esri.com/localgovernment/help/PhotoSurvey/) help
+For more information on requirements and publication steps, see [Photo Survey for Local Government](http://links.esri.com/localgovernment/help/PhotoSurvey/) help or the [Photo Survey for State Government](http://solutions.arcgis.com/state-government/help/photo-survey/) help.
 
 ## Resources
 
-Learn more about Esri's ArcGIS for [Local Government maps and apps] (http://solutions.arcgis.com/local-government/).
+Learn more about Esri's ArcGIS for [Local Government](http://solutions.arcgis.com/local-government/) and [State Government](http://solutions.arcgis.com/state-government/) maps and apps] .
 
-Show me a [list] (http://esri.github.io/#Local-Government) of other Local Government GitHub repositories.
+* Show me a [list] (http://esri.github.io/#Local-Government) of other Local Government GitHub repositories.
+* Show me a [list] (http://esri.github.io/#State-Government) of other State Government GitHub repositories.
+
+##Selecting Your Configuration
+
+The photo-survey repo contains three unique application configurations: Property Survey, Damage Assessment Survey, and Wildlife Photo Survey.
+
+To get the Property Survey configuration, use the default configuration.json.
+
+To get the Damage Assessment Survey configuration, rename the configurationDamage.json to configuration.json.
+
+To get the Wildlife Photo Survey configuration, rename the configurationWildlife.json to configuration.json.
 
 
 ## Issues
