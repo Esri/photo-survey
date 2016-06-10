@@ -21,7 +21,7 @@ define(['diag'], function (diag) {
     var dataAccess;
     dataAccess = {
 
-        fixedQueryParams: "&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&distance=&units=esriSRUnit_Meter&returnGeometry=false&maxAllowableOffset=&geometryPrecision=&outSR=&returnExtentOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&quantizationParameters=&f=json",
+        fixedQueryParams: "&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&distance=&units=esriSRUnit_Meter&returnGeometry=true&maxAllowableOffset=&geometryPrecision=&returnExtentOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&quantizationParameters=&f=json&outSR=4326",
         featureServiceUrl: null,
         featureServiceLayerId: null,
         objectIdField: null,
@@ -224,12 +224,14 @@ define(['diag'], function (diag) {
             });
 
             // Return the attributes and attachments
-            $.when(attributesDeferred, attachmentsDeferred).done(function (attributesData, attachmentsData) {
+            $.when(attributesDeferred, attachmentsDeferred).then(function (attributesData, attachmentsData) {
                 deferred.resolve({
                     id: objectId,
                     obj: attributesData,
                     attachments: attachmentsData
                 });
+            }, function () {
+                deferred.reject();
             });
         },
 
@@ -247,14 +249,14 @@ define(['diag'], function (diag) {
             var attachments = [];
 
             if (!results || results.error) {
-                attachmentsDeferred.reject();
+                attachmentsDeferred.resolve(null);
                 return;
             }
 
             // Empty list of attachments is possible
             if (results && results.attachmentInfos) {
 
-                attributesDeferred.done(function (feature) {
+                attributesDeferred.then(function (feature) {
                     // Watch for request to reverse order of attachments
                     var doReversal = false;
                     if (feature && feature.attributes && feature.attributes.REVERSE) {
@@ -272,8 +274,8 @@ define(['diag'], function (diag) {
                         });
                     });
                     attachmentsDeferred.resolve(attachments);
-                }).fail(function () {
-                    attachmentsDeferred.reject();
+                }, function () {
+                    attachmentsDeferred.resolve(null);
                 });
             } else {
                 attachmentsDeferred.resolve(attachments);
@@ -288,10 +290,16 @@ define(['diag'], function (diag) {
          * @return {object} Deferred to provide information about success or failure of update
          */
         updateCandidate: function (candidate) {
-            var deferred, url, update;
+            var deferred, url, update, updatePacket;
             deferred = $.Deferred();
 
-            update = "f=json&id=" + dataAccess.featureServiceLayerId + "&updates=%5B" + dataAccess.stringifyForApplyEdits(candidate.obj) + "%5D";
+            // Create update content from attributes only--we don't need or want to send coordinates
+            updatePacket = {
+                attributes: candidate.obj.attributes
+            };
+            update = "f=json&id=" + dataAccess.featureServiceLayerId + "&updates=%5B" + dataAccess.stringifyForApplyEdits(updatePacket) + "%5D";
+
+            // POST the update
             url = (dataAccess.proxyProgram
                 ? dataAccess.proxyProgram + "?"
                 : "") + dataAccess.featureServiceUrl + "applyEdits";
@@ -342,7 +350,7 @@ define(['diag'], function (diag) {
             if (value === null) {
                 result += 'null';
             } else if (typeof value === "string") {
-                result += '%22' + value + '%22';
+                result += '%22' + encodeURIComponent(value) + '%22';
             } else if (typeof value === "object") {
                 result += '%7B';
                 $.each(value, function (part) {
