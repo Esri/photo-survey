@@ -4,7 +4,7 @@
 	@company: Esri
 	@version: 1.0.0
 	@description: Photo Survey Tool to load photos
-	@requirements: Python 2.7.x or higher, ArcGIS 10.2, 10.3.x (also ArcGIS Pro)
+	@requirements: Python 2.7.x or higher, ArcGIS 10.2, 10.3.x, 10.4 (also ArcGIS Pro)
 	@copyright: Esri, 2015
 
 """
@@ -26,13 +26,14 @@ arcpy.env.overwriteOutput = True
 
 CameraInput = arcpy.GetParameterAsText(0)
 SinglePhotos = arcpy.GetParameterAsText(1)
-PassengerPhotos = arcpy.GetParameterAsText(2)
-DriverPhotos = arcpy.GetParameterAsText(3)
-AngleField = arcpy.GetParameterAsText(4)
-Geodatabase = arcpy.GetParameterAsText(5)
-Parcels = arcpy.GetParameterAsText(6)
-ParcelPIN = arcpy.GetParameterAsText(7)
-config_file = arcpy.GetParameterAsText(8)
+Location =  arcpy.GetParameterAsText(2)
+PassengerPhotos = arcpy.GetParameterAsText(3)
+DriverPhotos = arcpy.GetParameterAsText(4)
+AngleField = arcpy.GetParameterAsText(5)
+Geodatabase =  arcpy.GetParameterAsText(6)
+Parcels = arcpy.GetParameterAsText(7)
+ParcelPIN = arcpy.GetParameterAsText(8)
+config_file = arcpy.GetParameterAsText(9)
 
 arcpy.AddMessage("Step 1:  Loading input parameters")
 
@@ -234,7 +235,7 @@ if CameraInput == 'Associate Photo with Parcel':
 else:
 	pass
 
-if CameraInput == 'Associate Photo with Point':
+if CameraInput == 'Associate Geotagged Photo with Point (photo has location)':
 
 	# ______________________________________________________________________________#
 	#
@@ -251,6 +252,27 @@ if CameraInput == 'Associate Photo with Point':
 										"IsHighPrecision", "", "0", "0", "0")
 else:
 	pass
+
+
+if CameraInput == 'Associate Non-Geotagged Photo with specified Point (no location)':
+
+	# ______________________________________________________________________________#
+	#
+	# Convert Photos to Pointsw/ no coordinates
+	#_______________________________________________________________________________#
+
+	ParcelPointHelper = """{}\\PhotoPoints""".format(Geodatabase)
+	arcpy.CreateFeatureclass_management(Geodatabase, "PhotoPoints", "Point", "", "DISABLED", "DISABLED",
+										"GEOGCS['GCS_WGS_1984',DATUM['D_WGS_1984',SPHEROID['WGS_1984',6378137.0,298.257223563]],"
+										"PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]],"
+										"VERTCS['WGS_1984',DATUM['D_WGS_1984',SPHEROID['WGS_1984',6378137.0,298.257223563]],"
+										"PARAMETER['Vertical_Shift',0.0],PARAMETER['Direction',1.0],"
+										"UNIT['Meter',1.0]];-400 -400 1000000000;-100000 10000;-100000 10000;8.98315284119522E-09;0.001;0.001;"
+										"IsHighPrecision", "", "0", "0", "0")
+else:
+	pass
+
+
 #______________________________________________________________________________#
 #
 # Adding Survey Fields
@@ -313,33 +335,33 @@ Domain5Values = config.get('DOMAIN_VALUES', "Domain5")
 if Domain1Values == "":
 	pass
 else:
-	DomainDict1 = ast.literal_eval(Domain1Values)
-	for codex in DomainDict1:
-		arcpy.AddCodedValueToDomain_management(Geodatabase, Domain1, codex, DomainDict1[codex])
+	DomainList1 = ast.literal_eval(Domain1Values)
+	for codex in DomainList1:
+		arcpy.AddCodedValueToDomain_management(Geodatabase, Domain1, codex, codex)
 if Domain2Values == "":
 	pass
 else:
-	DomainDict2 = ast.literal_eval(Domain2Values)
-	for codex in DomainDict2:
-		arcpy.AddCodedValueToDomain_management(Geodatabase, Domain2, codex, DomainDict2[codex])
+	DomainList2 = ast.literal_eval(Domain2Values)
+	for codex in DomainList2:
+		arcpy.AddCodedValueToDomain_management(Geodatabase, Domain2, codex, codex)
 if Domain3Values == "":
 	pass
 else:
-	DomainDict3 = ast.literal_eval(Domain3Values)
-	for codex in DomainDict3:
-		arcpy.AddCodedValueToDomain_management(Geodatabase, Domain3, codex, DomainDict3[codex])
+	DomainList3 = ast.literal_eval(Domain3Values)
+	for codex in DomainList3:
+		arcpy.AddCodedValueToDomain_management(Geodatabase, Domain3, codex, codex)
 if Domain4Values == "":
 	pass
 else:
-	DomainDict4 = ast.literal_eval(Domain4Values)
-	for codex in DomainDict4:
-		arcpy.AddCodedValueToDomain_management(Geodatabase, Domain4, codex, DomainDict4[codex])
+	DomainList4 = ast.literal_eval(Domain4Values)
+	for codex in DomainList4:
+		arcpy.AddCodedValueToDomain_management(Geodatabase, Domain4, codex, codex)
 if Domain5Values == "":
 	pass
 else:
-	DomainDict5 = ast.literal_eval(Domain5Values)
-	for codex in DomainDict5:
-		arcpy.AddCodedValueToDomain_management(Geodatabase, Domain5, codex, DomainDict5[codex])
+	DomainList5 = ast.literal_eval(Domain5Values)
+	for codex in DomainList5:
+		arcpy.AddCodedValueToDomain_management(Geodatabase, Domain5, codex, codex)
 
 Field1  = config.get('FIELDS', "Field1")
 Field2  = config.get('FIELDS', "Field2")
@@ -388,52 +410,101 @@ DomainSet10 = config.get('FIELD_DOMAIN', "Field10")
 if Field1 == "":
 	pass
 else:
-	arcpy.AddField_management(ParcelPointHelper, Field1, "TEXT", "", "", "25", Field1Alias, ValueRequired1) #"REQUIRED", "")
+	arcpy.AddField_management(ParcelPointHelper, Field1, "TEXT", "", "", "25", Field1Alias, ValueRequired1)
+
+if DomainSet1 == "":
+    pass
+else:
 	arcpy.AssignDomainToField_management(ParcelPointHelper, Field1, DomainSet1)
+
 if Field2 == "":
 	pass
 else:
 	arcpy.AddField_management(ParcelPointHelper, Field2, "TEXT", "", "", "25", Field2Alias, ValueRequired2)
+
+if DomainSet2 == "":
+    pass
+else:
 	arcpy.AssignDomainToField_management(ParcelPointHelper, Field2, DomainSet2)
+
 if Field3 == "":
 	pass
 else:
 	arcpy.AddField_management(ParcelPointHelper, Field3, "TEXT", "", "", "25", Field3Alias, ValueRequired3)
+
+if DomainSet3 == "":
+    pass
+else:
 	arcpy.AssignDomainToField_management(ParcelPointHelper, Field3, DomainSet3)
+
 if Field4 == "":
 	pass
 else:
 	arcpy.AddField_management(ParcelPointHelper, Field4, "TEXT", "", "", "25", Field4Alias, ValueRequired4)
-	arcpy.AssignDomainToField_management(ParcelPointHelper, Field4, DomainSet4)
+
+if DomainSet4 == "":
+    pass
+else:
+    arcpy.AssignDomainToField_management(ParcelPointHelper, Field4, DomainSet4)
+
 if Field5 == "":
 	pass
 else:
 	arcpy.AddField_management(ParcelPointHelper, Field5, "TEXT", "", "", "25", Field5Alias, ValueRequired5)
+
+if DomainSet5 == "":
+    pass
+else:
 	arcpy.AssignDomainToField_management(ParcelPointHelper, Field5, DomainSet5)
+
 if Field6 == "":
 	pass
 else:
 	arcpy.AddField_management(ParcelPointHelper, Field6, "TEXT", "", "", "25", Field6Alias, ValueRequired6)
+
+if DomainSet6 == "":
+    pass
+else:
 	arcpy.AssignDomainToField_management(ParcelPointHelper, Field6, DomainSet6)
+
 if Field7 == "":
 	pass
 else:
 	arcpy.AddField_management(ParcelPointHelper, Field7, "TEXT", "", "", "25", Field7Alias, ValueRequired7)
+
+if DomainSet7 == "":
+    pass
+else:
 	arcpy.AssignDomainToField_management(ParcelPointHelper, Field7, DomainSet7)
+
 if Field8 == "":
 	pass
 else:
 	arcpy.AddField_management(ParcelPointHelper, Field8, "TEXT", "", "", "25", Field8Alias, ValueRequired8)
+
+if DomainSet8 == "":
+    pass
+else:
 	arcpy.AssignDomainToField_management(ParcelPointHelper, Field8, DomainSet8)
+
 if Field9 == "":
 	pass
 else:
 	arcpy.AddField_management(ParcelPointHelper, Field9, "TEXT", "", "", "25", Field9Alias, ValueRequired9)
+
+if DomainSet9 == "":
+    pass
+else:
 	arcpy.AssignDomainToField_management(ParcelPointHelper, Field9, DomainSet9)
+
 if Field10 == "":
 	pass
 else:
 	arcpy.AddField_management(ParcelPointHelper, Field10, "TEXT", "", "", "25", Field10Alias, ValueRequired10)
+
+if DomainSet10 == "":
+    pass
+else:
 	arcpy.AssignDomainToField_management(ParcelPointHelper, Field10, DomainSet10)
 
 if CameraInput == 'Associate Photo with Parcel':
@@ -449,24 +520,72 @@ if CameraInput == 'Associate Photo with Parcel':
 else:
 	pass
 
-if CameraInput == 'Associate Photo with Point':
+if CameraInput == 'Associate Geotagged Photo with Point (photo has location)':
 
-		arcpy.AddMessage("Step 3:  Adding application required fields")
-		arcpy.AddField_management(ParcelPointHelper, "BSTPHOTOID", "TEXT", "", "", "5", "Best Photo Identifier", "NULLABLE", "NON_REQUIRED", "")
-		arcpy.AddField_management(ParcelPointHelper, "SRVNAME", "TEXT", "", "", "25", "Surveyor Name", "NULLABLE", "NON_REQUIRED", "")
-		arcpy.AddMessage("Step 4:  Finalizing photo survey feature class")
-		arcpy.AddMessage("Step 5:  Creating Photo Attachments")
-		ParcelPointHelperTemp = """{}\\ParcelPointsTemp""".format(Geodatabase)
-		ParcelPointsMerged = """{}\\ParcelPointsMerged""".format(Geodatabase)
-		arcpy.GeoTaggedPhotosToPoints_management(SinglePhotos, ParcelPointHelperTemp, "", "ONLY_GEOTAGGED", "NO_ATTACHMENTS")
-		arcpy.Merge_management(ParcelPointHelperTemp + ';' + ParcelPointHelper, ParcelPointsMerged)
-		arcpy.EnableAttachments_management(ParcelPointsMerged)
-		arcpy.AddAttachments_management(ParcelPointsMerged, "OBJECTID", ParcelPointsMerged, "OBJECTID", "Path", "")
-		arcpy.Delete_management(ParcelPointHelperTemp)
-		arcpy.Delete_management(ParcelPointHelper)
-		arcpy.Rename_management(ParcelPointsMerged, ParcelPointHelper)
+    arcpy.AddMessage("Step 3:  Adding application required fields")
+    arcpy.AddField_management(ParcelPointHelper, "BSTPHOTOID", "TEXT", "", "", "5", "Best Photo Identifier", "NULLABLE", "NON_REQUIRED", "")
+    arcpy.AddField_management(ParcelPointHelper, "SRVNAME", "TEXT", "", "", "25", "Surveyor Name", "NULLABLE", "NON_REQUIRED", "")
+    arcpy.AddMessage("Step 4:  Finalizing photo survey feature class")
+    arcpy.AddMessage("Step 5:  Creating Photo Attachments")
+    ParcelPointHelperTemp = """{}\\ParcelPointsTemp""".format(Geodatabase)
+    ParcelPointsMerged = """{}\\ParcelPointsMerged""".format(Geodatabase)
+    arcpy.GeoTaggedPhotosToPoints_management(SinglePhotos, ParcelPointHelperTemp, "", "ONLY_GEOTAGGED", "NO_ATTACHMENTS")
+    arcpy.Merge_management(ParcelPointHelperTemp + ';' + ParcelPointHelper, ParcelPointsMerged)
+    PointsMerged2 = """{}\\PhotoPoint""".format(Geodatabase)
+    arcpy.Rename_management(ParcelPointsMerged, PointsMerged2)
+    arcpy.EnableAttachments_management(PointsMerged2)
+    arcpy.AddAttachments_management(PointsMerged2, "OBJECTID", PointsMerged2, "OBJECTID", "Path", "")
+    arcpy.Delete_management(ParcelPointHelperTemp)
+    arcpy.Delete_management(ParcelPointHelper)
+    arcpy.DeleteField_management(PointsMerged2, "Path")
+    arcpy.Rename_management(PointsMerged2, ParcelPointHelper)
+
+
 else:
 	pass
+
+if CameraInput == 'Associate Non-Geotagged Photo with specified Point (no location)':
+
+
+    arcpy.AddMessage("Step 3:  Adding application required fields")
+    arcpy.AddField_management(ParcelPointHelper, "BSTPHOTOID", "TEXT", "", "", "5", "Best Photo Identifier", "NULLABLE", "NON_REQUIRED", "")
+    arcpy.AddField_management(ParcelPointHelper, "SRVNAME", "TEXT", "", "", "25", "Surveyor Name", "NULLABLE", "NON_REQUIRED", "")
+    arcpy.AddMessage("Step 4:  Finalizing photo survey feature class")
+    arcpy.AddMessage("Step 5:  Creating Photo Attachments")
+    PointHelperTemp = """{}\\PointsTemp""".format(Geodatabase)
+    PointsMerged = """{}\\PointsMerged""".format(Geodatabase)
+    arcpy.GeoTaggedPhotosToPoints_management(SinglePhotos, PointHelperTemp, "", "ALL_PHOTOS", "NO_ATTACHMENTS")
+    arcpy.Merge_management(PointHelperTemp + ';' + ParcelPointHelper, PointsMerged)
+    PointsMerged2 = """{}\\PhotoPoint""".format(Geodatabase)
+    arcpy.Rename_management(PointsMerged, PointsMerged2)
+    arcpy.EnableAttachments_management(PointsMerged2)
+    arcpy.AddAttachments_management(PointsMerged2, "OBJECTID", PointsMerged2, "OBJECTID", "Path", "")
+
+    shape = arcpy.Describe(PointsMerged2).ShapeFieldName
+    fields = ['SHAPE@XY']
+    edit = arcpy.da.Editor(Geodatabase)
+    edit.startEditing(False, True)
+
+    Coord = Location.split(' ')
+    Coord2 = ",".join(Coord)
+    with arcpy.da.UpdateCursor(PointsMerged2, "SHAPE@XY") as cur:
+        for row in cur:
+            row[0] = eval (Coord2)
+            cur.updateRow(row)
+
+    edit.stopEditing(True)
+
+    arcpy.Delete_management(PointHelperTemp)
+    arcpy.Delete_management(ParcelPointHelper)
+    arcpy.Rename_management(PointsMerged2, ParcelPointHelper)
+    arcpy.DeleteField_management(ParcelPointHelper, "Path")
+
+else:
+	pass
+
+
+
+
 
 #______________________________________________________________________________#
 #
@@ -500,6 +619,8 @@ if CameraInput == 'Associate Photo with Parcel':
 
 else:
 	pass
+
+
 
 
 

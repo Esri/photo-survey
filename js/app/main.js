@@ -16,8 +16,8 @@
  | limitations under the License.
  */
 //============================================================================================================================//
-define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSignin', 'dataAccess', 'diag'],
-        function (i18n, prepareAppConfigInfo, handleUserSignin, dataAccess, diag) {
+define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSignin', 'dataAccess', 'survey', 'diag'],
+        function (i18n, prepareAppConfigInfo, handleUserSignin, dataAccess, survey, diag) {
     'use strict';
     var main, unsupported = false, needProxy = false, proxyReady;
 
@@ -32,12 +32,25 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         candidate: null,
         signedIn: false,
         completions: 0,
+        overviewMap: null,
+        overviewMapVisible: false,
 
 
-        showHeart: function (heartId, makeVisible) {
-            document.getElementById(heartId).style.display = makeVisible
+        showIcon: function (iconId, makeVisible) {
+            document.getElementById(iconId).style.display = makeVisible
                 ? 'block'
                 : 'none';
+        },
+
+        updateIconToggle: function (state, onIconId, offIconId) {
+            main.showIcon(onIconId, state);
+            main.showIcon(offIconId, !state);
+        },
+
+        showOverviewMap: function (show) {
+            main.overviewMapVisible = show;
+            $("#overviewMap").css("visibility", show ? "visible" : "hidden");
+            main.updateIconToggle(show, 'hideOverview', 'showOverview');
         },
 
         completeSetup: function () {
@@ -156,7 +169,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
                                         $("#signinLoginPrompt").fadeIn("fast");
                                         $("#socialMediaButtonArea").fadeIn("fast");
                                     });
-                                }).fail(function () {
+                                }, function () {
                                     // Switch to the no-surveys message
                                     $("#signinLoginPrompt").fadeOut("fast", function () {
                                         $("#signinLoginPrompt")[0].innerHTML = i18n.signin.noMoreSurveys;
@@ -177,7 +190,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
                     });
 
                     // Don't need help button if there's no help to display
-                    if (prepareAppConfigInfo.appParams.helpText.length === 0) {
+                    if (!prepareAppConfigInfo.appParams.helpText || prepareAppConfigInfo.appParams.helpText.length === 0) {
                         $("#helpButton").css("display", "none");
                     } else {
                         $("#helpButton")[0].title = i18n.tooltips.button_additionalInfo;
@@ -192,6 +205,30 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
                         $("#signinLoginPrompt").fadeIn("fast");
                     });
                 });
+
+                // Create overview map if desired
+                if (prepareAppConfigInfo.appParams.includeOverviewMap) {
+                    // Prepare overview map and set its initial visibility
+                    main.overviewMap = L.map('overviewMap', {
+                        scrollWheelZoom: "center",
+                        doubleClickZoom: "center"
+                    });
+                    L.esri.basemapLayer(prepareAppConfigInfo.appParams.overviewMapBasemap).addTo(main.overviewMap);
+
+                    main.showOverviewMap(prepareAppConfigInfo.appParams.overviewMapInitiallyOpen);
+
+                    // Show the container for the show & hide icons, which is outside of the overview map's frame,
+                    // and enable the icons
+                    $("#showHideOverview").css("visibility", "visible");
+
+                    $('#showOverview').on('click', function () {
+                        main.showOverviewMap(true);
+                    });
+
+                    $('#hideOverview').on('click', function () {
+                        main.showOverviewMap(false);
+                    });
+                }
 
                 // i18n updates
                 $("#previousImageBtn")[0].title = i18n.tooltips.button_previous_image;
@@ -228,8 +265,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
             if (prepareAppConfigInfo.appParams.bestPhotoField) {
                 // Update selected photo indicator
                 main.photoSelected = main.iVisiblePhoto === main.iSelectedPhoto;
-                main.showHeart('emptyHeart', !main.photoSelected);
-                main.showHeart('filledHeart', main.photoSelected);
+                main.updateIconToggle(main.photoSelected, 'filledHeart', 'emptyHeart');
                 $("#hearts").attr("title",
                         (main.photoSelected
                     ? i18n.tooltips.button_best_image
@@ -282,76 +318,6 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
                 $("#ranking").fadeIn();
             } else {
                 $("#ranking").css("display", "none");
-            }
-        },
-
-        startQuestion: function (ignore, iQuestion, questionInfo) {
-            // <div class='form-group'>
-            //   <label for='q1'>Is there a structure on the property? <span class='glyphicon glyphicon-star'></span></label><br>
-            var start =
-                    "<div id='qg" + iQuestion + "' class='form-group'>"
-                    + "<label for='q" + iQuestion + "'>" + questionInfo.question + (questionInfo.important
-                ? "&nbsp;<div class='importantQuestion sprites star' title=\"" + i18n.tooltips.flag_important_question + "\"></div>"
-                : "")
-                    + "</label><br>";
-            return start;
-        },
-
-        createButtonChoice: function (ignore, iQuestion, questionInfo, isReadOnly) {
-            // <div id='q1' class='btn-group'>
-            //   <button type='button' class='btn'>Yes</button>
-            //   <button type='button' class='btn'>No</button>
-            //   <button type='button' class='btn'>Not sure</button>
-            // </div>
-            var buttons = "<div id='q" + iQuestion + "' class='btn-group'>";
-            var domain = questionInfo.domain.split('|');
-            $.each(domain, function (i, choice) {
-                buttons += "<button type='button' class='btn' value='" + i + "' " + (isReadOnly
-                    ? "disabled"
-                    : "") + ">" + choice + "</button>";
-            });
-            buttons += "</div>";
-            return buttons;
-        },
-
-        createListChoice: function (ignore, iQuestion, questionInfo, isReadOnly) {
-            // <div class='radio'><label><input type='radio' name='q1' id='optionFound1' value='0'>Crawlspace</label></div>
-            // <div class='radio'><label><input type='radio' name='q1' id='optionFound2' value='1'>Raised</label></div>
-            // <div class='radio'><label><input type='radio' name='q1' id='optionFound3' value='2'>Elevated</label></div>
-            // <div class='radio'><label><input type='radio' name='q1' id='optionFound4' value='3'>Slab on grade</label></div>
-            // <div class='radio'><label><input type='radio' name='q1' id='optionFound0' value='4'>Not sure</label></div>
-            var list = "";
-            var domain = questionInfo.domain.split('|');
-            $.each(domain, function (i, choice) {
-                list += "<div class='radio'><label><input type='radio' name='q" + iQuestion + "' value='" + i + "' " + (isReadOnly
-                    ? "disabled"
-                    : "") + ">" + choice + "</label></div>";
-            });
-            return list;
-        },
-
-        wrapupQuestion: function () {
-            // </div>
-            // <div class='clearfix'></div>
-            var wrap = "</div><div class='clearfix'></div>";
-            return wrap;
-        },
-
-        addQuestion: function (surveyContainer, iQuestion, questionInfo, isReadOnly) {
-            var question = main.startQuestion(surveyContainer, iQuestion, questionInfo);
-            if (questionInfo.style === "button") {
-                question += main.createButtonChoice(surveyContainer, iQuestion, questionInfo, isReadOnly);
-            } else {
-                question += main.createListChoice(surveyContainer, iQuestion, questionInfo, isReadOnly);
-            }
-            question += main.wrapupQuestion(surveyContainer, iQuestion, questionInfo);
-            $(surveyContainer).append(question);
-
-            // Fix radio-button toggling
-            if (questionInfo.style === "button") {
-                $('#q' + iQuestion + ' button').click(function (evt) {
-                    $(evt.currentTarget).addClass('active').siblings().removeClass('active');
-                });
             }
         },
 
@@ -444,6 +410,9 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
     // When we have the app parameters, we can continue setting up the app
     prepareAppConfigInfo.parametersReady.then(main.completeSetup);
 
+    // Provide the i18n strings to the survey
+    survey.flag_important_question = i18n.tooltips.flag_important_question;
+
     //------------------------------------------------------------------------------------------------------------------------//
     // Wire up app events
 
@@ -468,7 +437,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
                     $("#ranking").css("display", "none");
                 }
 
-            }).fail(function () {
+            }, function () {
                 $("#profileCount").css("display", "none");
                 $("#ranking").css("display", "none");
             });
@@ -501,21 +470,21 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         var isReadOnly = !(prepareAppConfigInfo.featureSvcParams.canBeUpdated && handleUserSignin.getUser().canSubmit);
 
         // Provide some visual feedback for the switch to a new survey
-        $("#submitBtn").fadeTo(100, 0.0);
+        $("#submitBtn").fadeTo(100, 0.0).blur();
         $("#surveyContainer").fadeTo(100, 0.0);
 
         // Get candidate property
         dataAccess.getCandidate(prepareAppConfigInfo.appParams.randomizeSelection).then(function (candidate) {
             // obj:feature{}
             // attachments:[{id,url},...]
-            var showThumbnails = (prepareAppConfigInfo.appParams.thumbnailLimit < 0) ||
-                    (candidate.attachments.length <= prepareAppConfigInfo.appParams.thumbnailLimit);
 
-            main.numPhotos = candidate.attachments.length;
+            // Do we have a valid candidate?
             if (!candidate.obj) {
                 $(document).triggerHandler('show:noSurveys');
                 return;
             }
+
+            main.numPhotos = candidate.attachments ? candidate.attachments.length : 0;
             if (main.numPhotos === 0) {
                 diag.appendWithLF("no photos for property <i>" + JSON.stringify(candidate.obj.attributes) + "</i>");  //???
                 candidate.obj.attributes[prepareAppConfigInfo.appParams.surveyorNameField] = "no photos";
@@ -529,6 +498,13 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
             main.candidate = candidate;
             main.iSelectedPhoto = -1;
 
+            if (prepareAppConfigInfo.appParams.includeOverviewMap) {
+                // Jump the overview map to candidate.obj.geometry after transforming to lat/long;
+                // we've asked the server to give us the geometry in lat/long (outSR=4326) for Leaflet
+                main.overviewMap.setView([candidate.obj.geometry.y, candidate.obj.geometry.x],
+                    prepareAppConfigInfo.appParams.overviewMapZoom);
+            }
+
             // Gallery
             var carouselSlidesHolder = $("#carouselSlidesHolder")[0];
             $(carouselSlidesHolder).children().remove();  // remove children and their events
@@ -536,6 +512,9 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
             $(carouselIndicatorsHolder).children().remove();  // remove children and their events
             var initiallyActiveItem =
                     Math.floor((main.numPhotos + 1) / 2) - 1;  // len=1,2: idx=0; len=3,4; idx=1; etc. (idx 0-based)
+
+            var showThumbnails = (prepareAppConfigInfo.appParams.thumbnailLimit < 0) ||
+                    (candidate.attachments.length <= prepareAppConfigInfo.appParams.thumbnailLimit);
 
             $.each(candidate.attachments, function (indexInArray, attachment) {
                 main.addPhoto(carouselSlidesHolder, indexInArray, (initiallyActiveItem === indexInArray), attachment.url);
@@ -556,17 +535,12 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
                 $("#submitBtn").fadeTo(1000, 1.0);
             }
 
-        }).fail(function () {
+        }, function () {
             $(document).triggerHandler('show:noSurveys');
         });
 
-        // Survey
-        var surveyContainer = $("#surveyContainer")[0];
-        $(surveyContainer).children().remove();  // remove children and their events
-        $.each(prepareAppConfigInfo.survey, function (indexInArray, questionInfo) {
-            main.addQuestion(surveyContainer, indexInArray, questionInfo, isReadOnly);
-        });
-        $(".btn-group").trigger('create');
+        // Create survey
+        survey.createNewForm($("#surveyContainer")[0], prepareAppConfigInfo.survey, isReadOnly);
 
         // Show the content
         $("#contentPage").fadeIn("fast");
@@ -593,39 +567,16 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         $(document).triggerHandler('hide:profile');
     });
     $("#skipBtn").on('click', function () {
+        $("#skipBtn").blur();
         dataAccess.addItemToExclusionList(main.candidate.id);
         $(document).triggerHandler('show:newSurvey');
     });
     $("#submitBtn").on('click', function () {
-        var surveyContainer, iQuestionResult, hasImportants = true, firstMissing;
-
-        surveyContainer = $('#surveyContainer');
-        $.each(prepareAppConfigInfo.survey, function (iQuestion, questionInfo) {
-            if (questionInfo.style === "button") {
-                iQuestionResult = $('#q' + iQuestion + ' .active', surveyContainer).val();
-            } else {
-                iQuestionResult = $('input[name=q' + iQuestion + ']:checked', surveyContainer).val();
-            }
-            if (iQuestionResult) {
-                main.candidate.obj.attributes[questionInfo.field] = questionInfo.domain.split("|")[iQuestionResult];
-            }
-
-            // Flag missing importants
-            if (questionInfo.important) {
-                if (iQuestionResult) {
-                    $("#qg" + iQuestion).removeClass("flag-error");
-                } else {
-                    $("#qg" + iQuestion).addClass("flag-error");
-                    hasImportants = false;
-                    if (firstMissing === undefined) {
-                        firstMissing = $("#qg" + iQuestion)[0];
-                    }
-                }
-            }
-        });
+        var firstMissing =
+            survey.validateForm($('#surveyContainer'), prepareAppConfigInfo.survey, main.candidate.obj.attributes);
 
         // Submit the survey if it has the important responses
-        if (hasImportants) {
+        if (firstMissing === undefined) {
             main.candidate.obj.attributes[prepareAppConfigInfo.appParams.surveyorNameField] = handleUserSignin.getUser().name;
             if (main.iSelectedPhoto >= 0) {
                 main.candidate.obj.attributes[prepareAppConfigInfo.appParams.bestPhotoField] = main.candidate.attachments[main.iSelectedPhoto].id;
