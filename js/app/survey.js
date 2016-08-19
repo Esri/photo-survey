@@ -33,6 +33,9 @@ define([], function () {
          * properties
          */
         createSurvey: function (surveyDescription, featureSvcFields) {
+            // Patch older browsers
+            survey._installPolyfills();
+
             // Create dictionary of domains
             var dictionary = survey._createSurveyDictionary(featureSvcFields);
 
@@ -92,7 +95,7 @@ define([], function () {
                     } else if (questionInfo.style === "text" || questionInfo.style === "dropdown") {
                         objAttributes[questionInfo.field] = iQuestionResult;
                     } else {  // "button" or "list"
-                        objAttributes[questionInfo.field] = questionInfo.domain.split("|")[iQuestionResult];
+                        objAttributes[questionInfo.field] = questionInfo.values[iQuestionResult];
                     }
                 }
 
@@ -115,6 +118,16 @@ define([], function () {
 
         //--------------------------------------------------------------------------------------------------------------------//
 
+        _installPolyfills: function () {
+            // source: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/startsWith
+            if (!String.prototype.startsWith) {
+                String.prototype.startsWith = function(searchString, position){
+                    position = position || 0;
+                    return this.substr(position, searchString.length) === searchString;
+                };
+            }
+        },
+
         /**
          * Converts a list of feature service fields into a dictionary of fields with their domains and nullability;
          * skips fields without coded-value domains.
@@ -128,17 +141,21 @@ define([], function () {
             var fieldDomains = {};
 
             $.each(featureSvcFields, function (ignore, field) {
-                var domain = null;
+                var domain = null, value = null;
                 if (field.domain && field.domain.codedValues) {
                     domain = $.map(field.domain.codedValues, function (item) {
                         return item.name;
                     }).join("|");
+                    value = $.map(field.domain.codedValues, function (item) {
+                        return item.code;
+                    });
                 } else if (field.length) {
                     domain = field.length;
                 }
 
                 fieldDomains[field.name] = {
                     domain: domain,
+                    values: value,
                     important: !field.nullable
                 };
             });
@@ -217,6 +234,7 @@ define([], function () {
                             question: trimmedParts[0],
                             field: fieldName,
                             domain: fieldDomains[fieldName].domain,
+                            values: fieldDomains[fieldName].values,
                             important: fieldDomains[fieldName].important
                         };
 
@@ -269,6 +287,24 @@ define([], function () {
             if (questionInfo.style === "button") {
                 $('#q' + iQuestion + ' button').click(function (evt) {
                     $(evt.currentTarget).addClass('active').siblings().removeClass('active');
+                    $("#qg" + iQuestion).removeClass("flag-error");
+                });
+
+            } else if (questionInfo.style === "list") {
+                $("[name=q" + iQuestion + "]").click(function (evt) {
+                    $("#qg" + iQuestion).removeClass("flag-error");
+                });
+
+            } else {
+                // Start with nothing selected in dropdown
+                if (questionInfo.style === "dropdown") {
+                    $("#q" + iQuestion).each(function (indexInArray, input) {
+                        input.selectedIndex = -1;
+                    });
+                }
+
+                $('#q' + iQuestion).change(function (evt) {
+                    $("#qg" + iQuestion).removeClass("flag-error");
                 });
             }
         },
@@ -363,8 +399,8 @@ define([], function () {
             var list = "<select id='q" + iQuestion + "' class='dropdown-group'>";
             var domain = questionInfo.domain.split('|');
             $.each(domain, function (i, choice) {
-                list += "<option value='" + choice + "' " + (isReadOnly
-                    ? "disabled"
+                list += "<option value='" + questionInfo.values[i] + "'" + (isReadOnly
+                    ? " disabled"
                     : "") + ">" + choice + "</option>";
             });
             list += "</select>";
