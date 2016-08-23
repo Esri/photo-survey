@@ -124,11 +124,11 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'dataAccess', '
                     $("#signinPage").fadeOut();
                 });
                 prepareAppConfigInfo.surveyReady.then(function () {
-                    $(document).triggerHandler('show:newSurvey');
+                    $.publish('show:newSurvey');
                 });
             });
 
-            $(document).on('signedOut:user', function () {
+            $.subscribe('signedOut:user', function () {
                 dataAccess.resetExclusionList();
                 content.show(false, function () {
                     user.signout();
@@ -136,17 +136,17 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'dataAccess', '
                 });
             });
 
-            $(document).on('show:noSurveys', function () {
+            $.subscribe('show:noSurveys', function () {
                 // No more surveys available either due to error or completion
                 // Hide the main content
                 content.show(false, function () {
                     // Show the profile view & help window
-                    $(document).triggerHandler('show:profile');
+                    $.publish('show:profile');
                     //$('#additionalInfoPanel').modal('show');
                 });
             });
 
-            $(document).on('show:newSurvey', function () {
+            $.subscribe('show:newSurvey', function () {
                 var isReadOnly = !(prepareAppConfigInfo.featureSvcParams.canBeUpdated && main._currentUser.canSubmit);
 
                 // Provide some visual feedback for the switch to a new survey
@@ -160,7 +160,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'dataAccess', '
 
                     // Do we have a valid candidate?
                     if (!candidate.obj) {
-                        $(document).triggerHandler('show:noSurveys');
+                        $.publish('show:noSurveys');
                         return;
                     }
 
@@ -169,7 +169,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'dataAccess', '
                         diag.appendWithLF("no photos for property <i>" + JSON.stringify(candidate.obj.attributes) + "</i>");  //???
                         candidate.obj.attributes[prepareAppConfigInfo.appParams.surveyorNameField] = "no photos";
                         dataAccess.updateCandidate(candidate);
-                        $(document).triggerHandler('show:newSurvey');
+                        $.publish('show:newSurvey');
                         return;
                     }
                     diag.appendWithLF("showing property <i>" + JSON.stringify(candidate.obj.attributes) + "</i> with "  //???
@@ -216,7 +216,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'dataAccess', '
                     }
 
                 }, function () {
-                    $(document).triggerHandler('show:noSurveys');
+                    $.publish('show:noSurveys');
                 });
 
                 // Create survey
@@ -226,12 +226,12 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'dataAccess', '
                 $("#contentPage").fadeIn("fast");
             });
 
-            $(document).on('show:profile', function () {
+            $.subscribe('show:profile', function () {
                 $("#survey").fadeOut("fast", function () {
                     $("#profile").fadeIn("fast");
                 });
             });
-            $(document).on('hide:profile', function () {
+            $.subscribe('hide:profile', function () {
                 $("#profile").fadeOut("fast", function () {
                     $("#survey").fadeIn("fast");
                 });
@@ -239,18 +239,18 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'dataAccess', '
 
             contentPanelReady.then(function () {
                 $("#userSignoutSelection").on('click', function () {
-                    $(document).triggerHandler('signedOut:user');
+                    $.publish('signedOut:user');
                 });
                 $("#userProfileSelection").on('click', function () {
-                    $(document).triggerHandler('show:profile');
+                    $.publish('show:profile');
                 });
                 $("#closeProfileBtn").on('click', function () {
-                    $(document).triggerHandler('hide:profile');
+                    $.publish('hide:profile');
                 });
                 $("#skipBtn").on('click', function () {
                     $("#skipBtn").blur();
                     dataAccess.addItemToExclusionList(main.candidate.id);
-                    $(document).triggerHandler('show:newSurvey');
+                    $.publish('show:newSurvey');
                 });
                 $("#submitBtn").on('click', function () {
                     var firstMissing =
@@ -267,7 +267,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'dataAccess', '
                             main.completions += 1;
                             main.updateCount();
 
-                            $(document).triggerHandler('show:newSurvey');
+                            $.publish('show:newSurvey');
                         });
 
                     // Jump to the first missing important question otherwise
@@ -321,7 +321,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'dataAccess', '
 
             $.subscribe("signedOut:user", function () {
                 console.log("signed-out");
-                $(document).triggerHandler('hide:profile');
+                $.publish('hide:profile');
                 $("#profileAvatar").css("display", "none");
                _this._currentUser = {
                     name: "",
