@@ -1,8 +1,10 @@
 http://cdn.leafletjs.com/leaflet/v1.0.0-rc.1/leaflet.js
-https://cdn.jsdelivr.net/leaflet.esri/2.0.0-beta.8/esri-leaflet.js
-https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js
-https://raw.githubusercontent.com/requirejs/i18n/latest/i18n.js
-https://github.com/maaaaark/bcSwipe
 http://code.jquery.com/jquery-2.1.4.min.js
 http://modernizr.com/download/#-load
 http://requirejs.org/docs/release/2.1.18/minified/require.js
+https://cdn.jsdelivr.net/leaflet.esri/2.0.0-beta.8/esri-leaflet.js
+https://gist.github.com/cowboy/661855
+https://github.com/codepb/jquery-template
+https://github.com/maaaaark/bcSwipe
+https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js
+https://raw.githubusercontent.com/requirejs/i18n/latest/i18n.js

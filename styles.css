@@ -225,7 +225,7 @@ header, section, footer, aside, nav, main, article, figure {
     }
 }
 @media only screen and (max-width: 768px) {
-    #signinPage {
+    #splashPage {
         padding: 10px;
     }
     .smallSidebar {
@@ -234,34 +234,34 @@ header, section, footer, aside, nav, main, article, figure {
     }
 }
 @media only screen and (max-height: 500px) {
-    #signinPage {
+    #splashPage {
         padding: 10px;
     }
     .smallSidebar {
         margin: 10px;
     }
 }
-.signinTitle {
+.splashInfoTitle {
     font-size: 30px;
     font-weight: bold;
     color: #333;
 }
-.signinParagraph {
+.splashInfoBody {
     font-size: 14px;
     color: #555;
     margin: 20px 0;
 }
-.signinLoginPrompt {
+.splashInfoPrompt {
     font-size: 16px;
     font-weight: bold;
     color: #555;
 }
-.socialMediaButtonArea {
+.splashInfoActions {
     text-align: center;
     margin-left: auto;
     margin-right: auto;
 }
-.socialMediaButton {
+.splashInfoActionButton {
     width: 80px;
     height: 60px;
     margin: 4px;

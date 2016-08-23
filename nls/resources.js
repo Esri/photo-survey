@@ -49,7 +49,9 @@ define({
             needProxy: "This version of Internet Explorer is not supported by our server. Please use Internet Explorer 10 or newer.",
             signinFetching: "Checking availability of login possibilities...",
             signinLoginPrompt: "Please sign in to get started",
+            lookingForSurveys: "Looking for surveys...",
             noMoreSurveys: "There are no surveys available at this time; thank you for your participation.",
+            noSigninsAvailable: "There are no logins available",
             guestLabel: "Guest"
         }
     }),

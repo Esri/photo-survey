@@ -49,7 +49,9 @@ define(
             needProxy: "Diese Version von Internet Explorer wird nicht von unserem Server unterstützt. Bitte verwenden Sie Internet Explorer 10 oder neuer.",
             signinFetching: "Überprüfung der Verfügbarkeit des Anschlussmöglichkeiten...",
             signinLoginPrompt: "Bitte loggen Sie ein, um loszulegen",
+            lookingForSurveys: "Auf der Suche nach Umfragen ...",
             noMoreSurveys: "Es sind keine Umfragen vorhanden zu diesem Zeitpunkt; vielen Dank für Ihre Teilnahme.",
+            noSigninsAvailable: "Es sind keine Anschlussmöglichkeiten verfügbar",
             guestLabel: "Gast"
         }
     })
