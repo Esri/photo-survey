@@ -40,8 +40,8 @@ define(['lib/i18n.min!nls/resources.js', 'diag'],
             return messagePanelReady;
         },
 
-        showMessage: function (title, body) {
-            $("#messageTitle")[0].innerHTML = title;
+        showMessage: function (body, title) {
+            $("#messageTitle")[0].innerHTML = title || "";
             $("#messageBody")[0].innerHTML = body;
             $("#messagePanel").modal("show");
         }

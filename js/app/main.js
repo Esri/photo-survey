@@ -142,7 +142,10 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'dataAccess', '
                 content.show(false, function () {
                     // Show the profile view & help window
                     $.publish('show:profile');
-                    //$('#additionalInfoPanel').modal('show');
+                    messagePanelReady.then(function () {
+                        message.showMessage(i18n.signin.noMoreSurveys, prepareAppConfigInfo.appParams.title);
+                        message.showMessage(prepareAppConfigInfo.appParams.helpText, prepareAppConfigInfo.appParams.title);
+                    });
                 });
             });
 
