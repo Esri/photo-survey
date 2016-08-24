@@ -49,14 +49,15 @@
     <script>
     // Main module is in js/app directory, and it refers to third-party libraries in the js/lib directory
     requirejs.config({
-        baseUrl: "js/app",
+        baseUrl: "js/",
         paths: {
-            lib: "../lib"
+            app: "./app",
+            lib: "./lib"
         }
     });
 
     // Load the main app module to start the app
-    requirejs(["main"]);
+    requirejs(["app/main"]);
     </script>
 </body>
 </html>
