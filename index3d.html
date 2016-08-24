@@ -1,0 +1,66 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <!--
+     | Copyright 2015 Esri
+     |
+     | Licensed under the Apache License, Version 2.0 (the "License");
+     | you may not use this file except in compliance with the License.
+     | You may obtain a copy of the License at
+     |
+     |    http://www.apache.org/licenses/LICENSE-2.0
+     |
+     | Unless required by applicable law or agreed to in writing, software
+     | distributed under the License is distributed on an "AS IS" BASIS,
+     | WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     | See the License for the specific language governing permissions and
+     | limitations under the License.
+    -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title></title>
+
+    <link href="js/lib/leaflet.css" rel="stylesheet" />
+    <link href="js/lib/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="//js.arcgis.com/4.0/esri/css/main.css">
+    <link rel="stylesheet" href="//js.arcgis.com/4.0/dijit/themes/claro/claro.css">
+    <link href="styles.css" rel="stylesheet">
+</head>
+<!--[if lt IE 9]><body class="unsupportedIE"><![endif]-->
+<!--[if IE 9]><body class="IE9"><![endif]-->
+<!--[if !IE]> --><body><!-- <![endif]-->
+
+    <!-- Content page -->
+    <main id="contentPage" class="conditionalPageFill container-fluid transparent">
+        <div class="row fillHeight">
+
+            <h2 class="screenreaderInfo">Main content</h2>
+            <article id="mainContent" class="mainContent fillHeight col-sm-9 col-md-9 repad">
+            </article>
+
+            <h2 class="screenreaderInfo">Sidebar content</h2>
+            <article id="sidebarContent" class="sidebarContent fillHeight col-sm-3 col-md-3 repad">
+            </article>
+
+        </div>
+    </main>
+
+    <!-- Load libs and launch app -->
+    <script src="js/lib/libs.js"></script>
+    <script>
+    // Main module is in js/app directory, and it refers to third-party libraries in the js/lib directory
+    var package_path = window.location.pathname.substring(0, window.location.pathname.lastIndexOf("/"));
+    requirejs.config({
+        baseUrl: "//js.arcgis.com/4.0/",
+        paths: {
+            app: package_path + "/js/app",
+            lib: package_path + "/js/lib"
+        }
+    });
+
+    // Load the main app module to start the app
+    require(["app/main3d"]);
+    </script>
+</body>
+</html>

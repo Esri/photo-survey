@@ -193,6 +193,17 @@ header, section, footer, aside, nav, main, article, figure {
     z-index: 1000;
 }
 
+.viewDivMinHeight {
+    height: 100%;
+    min-height: 100%;
+}
+@media only screen and (max-width: 767px) {
+    .viewDivMinHeight {
+        height: 300px;
+    }
+}
+
+
 /* ---------- splash ---------- */
 
 .pageFill {
