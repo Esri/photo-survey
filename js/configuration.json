@@ -16,10 +16,10 @@
         "allowGuestSubmissions": true,
         "thumbnailLimit": "10",
 
-        "showGuest": "true",
+        "showGuest": true,
         "facebookAppId": "",
         "googleplusClientId": "",
-        "showTwitter": "true",
+        "showTwitter": false,
 
 
         "googleplusLogoutUrl": "https://accounts.google.com/logout",
