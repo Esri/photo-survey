@@ -16,8 +16,8 @@
  | limitations under the License.
  */
 //====================================================================================================================//
-define(["lib/i18n.min!nls/resources.js", "esri/WebScene", "esri/views/SceneView", "app/diag"],
-    function (i18n, WebScene, SceneView, diag) {
+define(["lib/i18n.min!nls/resources.js", "app/diag"],
+    function (i18n, diag) {
     "use strict";
     var visualsController = {
         _prepareAppConfigInfo: null,
@@ -38,21 +38,10 @@ define(["lib/i18n.min!nls/resources.js", "esri/WebScene", "esri/views/SceneView"
                 prepend: true,
                 complete: function () {
 
-                    var scene = new WebScene({
-                        portalItem: {
-                            id: "3e510d9f52404e1f9ef3827952c22ccf"
-                        }
-                    });
-
-                    $("#viewDiv").addClass("viewDivMinHeight");
-                    var view = new SceneView({
-                        map: scene,
-                        container: "viewDiv"
-                    });
-
-                    view.then(function (response) {
+                    var webSceneReady = visualsController._loadWebScene("3e510d9f52404e1f9ef3827952c22ccf");
+                    webSceneReady.then(function (response) {
                         // Loads once visuals panel becomes visible
-
+                        console.log("webscene ready");
 
 
                     });
@@ -73,6 +62,33 @@ define(["lib/i18n.min!nls/resources.js", "esri/WebScene", "esri/views/SceneView"
 
         _showVisuals: function () {
             $(visualsController._container).fadeTo(1000, 1.0);
+        },
+
+        _loadWebScene: function (id) {
+            var webSceneReady = $.Deferred();
+
+            require(["esri/WebScene", "esri/views/SceneView"], function (WebScene, SceneView) {
+                var scene = new WebScene({
+                    portalItem: {
+                        id: id
+                    }
+                });
+
+                $("#viewDiv").addClass("viewDivMinHeight");
+                var view = new SceneView({
+                    map: scene,
+                    container: "viewDiv"
+                });
+
+                view.then(function () {
+                    webSceneReady.resolve({
+                        webScene: scene,
+                        sceneView: view
+                    });
+                });
+            });
+
+            return webSceneReady;
         }
 
         //------------------------------------------------------------------------------------------------------------//
