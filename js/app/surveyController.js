@@ -80,11 +80,7 @@ define(["lib/i18n.min!nls/resources.js", "app/survey", "app/message", "app/diag"
                         $.publish("request:signOut");
                     });
 
-                    $("#submitBtn").on("click", function () {
-                        surveyController._hideSurvey();
-                        surveyController._submitSurvey();
-                        $.publish("request:newSurvey");
-                    });
+                    $("#submitBtn").on("click", surveyController._submitSurvey);
 
                     $("#userProfileSelection").on("click", function () {
                         $.publish("show:profile");
@@ -151,7 +147,36 @@ define(["lib/i18n.min!nls/resources.js", "app/survey", "app/message", "app/diag"
         },
 
         _submitSurvey: function () {
+            var firstMissing = survey.validateForm($('#surveyContainer'),
+                surveyController._prepareAppConfigInfo.survey, surveyController._currentCandidate.obj.attributes);
 
+            // Submit the survey if it has the important responses
+            if (firstMissing === undefined) {
+                surveyController._currentCandidate.obj.attributes[
+                    surveyController._prepareAppConfigInfo.appParams.surveyorNameField] =
+                    surveyController._currentUser.name;
+                if (surveyController._iSelectedPhoto >= 0) {
+                    surveyController._currentCandidate.obj.attributes[
+                        surveyController._prepareAppConfigInfo.appParams.bestPhotoField] =
+                        surveyController._currentCandidate.attachments[surveyController._iSelectedPhoto].id;
+                }
+                diag.appendWithLF("saving survey for property <i>"
+                    + JSON.stringify(surveyController._currentCandidate.obj.attributes) + "</i>");  //???
+                surveyController._dataAccess.updateCandidate(surveyController._currentCandidate).then(function () {
+                    surveyController._completions += 1;
+                    surveyController._updateCount();
+
+                    surveyController._hideSurvey();
+                    $.publish("request:newSurvey");
+                });
+
+            // Jump to the first missing important question otherwise
+            // From http://stackoverflow.com/a/6677069
+            } else {
+                $("#sidebarContent").animate({
+                    scrollTop: firstMissing.offsetTop - 5
+                }, 500);
+            }
         },
 
         _showNewSurvey: function (ignore, candidate) {
