@@ -16,7 +16,7 @@
  | limitations under the License.
  */
 //====================================================================================================================//
-define(["lib/i18n.min!nls/resources.js", "prepareAppConfigInfo", "dataAccess", "splash", "message", "proxy", "guest", "content", "diag"],
+define(["lib/i18n.min!nls/resources.js", "prepareAppConfigInfo", "dataAccess", "splash", "message", "proxy", "user", "content", "diag"],
     function (i18n, prepareAppConfigInfo, dataAccess, splash, message, proxy, user, content, diag) {
     "use strict";
     var main = {
