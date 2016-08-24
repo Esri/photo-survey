@@ -1,0 +1,65 @@
+﻿<header>
+    <button id="helpButton" aria-label="help" role="button"
+        class="glyphicon pull-right help-icon iconButton sprites question-sign"
+        data-toggle="modal" data-target="#helpPanel"></button>
+    <div class="dropdown">
+        <span class="lg-a" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span id="name"></span>
+            <span id="score" class="badge"></span><span class="caret"></span>
+        </span>
+        <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+            <li id="userProfileSelection"><span id="userProfileSelectionText" role="menuitem" tabindex="-1">Profile</span></li>
+            <li id="userSignoutSelection"><span id="userSignoutSelectionText" role="menuitem" tabindex="-1">Sign out</span></li>
+        </ul>
+    </div>
+    <div id="page-title" class="page-title"></div>
+</header>
+
+<article id="survey" role="form">
+    <div id="surveyContainer" class="form-frame transparent"></div>
+    <div class="action-bar">
+      <button id="skipBtn" type="button" class="btn skip-button transparent">Skip</button>
+      <button id="submitBtn" type="submit" class="btn pull-right submit-button transparent">Submit survey</button>
+    </div>
+</article>
+
+<article id="profile" class="transparent">
+    <div class="profile-frame">
+        <div id="profileAvatar" class="profileAvatar transparent"></div>
+        <div id="name2" class="profileName"></div>
+        <div id="profileCount" class="profileCount transparent">
+            <div id="score2" class="profileCountNum"></div>
+            <div id="surveysCompleted" class="profileCountLabel">surveys completed</div>
+        </div>
+        <div id="ranking" class="ranking transparent">
+            <div id="rankLabel" class="profileRankLabel"></div>
+            <div id="level" class="profileRankLevel"></div>
+            <div class="profileRankStars"><div class="sprites empty-star"></div><div class="sprites empty-star"></div><div class="sprites empty-star"></div><div class="sprites empty-star"></div><div class="sprites empty-star"></div></div>
+            <div id="profileRankBar" class="profileRankBar">
+                <div id="profileRankBarFill" class="profileRankBarFill"></div>
+            </div>
+            <div id="remainingToNextLevel" class="profileRankToGo"></div>
+        </div>
+    </div>
+    <div id="profileActionBar" class="action-bar">
+      <button id="closeProfileBtn" type="button" class="btn skip-button">&lt; Back to survey</button>
+    </div>
+</article>
+
+<!-- Help and message overlay -->
+<aside id="helpPanel" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button id="modalCloseBtn1" aria-label="close help" class="close" data-dismiss="modal">&times;</button>
+                <span id="helpTitle" class="modal-title"></span>
+            </div>
+            <div id="helpBody" class="modal-body"></div>
+            <div class="modal-footer">
+                <button id="modalCloseBtn2" aria-label="close help" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+
+    </div>
+</aside>

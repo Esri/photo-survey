@@ -16,7 +16,7 @@
  | limitations under the License.
  */
 //====================================================================================================================//
-define(["lib/i18n.min!nls/resources.js", "app/visualsController3d", "app/surveyController", "app/diag"],
+define(["lib/i18n.min!nls/resources.js", "app/visualsController3d", "app/surveyController3d", "app/diag"],
     function (i18n, visualsController, surveyController, diag) {
     "use strict";
     var content = {
