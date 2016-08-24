@@ -19,37 +19,27 @@
 define(['lib/i18n.min!nls/resources.js', 'diag'],
     function (i18n, diag) {
     'use strict';
-    var proxy = {
+    var user = {
         //------------------------------------------------------------------------------------------------------------//
 
-        test: function (prepareAppConfigInfo) {
-            var proxyReady = $.Deferred(), unsupported = false, needProxy = false;
-
-            // Check for obsolete IE
-            if ($("body").hasClass("unsupportedIE")) {
-                unsupported = true;
-            } else if ($("body").hasClass("IE9")) {
-                needProxy = true;
-            }
-
-            // If a proxy is needed, launch the test for a usable proxy
-            if (unsupported) {
-                proxyReady.reject("Unsupported browser");
-            } else if (needProxy) {
-                $.getJSON(prepareAppConfigInfo.appParams.proxyProgram + "?ping", function () {
-                    proxyReady.resolve();
-                }).fail(function (error) {
-                    proxyReady.reject(error);
+        launch: function (prepareAppConfigInfo, splash, actionButtonContainer) {
+            $('<div id="guestSignin" class="splashInfoActionButton guestOfficialColor"><span class="socialMediaIcon sprites guest-user_29"></span>'
+                    + i18n.signin.guestLabel + '</div>').appendTo(actionButtonContainer);
+            $('#guestSignin').on('click', function () {
+                $.publish("signedIn:user", {
+                    name: "Guest",
+                    id: "",
+                    canSubmit: prepareAppConfigInfo.appParams.allowGuestSubmissions
                 });
-            } else {
-                prepareAppConfigInfo.appParams.proxyProgram = null;
-                proxyReady.resolve();
-            }
+            });
+            splash.replacePrompt(i18n.signin.signinLoginPrompt, splash.showActions);
+        },
 
-            return proxyReady;
-        }
+        signout: function () {
+            $.publish("signedOut:user");
+        },
 
         //------------------------------------------------------------------------------------------------------------//
     };
-    return proxy;
+    return user;
 });

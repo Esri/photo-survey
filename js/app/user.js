@@ -16,13 +16,13 @@
  | limitations under the License.
  */
 //====================================================================================================================//
-define(['lib/i18n.min!nls/resources.js', 'splash', 'handleUserSignin', 'diag'],
-    function (i18n, splash, handleUserSignin, diag) {
+define(['lib/i18n.min!nls/resources.js', 'handleUserSignin', 'diag'],
+    function (i18n,handleUserSignin, diag) {
     'use strict';
     var user = {
         //------------------------------------------------------------------------------------------------------------//
 
-        launch: function (prepareAppConfigInfo) {
+        launch: function (prepareAppConfigInfo, splash, actionButtonContainer) {
             splash.replacePrompt(i18n.signin.signinFetching);
 
             // Start up the social media connections
@@ -44,7 +44,7 @@ define(['lib/i18n.min!nls/resources.js', 'splash', 'handleUserSignin', 'diag'],
             // When the social media connections are ready, we can enable the social-media sign-in buttons
             userSigninReady.then(function () {
                 // Add the sign-in buttons
-                handleUserSignin.initUI($("#splashInfoActions")[0]);
+                handleUserSignin.initUI(actionButtonContainer);
 
                 // Switch to the sign-in prompt
                 splash.replacePrompt(i18n.signin.signinLoginPrompt, splash.showActions);

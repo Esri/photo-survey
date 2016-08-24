@@ -32,6 +32,11 @@ define(['lib/i18n.min!nls/resources.js', 'diag'],
                 }, {
                     prepend: true,
                     complete: function () {
+                        // i18n-ize content
+                        $("#modalCloseBtn1")[0].title = i18n.tooltips.button_close;
+                        $("#modalCloseBtn2")[0].title = i18n.tooltips.button_close;
+                        $("#modalCloseBtn2")[0].innerHTML = i18n.labels.button_close;
+
                         messagePanelReady.resolve();
                     }
                 });

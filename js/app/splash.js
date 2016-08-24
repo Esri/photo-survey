@@ -16,14 +16,14 @@
  | limitations under the License.
  */
 //====================================================================================================================//
-define(['lib/i18n.min!nls/resources.js', 'diag'],
+define(["lib/i18n.min!nls/resources.js", "diag"],
     function (i18n, diag) {
-    'use strict';
+    "use strict";
     var splash = {
         //------------------------------------------------------------------------------------------------------------//
 
         init: function (prepareAppConfigInfo) {
-            var _this = this, splashInfoPanelReady = $.Deferred();
+            var splashInfoPanelReady = $.Deferred();
 
             // When the DOM is ready, we can start adjusting the UI
             $().ready(function () {
@@ -43,10 +43,10 @@ define(['lib/i18n.min!nls/resources.js', 'diag'],
                                 if (url) {
                                     prepareAppConfigInfo.appParams.splashBackgroundUrl = url;
                                 }
-                                _this.setBackground(prepareAppConfigInfo.appParams.splashBackgroundUrl);
+                                splash.setBackground(prepareAppConfigInfo.appParams.splashBackgroundUrl);
                             });
                         } else {
-                            _this.setBackground(prepareAppConfigInfo.appParams.splashBackgroundUrl);
+                            splash.setBackground(prepareAppConfigInfo.appParams.splashBackgroundUrl);
                         }
                     }
                 });
@@ -55,14 +55,14 @@ define(['lib/i18n.min!nls/resources.js', 'diag'],
             return splashInfoPanelReady;
         },
 
-        show: function (makeVisible, thenDo) {
+        show: function (makeVisible, thenDo, thenDoArg) {
             if (makeVisible) {
                 $("#splashPage").fadeIn("fast", function () {
-                    thenDo && thenDo();
+                    thenDo && thenDo(thenDoArg);
                 });
             } else {
                 $("#splashPage").fadeOut("fast", function () {
-                    thenDo && thenDo();
+                    thenDo && thenDo(thenDoArg);
                 });
             }
         },
@@ -71,33 +71,37 @@ define(['lib/i18n.min!nls/resources.js', 'diag'],
             $("#splashPageBkgd").css("background-image", "url(" + url + ")").fadeIn(2000);
         },
 
-        replaceTitle: function (text) {
-            this._replaceText($("#splashInfoTitle"), text, thenDo);
+        replaceTitle: function (text, thenDo, thenDoArg) {
+            splash._replaceText($("#splashInfoTitle"), text, thenDo, thenDoArg);
         },
 
-        replaceBody: function (text) {
-            this._replaceText($("#splashInfoBody"), text, thenDo);
+        replaceBody: function (text, thenDo, thenDoArg) {
+            splash._replaceText($("#splashInfoBody"), text, thenDo, thenDoArg);
         },
 
-        replacePrompt: function (text, thenDo) {
-            this._replaceText($("#splashInfoPrompt"), text, thenDo);
+        replacePrompt: function (text, thenDo, thenDoArg) {
+            splash._replaceText($("#splashInfoPrompt"), text, thenDo, thenDoArg);
         },
 
         showActions: function () {
             $("#splashInfoActions").fadeIn();
         },
 
+        getActionsContainer: function () {
+            return $("#splashInfoActions")[0];
+        },
+
         //------------------------------------------------------------------------------------------------------------//
 
-        _replaceText: function (item, text, thenDo) {
+        _replaceText: function (item, text, thenDo, thenDoArg) {
             item.fadeOut("fast", function () {
                 if (text) {
                     item[0].innerHTML = text;
                     item.fadeIn(function () {
-                        thenDo && thenDo();
+                        thenDo && thenDo(thenDoArg);
                     });
                 } else {
-                    thenDo && thenDo();
+                    thenDo && thenDo(thenDoArg);
                 }
             });
         }

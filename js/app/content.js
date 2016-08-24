@@ -16,123 +16,129 @@
  | limitations under the License.
  */
 //====================================================================================================================//
-define(['lib/i18n.min!nls/resources.js', 'diag'],
-    function (i18n, diag) {
-    'use strict';
+define(["lib/i18n.min!nls/resources.js", "visualsController", "surveyController", "diag"],
+    function (i18n, visualsController, surveyController, diag) {
+    "use strict";
     var content = {
-        _overviewMap: null,
-        _overviewMapVisible: false,
+        _prepareAppConfigInfo: null,
+        _splash: null,
 
         //------------------------------------------------------------------------------------------------------------//
 
-        init: function (prepareAppConfigInfo) {
-            var _this = this, contentPanelReady = $.Deferred();
+        init: function (prepareAppConfigInfo, dataAccess, splash) {
+            var contentPanelReady = $.Deferred();
+            content._prepareAppConfigInfo = prepareAppConfigInfo;
+            content._dataAccess = dataAccess;
+            content._splash = splash;
 
-            // When the DOM is ready, we can start adjusting the UI
-            $().ready(function () {
-                // Instantiate the content template
-                $("body").loadTemplate("js/app/content.html", {
-                }, {
-                    prepend: true,
-                    complete: function () {
+            // Instantiate the content template
+            $("body").loadTemplate("js/app/content.html", {
+            }, {
+                prepend: true,
+                complete: function () {
+                    // When the feature service and survey are ready, we can set up the module that reads from and writes to the service
+                    content._prepareAppConfigInfo.surveyReady.then(function () {
+                        content._dataAccess.init(content._prepareAppConfigInfo.featureSvcParams.url,
+                            content._prepareAppConfigInfo.featureSvcParams.id,
+                            content._prepareAppConfigInfo.featureSvcParams.objectIdField,
+                            content._prepareAppConfigInfo.appParams.surveyorNameField + "+is+null+or+"
+                            + content._prepareAppConfigInfo.appParams.surveyorNameField + "=''",
+                            content._prepareAppConfigInfo.appParams.proxyProgram);
 
-                        // Don't need help button if there's no help to display
-                        if (!prepareAppConfigInfo.appParams.helpText || prepareAppConfigInfo.appParams.helpText.length === 0) {
-                            $("#helpButton").css("display", "none");
-                        } else {
-                            $("#helpButton")[0].title = i18n.tooltips.button_additionalInfo;
-                            /*$("#helpTitle")[0].innerHTML = prepareAppConfigInfo.appParams.title;
-                            $("#helpBody")[0].innerHTML = prepareAppConfigInfo.appParams.helpText;*/
-                        }
-
-                        // Create overview map if desired
-                        if (prepareAppConfigInfo.appParams.includeOverviewMap) {
-                            // Prepare overview map and set its initial visibility
-                            content._overviewMap = L.map('overviewMap', {
-                                scrollWheelZoom: "center",
-                                doubleClickZoom: "center"
-                            });
-                            L.esri.basemapLayer(prepareAppConfigInfo.appParams.overviewMapBasemap).addTo(content._overviewMap);
-
-                            content._showOverviewMap(prepareAppConfigInfo.appParams.overviewMapInitiallyOpen);
-
-                            // Show the container for the show & hide icons, which is outside of the overview map's frame,
-                            // and enable the icons
-                            $("#showHideOverview").css("visibility", "visible");
-
-                            $('#showOverview').on('click', function () {
-                                content._showOverviewMap(true);
-                            });
-
-                            $('#hideOverview').on('click', function () {
-                                content._showOverviewMap(false);
-                            });
-                        }
-
-                        // i18n updates
-                        $("#previousImageBtn")[0].title = i18n.tooltips.button_previous_image;
-                        $("#nextImageBtn")[0].title = i18n.tooltips.button_next_image;
-
-                        $("#skipBtn")[0].innerHTML = i18n.tooltips.button_skip;
-                        $("#submitBtn")[0].innerHTML = i18n.tooltips.button_submit;
-
-                        $("#userProfileSelectionText")[0].innerHTML = i18n.labels.menuItem_profile;
-                        $("#userSignoutSelectionText")[0].innerHTML = i18n.labels.menuItem_signout;
-
-                        /*$("#modalCloseBtn1")[0].title = i18n.tooltips.button_close;
-                        $("#modalCloseBtn2")[0].title = i18n.tooltips.button_close;
-                        $("#modalCloseBtn2")[0].innerHTML = i18n.labels.button_close;*/
-
-                        $("#surveysCompleted")[0].innerHTML = i18n.labels.label_surveys_completed;
-                        $("#closeProfileBtn")[0].innerHTML = i18n.labels.button_returnToSurvey;
-
-                        // Enable the carousel swipe for mobile
-                        $('.carousel').bcSwipe({
-                            threshold: 50
+                        // Test if there are any surveys remaining to be done
+                        splash.replacePrompt(i18n.signin.lookingForSurveys);
+                        content._dataAccess.getObjectCount().then(function (countRemaining) {
+                            diag.appendWithLF(countRemaining + " surveys are available");  //???
+                            if (countRemaining > 0) {
+                                contentPanelReady.resolve();
+                            } else {
+                                splash.replacePrompt(i18n.signin.noMoreSurveys);
+                                contentPanelReady.reject();
+                            }
+                        }, function (error) {
+                            console.log(JSON.stringify(error));
+                            splash.replacePrompt(i18n.signin.noMoreSurveys);
+                            contentPanelReady.reject();
                         });
-
-                        // Provide the i18n strings to the survey
-                        survey.flag_important_question = i18n.tooltips.flag_important_question;
-
-
-
-                        contentPanelReady.resolve();
-                    }
-                });
+                    }, function (error) {
+                        console.log(JSON.stringify(error));
+                        splash.replacePrompt(i18n.signin.noMoreSurveys);
+                        contentPanelReady.reject();
+                    });
+                }
             });
 
             return contentPanelReady;
         },
 
-        show: function (makeVisible, thenDo) {
+        launch: function () {
+            var contentComponentsReady = $.Deferred();
+
+            var visualsCtrlr = visualsController.init(content._prepareAppConfigInfo, content._dataAccess, $("#mainContent"));
+            var surveyCtrlr = surveyController.init(content._prepareAppConfigInfo, content._dataAccess, $("#sidebarContent"));
+
+            $.when(visualsCtrlr, surveyCtrlr).then(function () {
+
+                // Wire up buttons and menu choices
+                $.subscribe("signedIn:user", function () {
+                    $.publish("request:newSurvey");
+                });
+
+                $.subscribe("request:newSurvey", function () {
+
+                    // Get candidate
+                    content._dataAccess.getCandidate(
+                        content._prepareAppConfigInfo.appParams.randomizeSelection).then(function (candidate) {
+                        // id:num
+                        // obj:feature{}
+                        // attachments:[{id,url},...]
+
+                        // Do we have a valid candidate?
+                        if (!candidate.obj) {
+                            $.publish("show:noSurveys");
+                            return;
+                        }
+
+                        // Is this candidate usable?
+                        var numPhotos = candidate.attachments ? candidate.attachments.length : 0;
+                        if (numPhotos === 0) {
+                            diag.appendWithLF("no photos for property <i>"
+                                + JSON.stringify(candidate.obj.attributes) + "</i>");  //???
+                            candidate.obj.attributes[content._prepareAppConfigInfo.appParams.surveyorNameField] =
+                                "no photos";
+                            content._dataAccess.updateCandidate(candidate);
+                            $.publish("request:newSurvey");
+                            return;
+                        }
+                        diag.appendWithLF("showing property <i>"
+                            + JSON.stringify(candidate.obj.attributes) + "</i> with "  //???
+                            + numPhotos + " photos");  //???
+
+                        candidate.numPhotos = numPhotos;
+                        $.publish("show:newSurvey", candidate);
+
+                    }, function () {
+                        $.publish("show:noSurveys");
+                    });
+                });
+
+                // Done with setup
+                contentComponentsReady.resolve();
+            });
+
+            return contentComponentsReady;
+        },
+
+        show: function (makeVisible, thenDo, thenDoArg) {
             if (makeVisible) {
                 $("#contentPage").fadeIn("fast", function () {
-                    thenDo && thenDo();
+                    thenDo && thenDo(thenDoArg);
                 });
             } else {
                 $("#contentPage").fadeOut("fast", function () {
-                    thenDo && thenDo();
+                    thenDo && thenDo(thenDoArg);
                 });
             }
-        },
-
-        //------------------------------------------------------------------------------------------------------------//
-
-        _showOverviewMap: function (show) {
-            content._overviewMapVisible = show;
-            $("#overviewMap").css("visibility", show ? "visible" : "hidden");
-            content._updateIconToggle(show, 'hideOverview', 'showOverview');
-        },
-
-        _updateIconToggle: function (state, onIconId, offIconId) {
-            content._showIcon(onIconId, state);
-            content._showIcon(offIconId, !state);
-        },
-
-        _showIcon: function (iconId, makeVisible) {
-            document.getElementById(iconId).style.display = makeVisible
-                ? 'block'
-                : 'none';
         }
 
         //------------------------------------------------------------------------------------------------------------//

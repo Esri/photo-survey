@@ -185,11 +185,11 @@ define(['lib/i18n.min!nls/resources.js'], function (i18n) {
             return deferred;
         },
 
-        initUI: function (buttonContainer) {
+        initUI: function (actionButtonContainer) {
 
             if (handleUserSignin.availabilities.guest) {
                 $('<div id="guestSignin" class="splashInfoActionButton guestOfficialColor"><span class="socialMediaIcon sprites guest-user_29"></span>'
-                        + i18n.signin.guestLabel + '</div>').appendTo(buttonContainer);
+                        + i18n.signin.guestLabel + '</div>').appendTo(actionButtonContainer);
                 $('#guestSignin').on('click', function () {
                     handleUserSignin.loggedIn = true;
                     handleUserSignin.currentProvider = "guest";
@@ -206,7 +206,7 @@ define(['lib/i18n.min!nls/resources.js'], function (i18n) {
             }
 
             if (handleUserSignin.availabilities.facebook) {
-                $('<div id="facebookSignin" class="splashInfoActionButton facebookOfficialColor"><span class="socialMediaIcon sprites FB-f-Logo__blue_29"></span>Facebook</div>').appendTo(buttonContainer);
+                $('<div id="facebookSignin" class="splashInfoActionButton facebookOfficialColor"><span class="socialMediaIcon sprites FB-f-Logo__blue_29"></span>Facebook</div>').appendTo(actionButtonContainer);
                 $('#facebookSignin').on('click', function () {
                     // Force reauthorization. FB says, "Apps should build their own mechanisms for allowing switching
                     // between different Facebook user accounts using log out functions and should not rely upon
@@ -222,7 +222,7 @@ define(['lib/i18n.min!nls/resources.js'], function (i18n) {
             }
 
             if (handleUserSignin.availabilities.googleplus) {
-                $('<div id="googlePlusSignin" class="splashInfoActionButton googlePlusOfficialColor"><span class="socialMediaIcon sprites gp-29"></span>Google+</div>').appendTo(buttonContainer);
+                $('<div id="googlePlusSignin" class="splashInfoActionButton googlePlusOfficialColor"><span class="socialMediaIcon sprites gp-29"></span>Google+</div>').appendTo(actionButtonContainer);
                 $('#googlePlusSignin').on('click', function () {
                     // Google caveat for setting cookiepolicy to "none":
                     // The none value does not set cookies or session storage for the sign-in button
@@ -242,7 +242,7 @@ define(['lib/i18n.min!nls/resources.js'], function (i18n) {
             }
 
             if (handleUserSignin.availabilities.twitter) {
-                $('<div id="twitterSignin" class="splashInfoActionButton twitterOfficialColor"><span class="socialMediaIcon sprites Twitter_logo_blue_29"></span>Twitter</div>').appendTo(buttonContainer);
+                $('<div id="twitterSignin" class="splashInfoActionButton twitterOfficialColor"><span class="socialMediaIcon sprites Twitter_logo_blue_29"></span>Twitter</div>').appendTo(actionButtonContainer);
                 $('#twitterSignin').on('click', function () {
                     handleUserSignin.showTwitterLoginWin(false);
                 });
