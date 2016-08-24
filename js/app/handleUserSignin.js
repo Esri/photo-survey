@@ -39,8 +39,8 @@
  | limitations under the License.
  */
 //============================================================================================================================//
-define(['lib/i18n.min!nls/resources.js'], function (i18n) {
-    'use strict';
+define(["lib/i18n.min!nls/resources.js"], function (i18n) {
+    "use strict";
     var handleUserSignin;
     handleUserSignin = {
 
@@ -143,8 +143,8 @@ define(['lib/i18n.min!nls/resources.js'], function (i18n) {
                         Modernizr.load([{
                             load: "https://apis.google.com/js/client:platform.js",
                             complete: function () {
-                                gapi.load('auth2', function () {
-                                    gapi.client.load('plus', 'v1').then(function () {
+                                gapi.load("auth2", function () {
+                                    gapi.client.load("plus", "v1").then(function () {
                                         handleUserSignin.availabilities.googleplus = true;
                                         googlePlusDeferred.resolve(true);
                                     });
@@ -188,9 +188,9 @@ define(['lib/i18n.min!nls/resources.js'], function (i18n) {
         initUI: function (actionButtonContainer) {
 
             if (handleUserSignin.availabilities.guest) {
-                $('<div id="guestSignin" class="splashInfoActionButton guestOfficialColor"><span class="socialMediaIcon sprites guest-user_29"></span>'
-                        + i18n.signin.guestLabel + '</div>').appendTo(actionButtonContainer);
-                $('#guestSignin').on('click', function () {
+                $("<div id='guestSignin' class='splashInfoActionButton guestOfficialColor'><span class='socialMediaIcon sprites guest-user_29'></span>"
+                        + i18n.signin.guestLabel + "</div>").appendTo(actionButtonContainer);
+                $("#guestSignin").on("click", function () {
                     handleUserSignin.loggedIn = true;
                     handleUserSignin.currentProvider = "guest";
 
@@ -206,8 +206,8 @@ define(['lib/i18n.min!nls/resources.js'], function (i18n) {
             }
 
             if (handleUserSignin.availabilities.facebook) {
-                $('<div id="facebookSignin" class="splashInfoActionButton facebookOfficialColor"><span class="socialMediaIcon sprites FB-f-Logo__blue_29"></span>Facebook</div>').appendTo(actionButtonContainer);
-                $('#facebookSignin').on('click', function () {
+                $("<div id='facebookSignin' class='splashInfoActionButton facebookOfficialColor'><span class='socialMediaIcon sprites FB-f-Logo__blue_29'></span>Facebook</div>").appendTo(actionButtonContainer);
+                $("#facebookSignin").on("click", function () {
                     // Force reauthorization. FB says, "Apps should build their own mechanisms for allowing switching
                     // between different Facebook user accounts using log out functions and should not rely upon
                     // re-authentication for this."  (https://developers.facebook.com/docs/facebook-login/reauthentication),
@@ -216,14 +216,14 @@ define(['lib/i18n.min!nls/resources.js'], function (i18n) {
                     FB.login(function () {
                         return null;
                     }, {
-                        auth_type: 'reauthenticate'
+                        auth_type: "reauthenticate"
                     });
                 });
             }
 
             if (handleUserSignin.availabilities.googleplus) {
-                $('<div id="googlePlusSignin" class="splashInfoActionButton googlePlusOfficialColor"><span class="socialMediaIcon sprites gp-29"></span>Google+</div>').appendTo(actionButtonContainer);
-                $('#googlePlusSignin').on('click', function () {
+                $("<div id='googlePlusSignin' class='splashInfoActionButton googlePlusOfficialColor'><span class='socialMediaIcon sprites gp-29'></span>Google+</div>").appendTo(actionButtonContainer);
+                $("#googlePlusSignin").on("click", function () {
                     // Google caveat for setting cookiepolicy to "none":
                     // The none value does not set cookies or session storage for the sign-in button
                     // and uses a less efficient fallback mechanism for determining user and session
@@ -242,8 +242,8 @@ define(['lib/i18n.min!nls/resources.js'], function (i18n) {
             }
 
             if (handleUserSignin.availabilities.twitter) {
-                $('<div id="twitterSignin" class="splashInfoActionButton twitterOfficialColor"><span class="socialMediaIcon sprites Twitter_logo_blue_29"></span>Twitter</div>').appendTo(actionButtonContainer);
-                $('#twitterSignin').on('click', function () {
+                $("<div id='twitterSignin' class='splashInfoActionButton twitterOfficialColor'><span class='socialMediaIcon sprites Twitter_logo_blue_29'></span>Twitter</div>").appendTo(actionButtonContainer);
+                $("#twitterSignin").on("click", function () {
                     handleUserSignin.showTwitterLoginWin(false);
                 });
             }
@@ -320,12 +320,12 @@ define(['lib/i18n.min!nls/resources.js'], function (i18n) {
         updateFacebookUser: function (response) {
             // Events & FB.getLoginStatus return an updated authResponse object
             // {
-            //     status: 'connected',
+            //     status: "connected",
             //     authResponse: {
-            //         accessToken: '...',
-            //         expiresIn:'...',
-            //         signedRequest:'...',
-            //         userID:'...'
+            //         accessToken: "...",
+            //         expiresIn:"...",
+            //         signedRequest:"...",
+            //         userID:"..."
             //     }
             // }
 
@@ -419,15 +419,15 @@ define(['lib/i18n.min!nls/resources.js'], function (i18n) {
          */
         disconnectUser: function (access_token) {
             // From https://developers.google.com/+/web/signin/disconnect
-            var revokeUrl = 'https://accounts.google.com/o/oauth2/revoke?token=' + access_token;
+            var revokeUrl = "https://accounts.google.com/o/oauth2/revoke?token=" + access_token;
 
             // Perform an asynchronous GET request.
             $.ajax({
-                type: 'GET',
+                type: "GET",
                 url: revokeUrl,
                 async: false,
                 contentType: "application/json",
-                dataType: 'jsonp',
+                dataType: "jsonp",
                 success: function () {
                     handleUserSignin.updateGooglePlusUser();
                 },
@@ -464,22 +464,22 @@ define(['lib/i18n.min!nls/resources.js'], function (i18n) {
             var baseUrl, package_path, redirect_uri, left, top, w, h;
 
             baseUrl = handleUserSignin.appParams.twitterSigninUrl;
-            package_path = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
-            redirect_uri = encodeURIComponent(location.protocol + '//' + location.host + package_path + handleUserSignin.appParams.twitterCallbackUrl);
+            package_path = window.location.pathname.substring(0, window.location.pathname.lastIndexOf("/"));
+            redirect_uri = encodeURIComponent(location.protocol + "//" + location.host + package_path + handleUserSignin.appParams.twitterCallbackUrl);
             left = (screen.width / 2) - (w / 2);
             top = (screen.height / 2) - (h / 2);
             w = screen.width / 2;
             h = screen.height / 1.5;
 
-            baseUrl += '?';
+            baseUrl += "?";
             if (forceLogin) {
-                baseUrl += 'force_login=true';
+                baseUrl += "force_login=true";
                 if (redirect_uri) {
-                    baseUrl += '&';
+                    baseUrl += "&";
                 }
             }
             if (redirect_uri) {
-                baseUrl += 'redirect_uri=' + redirect_uri;
+                baseUrl += "redirect_uri=" + redirect_uri;
             }
 
             window.open(baseUrl, "twoAuth", "scrollbars=yes, resizable=yes, left=" + left + ", top=" + top + ", width=" + w + ", height=" + h, true);
@@ -567,21 +567,21 @@ define(['lib/i18n.min!nls/resources.js'], function (i18n) {
          * @private
          */
         isIE: function (version, comparison) {
-            var cc = 'IE',
-                b = document.createElement('B'),
+            var cc = "IE",
+                b = document.createElement("B"),
                 docElem = document.documentElement,
                 isIE;
 
             if (version) {
-                cc += ' ' + version;
+                cc += " " + version;
                 if (comparison) {
-                    cc = comparison + ' ' + cc;
+                    cc = comparison + " " + cc;
                 }
             }
 
-            b.innerHTML = '<!--[if ' + cc + ']><b id="iecctest"></b><![endif]-->';
+            b.innerHTML = "<!--[if " + cc + "]><b id='iecctest'></b><![endif]-->";
             docElem.appendChild(b);
-            isIE = !!document.getElementById('iecctest');
+            isIE = !!document.getElementById("iecctest");
             docElem.removeChild(b);
             return isIE;
         }

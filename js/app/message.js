@@ -16,9 +16,9 @@
  | limitations under the License.
  */
 //====================================================================================================================//
-define(['lib/i18n.min!nls/resources.js', 'diag'],
+define(["lib/i18n.min!nls/resources.js", "app/diag"],
     function (i18n, diag) {
-    'use strict';
+    "use strict";
     var message = {
         //------------------------------------------------------------------------------------------------------------//
 

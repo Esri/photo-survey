@@ -16,9 +16,9 @@
  | limitations under the License.
  */
 //====================================================================================================================//
-define(['lib/i18n.min!nls/resources.js', 'handleUserSignin', 'diag'],
+define(["lib/i18n.min!nls/resources.js", "app/handleUserSignin", "app/diag"],
     function (i18n,handleUserSignin, diag) {
-    'use strict';
+    "use strict";
     var user = {
         //------------------------------------------------------------------------------------------------------------//
 

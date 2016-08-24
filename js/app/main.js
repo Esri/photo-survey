@@ -16,7 +16,7 @@
  | limitations under the License.
  */
 //====================================================================================================================//
-define(["lib/i18n.min!nls/resources.js", "prepareAppConfigInfo", "dataAccess", "splash", "message", "proxy", "user", "content", "diag"],
+define(["lib/i18n.min!nls/resources.js", "app/prepareAppConfigInfo", "app/dataAccess", "app/splash", "app/message", "app/proxy", "app/user", "app/content", "app/diag"],
     function (i18n, prepareAppConfigInfo, dataAccess, splash, message, proxy, user, content, diag) {
     "use strict";
     var main = {
@@ -61,7 +61,8 @@ define(["lib/i18n.min!nls/resources.js", "prepareAppConfigInfo", "dataAccess", "
 
                 // Wire up app
                 $.subscribe("signedIn:user", function (ignore, loginInfo) {
-                    console.log("signedIn:user " + JSON.stringify(loginInfo));
+                    diag.appendWithLF("signedIn:user " + JSON.stringify(loginInfo));  //???
+                    console.log();
                     splash.show(false, content.show, true);
                 });
 
@@ -70,7 +71,7 @@ define(["lib/i18n.min!nls/resources.js", "prepareAppConfigInfo", "dataAccess", "
                 });
 
                 $.subscribe("signedOut:user", function () {
-                    console.log("signedOut:user");
+                    diag.appendWithLF("signedOut:user");  //???
                     content.show(false, splash.show, true);
                 });
 

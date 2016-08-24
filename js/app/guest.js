@@ -16,18 +16,18 @@
  | limitations under the License.
  */
 //====================================================================================================================//
-define(['lib/i18n.min!nls/resources.js', 'diag'],
+define(["lib/i18n.min!nls/resources.js", "app/diag"],
     function (i18n, diag) {
-    'use strict';
+    "use strict";
     var user = {
         //------------------------------------------------------------------------------------------------------------//
 
         launch: function (prepareAppConfigInfo, splash, actionButtonContainer) {
-            $('<div id="guestSignin" class="splashInfoActionButton guestOfficialColor"><span class="socialMediaIcon sprites guest-user_29"></span>'
-                    + i18n.signin.guestLabel + '</div>').appendTo(actionButtonContainer);
-            $('#guestSignin').on('click', function () {
+            $("<div id='guestSignin' class='splashInfoActionButton guestOfficialColor'><span class='socialMediaIcon sprites guest-user_29'></span>"
+                    + i18n.signin.guestLabel + "</div>").appendTo(actionButtonContainer);
+            $("#guestSignin").on("click", function () {
                 $.publish("signedIn:user", {
-                    name: "Guest",
+                    name: i18n.signin.guestLabel,
                     id: "",
                     canSubmit: prepareAppConfigInfo.appParams.allowGuestSubmissions
                 });

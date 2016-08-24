@@ -17,7 +17,7 @@
  */
 //============================================================================================================================//
 define(function () {
-    'use strict';
+    "use strict";
     var parseConfigInfo;
     parseConfigInfo = {
 
@@ -89,7 +89,7 @@ define(function () {
                 if (!inConfigSection) {
                     inConfigSection = line.indexOf("=== Access and use settings ===") >= 0;
                 } else {
-                    lineParts = line.split(':');
+                    lineParts = line.split(":");
                     if (lineParts[0].toLowerCase().indexOf(keywordParts[iKeyword]) >= 0) {
                         switch (iKeyword) {
                         case 0: // "0"
@@ -156,7 +156,7 @@ define(function () {
             var levelParts, minimumSurveysNeeded;
 
             if (contribLevels !== null && levelDescrip !== null) {
-                levelParts = levelDescrip.split('@');
+                levelParts = levelDescrip.split("@");
                 try {
                     minimumSurveysNeeded = iLevel === 0
                         ? 0

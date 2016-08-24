@@ -16,8 +16,8 @@
  | limitations under the License.
  */
 //============================================================================================================================//
-define(['parseConfigInfo', 'fetchConfigInfo', 'survey'], function (parseConfigInfo, fetchConfigInfo, survey) {
-    'use strict';
+define(["app/parseConfigInfo", "app/fetchConfigInfo", "app/survey"], function (parseConfigInfo, fetchConfigInfo, survey) {
+    "use strict";
     var prepareAppConfigInfo;
     prepareAppConfigInfo = {
 

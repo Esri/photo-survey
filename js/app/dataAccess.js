@@ -16,8 +16,8 @@
  | limitations under the License.
  */
 //============================================================================================================================//
-define(['diag'], function (diag) {
-    'use strict';
+define(["app/diag"], function (diag) {
+    "use strict";
     var dataAccess;
     dataAccess = {
 
@@ -348,20 +348,20 @@ define(['diag'], function (diag) {
             var isFirst = true, result = "";
 
             if (value === null) {
-                result += 'null';
+                result += "null";
             } else if (typeof value === "string") {
-                result += '%22' + encodeURIComponent(value) + '%22';
+                result += "%22" + encodeURIComponent(value) + "%22";
             } else if (typeof value === "object") {
-                result += '%7B';
+                result += "%7B";
                 $.each(value, function (part) {
                     if (value.hasOwnProperty(part)) {
                         result += (isFirst
-                            ? ''
-                            : '%2C') + part + '%3A' + dataAccess.stringifyForApplyEdits(value[part]);
+                            ? ""
+                            : "%2C") + part + "%3A" + dataAccess.stringifyForApplyEdits(value[part]);
                         isFirst = false;
                     }
                 });
-                result += '%7D';
+                result += "%7D";
             } else {
                 result += value;
             }

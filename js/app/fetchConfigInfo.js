@@ -16,8 +16,8 @@
  | limitations under the License.
  */
 //============================================================================================================================//
-define(['parseConfigInfo'], function (parseConfigInfo) {
-    'use strict';
+define(["app/parseConfigInfo"], function (parseConfigInfo) {
+    "use strict";
     var fetchConfigInfo;
     fetchConfigInfo = {
 
@@ -223,7 +223,7 @@ define(['parseConfigInfo'], function (parseConfigInfo) {
             // Shield the call--a cross-domain call in IE9 sporadically breaks with "Access refused"
             try {
                 $.ajax({
-                    type: 'HEAD',
+                    type: "HEAD",
                     url: url,
                     success: function () {
                         callback(true);
