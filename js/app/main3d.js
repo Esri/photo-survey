@@ -16,9 +16,9 @@
  | limitations under the License.
  */
 //====================================================================================================================//
-define(["lib/i18n.min!nls/resources.js", "app/prepareAppConfigInfo", "app/dataAccess", "app/splash", "app/message",
+define(["lib/i18n.min!nls/resources.js", "app/prepareAppConfigInfo", "app/splash", "app/message",
         "app/proxy", "app/user", "app/content3d", "app/diag"],
-    function (i18n, prepareAppConfigInfo, dataAccess, splash, message, proxy, user, content, diag) {
+    function (i18n, prepareAppConfigInfo, splash, message, proxy, user, content, diag) {
     "use strict";
     var main = {
         //------------------------------------------------------------------------------------------------------------//
@@ -53,7 +53,7 @@ define(["lib/i18n.min!nls/resources.js", "app/prepareAppConfigInfo", "app/dataAc
         //------------------------------------------------------------------------------------------------------------//
 
         _launch: function () {
-            content.init(prepareAppConfigInfo, dataAccess, splash).then(function () {
+            content.init(prepareAppConfigInfo, splash).then(function () {
                 // Able to run app; continue content initialization
                 content.launch().then(function () {
                     // Show sign-in
@@ -62,7 +62,7 @@ define(["lib/i18n.min!nls/resources.js", "app/prepareAppConfigInfo", "app/dataAc
 
                 // Wire up app
                 $.subscribe("signedIn:user", function (ignore, loginInfo) {
-                    diag.appendWithLF("signedIn:user " + JSON.stringify(loginInfo));  //???
+                    diag.appendWithLF("signed in user: " + JSON.stringify(loginInfo));  //???
                     console.log();
                     splash.show(false, content.show, true);
                 });
@@ -72,7 +72,7 @@ define(["lib/i18n.min!nls/resources.js", "app/prepareAppConfigInfo", "app/dataAc
                 });
 
                 $.subscribe("signedOut:user", function () {
-                    diag.appendWithLF("signedOut:user");  //???
+                    diag.appendWithLF("signed out");  //???
                     content.show(false, splash.show, true);
                 });
 

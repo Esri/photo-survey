@@ -16,8 +16,8 @@
  | limitations under the License.
  */
 //====================================================================================================================//
-define(["lib/i18n.min!nls/resources.js", "app/visualsController3d", "app/surveyController3d", "app/diag"],
-    function (i18n, visualsController, surveyController, diag) {
+define(["lib/i18n.min!nls/resources.js", "app/dataAccess", "app/visualsController3d", "app/surveyController3d", "app/diag"],
+    function (i18n, dataAccess, visualsController, surveyController, diag) {
     "use strict";
     var content = {
         _prepareAppConfigInfo: null,
@@ -25,10 +25,9 @@ define(["lib/i18n.min!nls/resources.js", "app/visualsController3d", "app/surveyC
 
         //------------------------------------------------------------------------------------------------------------//
 
-        init: function (prepareAppConfigInfo, dataAccess, splash) {
+        init: function (prepareAppConfigInfo, splash) {
             var contentPanelReady = $.Deferred();
             content._prepareAppConfigInfo = prepareAppConfigInfo;
-            content._dataAccess = dataAccess;
             content._splash = splash;
 
             // Instantiate the content template
@@ -38,7 +37,7 @@ define(["lib/i18n.min!nls/resources.js", "app/visualsController3d", "app/surveyC
                 complete: function () {
                     // When the feature service and survey are ready, we can set up the module that reads from and writes to the service
                     content._prepareAppConfigInfo.surveyReady.then(function () {
-                        content._dataAccess.init(content._prepareAppConfigInfo.featureSvcParams.url,
+                        dataAccess.init(content._prepareAppConfigInfo.featureSvcParams.url,
                             content._prepareAppConfigInfo.featureSvcParams.id,
                             content._prepareAppConfigInfo.featureSvcParams.objectIdField,
                             content._prepareAppConfigInfo.appParams.surveyorNameField + "+is+null+or+"
@@ -47,8 +46,7 @@ define(["lib/i18n.min!nls/resources.js", "app/visualsController3d", "app/surveyC
 
                         // Test if there are any surveys remaining to be done
                         splash.replacePrompt(i18n.signin.lookingForSurveys);
-                        content._dataAccess.getObjectCount().then(function (countRemaining) {
-                            diag.appendWithLF(countRemaining + " surveys are available");  //???
+                        dataAccess.getObjectCount().then(function (countRemaining) {
                             if (countRemaining > 0) {
                                 contentPanelReady.resolve();
                             } else {
@@ -74,8 +72,8 @@ define(["lib/i18n.min!nls/resources.js", "app/visualsController3d", "app/surveyC
         launch: function () {
             var contentComponentsReady = $.Deferred();
 
-            var visualsCtrlr = visualsController.init(content._prepareAppConfigInfo, content._dataAccess, $("#mainContent"));
-            var surveyCtrlr = surveyController.init(content._prepareAppConfigInfo, content._dataAccess, $("#sidebarContent"));
+            var visualsCtrlr = visualsController.init(content._prepareAppConfigInfo, dataAccess, $("#mainContent"));
+            var surveyCtrlr = surveyController.init(content._prepareAppConfigInfo, dataAccess, $("#sidebarContent"));
 
             $.when(visualsCtrlr, surveyCtrlr).then(function () {
 
@@ -87,7 +85,7 @@ define(["lib/i18n.min!nls/resources.js", "app/visualsController3d", "app/surveyC
                 $.subscribe("request:newSurvey", function () {
 
                     // Get candidate
-                    content._dataAccess.getCandidate(
+                    dataAccess.getCandidate(
                         content._prepareAppConfigInfo.appParams.randomizeSelection).then(function (candidate) {
                         // id:num
                         // obj:feature{}
@@ -106,7 +104,7 @@ define(["lib/i18n.min!nls/resources.js", "app/visualsController3d", "app/surveyC
                                 + JSON.stringify(candidate.obj.attributes) + "</i>");  //???
                             candidate.obj.attributes[content._prepareAppConfigInfo.appParams.surveyorNameField] =
                                 "no photos";
-                            content._dataAccess.updateCandidate(candidate);
+                            dataAccess.updateCandidate(candidate);
                             $.publish("request:newSurvey");
                             return;
                         }
