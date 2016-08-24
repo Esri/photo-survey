@@ -67,6 +67,24 @@ define(["lib/i18n.min!nls/resources.js", "app/diag"],
                         visualsController._updatePhotoSelectionDisplay();
                     });
 
+                    // Manage group of buttons in a radio style
+                    $(".btn-group > .btn").click(function (evt) {
+                        $(evt.currentTarget).addClass("active").siblings().removeClass("active");
+                    });
+
+                    $("#carousel").on('slide.bs.carousel', function (data) {
+                        // Check if we should slide: swipe jumps right into here
+                        if ((visualsController._iVisiblePhoto === 0 && data.direction === "right")
+                                || (visualsController._iVisiblePhoto ===
+                                (visualsController._currentCandidate.numPhotos - 1) && data.direction === "left")) {
+                            // Block move
+                            data.preventDefault();
+                        } else {
+                            // Otherwise, hide the heart until the next slide appears
+                            $("#hearts")[0].style.display = "none";
+                        }
+                    });
+
                     $("#carousel").on("slid.bs.carousel", function () {
                         visualsController._updatePhotoSelectionDisplay();
                     });
