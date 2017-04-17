@@ -73,6 +73,3 @@ limitations under the License.
 
 A copy of the license is available in the repository's
 [LICENSE.txt](https://github.com/Esri/photo-survey/blob/master/License.txt) file.
-
-[](Esri Tags: ArcGISSolutions State-Government Local-Government Emergency-Management State Local Government Online Apps Python)
-[](Esri Language: JavaScript)
