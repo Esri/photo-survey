@@ -2,7 +2,7 @@
 	@author: bus
 	@contact: cbuscaglia@esri.com
 	@company: Esri
-	@version: 1.0.0
+	@version: 1.3.0
 	@description: Photo Survey Tool to load photos
 	@requirements: Python 2.7.x or higher, ArcGIS 10.2, 10.3.x, 10.4 (also ArcGIS Pro)
 	@copyright: Esri, 2015
@@ -523,7 +523,7 @@ else:
 if CameraInput == 'Associate Geotagged Photo with Point (photo has location)':
 
     arcpy.AddMessage("Step 3:  Adding application required fields")
-    arcpy.AddField_management(ParcelPointHelper, "BSTPHOTOID", "TEXT", "", "", "5", "Best Photo Identifier", "NULLABLE", "NON_REQUIRED", "")
+    arcpy.AddField_management(ParcelPointHelper, "BSTPHOTOID", "TEXT", "", "", "25", "Best Photo Identifier", "NULLABLE", "NON_REQUIRED", "")
     arcpy.AddField_management(ParcelPointHelper, "SRVNAME", "TEXT", "", "", "25", "Surveyor Name", "NULLABLE", "NON_REQUIRED", "")
     arcpy.AddMessage("Step 4:  Finalizing photo survey feature class")
     arcpy.AddMessage("Step 5:  Creating Photo Attachments")
@@ -548,7 +548,7 @@ if CameraInput == 'Associate Non-Geotagged Photo with specified Point (no locati
 
 
     arcpy.AddMessage("Step 3:  Adding application required fields")
-    arcpy.AddField_management(ParcelPointHelper, "BSTPHOTOID", "TEXT", "", "", "5", "Best Photo Identifier", "NULLABLE", "NON_REQUIRED", "")
+    arcpy.AddField_management(ParcelPointHelper, "BSTPHOTOID", "TEXT", "", "", "25", "Best Photo Identifier", "NULLABLE", "NON_REQUIRED", "")
     arcpy.AddField_management(ParcelPointHelper, "SRVNAME", "TEXT", "", "", "25", "Surveyor Name", "NULLABLE", "NON_REQUIRED", "")
     arcpy.AddMessage("Step 4:  Finalizing photo survey feature class")
     arcpy.AddMessage("Step 5:  Creating Photo Attachments")
@@ -613,7 +613,7 @@ if CameraInput == 'Associate Photo with Parcel':
 	arcpy.AddMessage("Step 10: Cleaning up staging geodatabase")
 
 	arcpy.AddMessage("Step 11: Adding application required fields")
-	arcpy.AddField_management(ParcelPointHelper, "BSTPHOTOID", "TEXT", "", "", "5", "Best Photo Identifier", "NULLABLE", "NON_REQUIRED", "")
+	arcpy.AddField_management(ParcelPointHelper, "BSTPHOTOID", "TEXT", "", "", "25", "Best Photo Identifier", "NULLABLE", "NON_REQUIRED", "")
 	arcpy.AddField_management(ParcelPointHelper, "SRVNAME", "TEXT", "", "", "25", "Surveyor Name", "NULLABLE", "NON_REQUIRED", "")
 	arcpy.AddMessage("Step 12: Finalizing photo survey feature class")
 
