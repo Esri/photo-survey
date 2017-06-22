@@ -34,7 +34,7 @@ Learn more about Esri's ArcGIS for [Local Government](http://solutions.arcgis.co
 * Show me a [list] (http://esri.github.io/#Local-Government) of other Local Government GitHub repositories.
 * Show me a [list] (http://esri.github.io/#State-Government) of other State Government GitHub repositories.
 
-##Selecting Your Configuration
+## Selecting Your Configuration
 
 The photo-survey repo contains three unique application configurations: Property Survey, Damage Assessment Survey, and Wildlife Photo Survey.
 
