@@ -148,20 +148,10 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
 
                     // When the feature service and survey are ready, we can set up the module that reads from and writes to the service
                     prepareAppConfigInfo.surveyReady.done(function () {
-                        
-                        //Test if the user has set a filter on the candidates feature service layer and update the validCondition parameter to query candidates accordingly
-                        var validCondition;
-                        if (prepareAppConfigInfo.filterDefinition){
-                            validCondition = "(" + prepareAppConfigInfo.appParams.surveyorNameField + "+is+null+or+"
-                            + prepareAppConfigInfo.appParams.surveyorNameField + "='') " + "and " + prepareAppConfigInfo.filterDefinition;
-                        }
-                        else{
-                            validCondition = prepareAppConfigInfo.appParams.surveyorNameField + "+is+null+or+"
-                            + prepareAppConfigInfo.appParams.surveyorNameField + "=''";
-                        }
-
                         dataAccess.init(prepareAppConfigInfo.featureSvcParams.url, prepareAppConfigInfo.featureSvcParams.id,
-                                prepareAppConfigInfo.featureSvcParams.objectIdField, validCondition, prepareAppConfigInfo.appParams.proxyProgram);
+                                prepareAppConfigInfo.featureSvcParams.objectIdField,
+                                prepareAppConfigInfo.appParams.surveyorNameField + "+is+null+or+"
+                                + prepareAppConfigInfo.appParams.surveyorNameField + "=''", prepareAppConfigInfo.appParams.proxyProgram);
 
                         // Test if there are any surveys remaining to be done
                         dataAccess.getObjectCount().done(function (countRemaining) {
