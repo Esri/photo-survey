@@ -46,6 +46,7 @@ define(['parseConfigInfo', 'fetchConfigInfo', 'survey'], function (parseConfigIn
 
             surveyorNameField: "",
             bestPhotoField: "",
+            filterDefinition: "",
 
             // Parameters defined here
             showFacebook: "false",
@@ -176,6 +177,10 @@ define(['parseConfigInfo', 'fetchConfigInfo', 'survey'], function (parseConfigIn
                         if (data.opLayerParams && data.opLayerParams.popupInfo && data.opLayerParams.popupInfo.description
                                 && data.featureSvcParams && data.featureSvcParams.fields) {
                             prepareAppConfigInfo.featureSvcParams.url = data.opLayerParams.url;
+                            //Test if user has added a definition expression to the candidate layer, if so set filterDefinition value
+                            if (data.opLayerParams.hasOwnProperty('layerDefinition')){
+                                prepareAppConfigInfo.filterDefinition = data.opLayerParams.layerDefinition.definitionExpression;
+                            }
                             prepareAppConfigInfo.featureSvcParams.id = data.featureSvcParams.id;
                             prepareAppConfigInfo.featureSvcParams.objectIdField = data.featureSvcParams.objectIdField;
                             prepareAppConfigInfo.featureSvcParams.canBeUpdated = data.featureSvcParams.canBeUpdated;
