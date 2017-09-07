@@ -240,11 +240,26 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
                     });
                 }
 
+                // Create skip button if specified in config
+                if(prepareAppConfigInfo.appParams.showSkip){
+
+                    // Check if config file skipButtonText is not empty or null
+                    if(prepareAppConfigInfo.appParams.skipButtonText){
+                        $("#skipBtn")[0].innerHTML = prepareAppConfigInfo.appParams.skipButtonText;
+                    }
+                    else{
+                        $("#skipBtn")[0].innerHTML = i18n.tooltips.button_skip;
+                    }
+                }
+                else{
+                    $("#skipBtn").css("visibility", "hidden");
+                }    
+
+
                 // i18n updates
                 $("#previousImageBtn")[0].title = i18n.tooltips.button_previous_image;
                 $("#nextImageBtn")[0].title = i18n.tooltips.button_next_image;
 
-                $("#skipBtn")[0].innerHTML = i18n.tooltips.button_skip;
                 $("#submitBtn")[0].innerHTML = i18n.tooltips.button_submit;
 
                 $("#userProfileSelectionText")[0].innerHTML = i18n.labels.menuItem_profile;
@@ -481,6 +496,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
 
         // Provide some visual feedback for the switch to a new survey
         $("#submitBtn").fadeTo(100, 0.0).blur();
+        $("#skipBtn").fadeTo(100, 0.0).blur();
         $("#surveyContainer").fadeTo(100, 0.0);
 
         // Get candidate property
@@ -543,6 +559,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
                 : 1.0));
             if (!isReadOnly) {
                 $("#submitBtn").fadeTo(1000, 1.0);
+                $("#skipBtn").fadeTo(1000, 1.0);
             }
 
         }, function () {
