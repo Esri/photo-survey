@@ -37,10 +37,12 @@ body {
     max-width: 100%;
     white-space: normal;
 }
+
 .btn:hover, .btn:focus {
     color: #007ac2;
     background-color: #e2f1fb;
 }
+
 .btn.active {
     color: #fff;
     background-color: #007ac2;
@@ -533,6 +535,7 @@ header, section, footer, aside, nav, main, article, figure {
 .skip-button {
     font-size: 14px;
     border: none;
+    max-width: 60%;
 }
 .dropdown.open>span.lg-a {
     background-color: #e2f1fb;
