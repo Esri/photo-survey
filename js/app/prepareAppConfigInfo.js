@@ -60,6 +60,12 @@ define(['parseConfigInfo', 'fetchConfigInfo', 'survey'], function (parseConfigIn
             id: "",
             objectIdField: ""
         },
+        formUISvcParams:{
+            url: "",
+            id: "",
+            objectIdField: "",
+            queryString: "/query?where=1=1&objectIds=&time=&resultType=none&outFields=*&returnIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=json"
+        },
         survey: [],
 
         // Available after init's webmapOrigImageUrlReady deferred: event arg is URL to original image or null if no image
@@ -174,8 +180,8 @@ define(['parseConfigInfo', 'fetchConfigInfo', 'survey'], function (parseConfigIn
                     webmapDataFetch.done(function (data) {
                         var dictionary;
 
-                        if (data.opLayerParams && data.opLayerParams.popupInfo && data.opLayerParams.popupInfo.description
-                                && data.featureSvcParams && data.featureSvcParams.fields) {
+                        if (data.opLayerParams && data.featureSvcParams && data.featureSvcParams.fields && data.formUISvcParams
+                                && data.formUISvcParams.fields) {
                             prepareAppConfigInfo.featureSvcParams.url = data.opLayerParams.url;
                             //Test if user has added a definition expression to the candidate layer, if so set filterDefinition value
                             if (data.opLayerParams.hasOwnProperty('layerDefinition')){
@@ -185,10 +191,21 @@ define(['parseConfigInfo', 'fetchConfigInfo', 'survey'], function (parseConfigIn
                             prepareAppConfigInfo.featureSvcParams.objectIdField = data.featureSvcParams.objectIdField;
                             prepareAppConfigInfo.featureSvcParams.canBeUpdated = data.featureSvcParams.canBeUpdated;
 
-                            // Create survey
-                            prepareAppConfigInfo.survey = survey.createSurvey(
-                                data.opLayerParams.popupInfo.description, data.featureSvcParams.fields);
-                            prepareAppConfigInfo.surveyReady.resolve();
+                            prepareAppConfigInfo.formUISvcParams.url = data.formUIParams.url;
+                            prepareAppConfigInfo.formUISvcParams.id = data.formUISvcParams.id;
+                            prepareAppConfigInfo.formUISvcParams.objectIdField = data.formUISvcParams.objectIdField;
+                            prepareAppConfigInfo.formUISvcParams.canBeUpdated = data.formUISvcParams.canBeUpdated;
+
+                            //Access Survey Form UI Config Info from FORM UI setting table in the service
+                            
+                            $.getJSON(prepareAppConfigInfo.formUISvcParams.url + 
+                                        prepareAppConfigInfo.formUISvcParams.queryString, function(results){
+                                prepareAppConfigInfo.survey = survey.createSurvey(
+                                    results, data.featureSvcParams.fields);
+                                prepareAppConfigInfo.surveyReady.resolve();
+                            });
+
+
                         } else {
                             prepareAppConfigInfo.featureSvcParams = {};
                             prepareAppConfigInfo.survey = [];
