@@ -165,14 +165,14 @@ define([], function () {
 
         /**
          * Parses HTML text such as appears in a webmap's feature layer's popup to generate a set of survey questions.
-         * @param {string} source Text from source
+         * @param {object} formUI Text from source
          * @param {object} fieldDomains List of field domains and field required/optional state as created by function
          * createSurveyDictionary using the 'fields' property of a feature service
          * @return {array} List of survey question objects, each of which contains question, field, style, domain, important
          * properties
          * @private
          */
-        _parseSurvey: function (source, fieldDomains) {
+        _parseSurvey: function (formUI, fieldDomains) {
             // Survey is written as a series of lines in the popup. Each line is expected to have arbitrary text followed by
             // a feature layer field name in braces followed by a question style flag also in braces.
             // Here is a sample source:
@@ -183,79 +183,26 @@ define([], function () {
             //  there roof damage? <b>{RoofDamage} </b><b>{button}</b></p><p>Is the exterior damaged? <b>{ExteriorDamage}
             //  </b><b>{button}</b></p><p></p><ol><li>Is there graffiti? <b>{Graffiti} </b><b>{button}</b><br /></li><li>
             //  Are there boarded windows/doors? <b>{Boarded} </b><b>{button}</b><br /></li></ol>
-            var surveyQuestions = [], descriptionSplit1, descriptionSplit2, descriptionSplit3, taggedSurveyLines,
-                surveyLines;
-
-            // 1. split on <div>, <p>, <br />, and <li>, all of which could be used to separate lines
-            descriptionSplit2 = [];
-            descriptionSplit3 = [];
-            taggedSurveyLines = [];
-            descriptionSplit1 = source.split("<div>");
-            $.each(descriptionSplit1, function (ignore, line) {
-                $.merge(descriptionSplit2, line.split("<p>"));
-            });
-            $.each(descriptionSplit2, function (ignore, line) {
-                $.merge(descriptionSplit3, line.split("<br />"));
-            });
-            $.each(descriptionSplit3, function (ignore, line) {
-                $.merge(taggedSurveyLines, line.split("<li>"));
-            });
-
-            // 2. remove all html tags (could have <b>, <i>, <u>, <ol>, <ul>, <li>, <a>, <font>, <span>, <br>,
-            // and their closures included or explicit)
-            surveyLines = [];
-            $.each(taggedSurveyLines, function (ignore, line) {
-                var cleanedLine = survey._textOnly(line).trim();
-                if (cleanedLine.length > 0) {
-                    surveyLines.push(cleanedLine);
+            // var surveyQuestions = [], descriptionSplit1, descriptionSplit2, descriptionSplit3, taggedSurveyLines,
+            //     surveyLines;
+            var surveyQuestions = []
+            $.each(formUI.features, function(ignore, feature){
+                var fieldName, surveyQuestion;
+                fieldName = feature.attributes.FIELDNAME;
+                if(fieldDomains[fieldName]){
+                    surveyQuestion = {
+                        question: feature.attributes.QUESTION,
+                        field: fieldName,
+                        domain: fieldDomains[fieldName].domain,
+                        values: fieldDomains[fieldName].values,
+                        important: fieldDomains[fieldName].important,
+                        style: feature.attributes.UITYPE,
+                        image: feature.attributes.IMG_URL,
+                        contingent: feature.attributes.CONTCOND
+                    };
                 }
-            });
-
-            // 3. Separate into question, field, and style
-            // e.g., "Is there a Structure on the Property? {Structure} {button}"
-            $.each(surveyLines, function (ignore, line) {
-                var paramParts, trimmedParts, fieldName, surveyQuestion, part2, part3;
-
-                paramParts = line.split("{");
-                trimmedParts = [];
-                $.each(paramParts, function (ignore, part) {
-                    var trimmed = part.replace("}", "").trim();
-                    if (trimmed.length > 0) {
-                        trimmedParts.push(trimmed);
-                    }
-                });
-
-                // Should have three parts now: question, field, style; we can add in the question's
-                // domain and importance from the fieldDomain dictionary created just above
-                if (trimmedParts.length >= 3) {
-                    fieldName = trimmedParts[1];
-                    if (fieldDomains[fieldName]) {
-                        surveyQuestion = {
-                            question: trimmedParts[0],
-                            field: fieldName,
-                            domain: fieldDomains[fieldName].domain,
-                            values: fieldDomains[fieldName].values,
-                            important: fieldDomains[fieldName].important
-                        };
-
-                        part2 = trimmedParts[2];
-                        surveyQuestion.style = part2;
-                        if (trimmedParts.length > 3) {
-                            part3 = trimmedParts[3];
-                            if (part3.startsWith("image=")) {
-                                surveyQuestion.startsWithImage = false;
-                                surveyQuestion.image = part3.substring(6);
-                            } else if (part2.startsWith("image=")) {
-                                surveyQuestion.startsWithImage = true;
-                                surveyQuestion.style = part3;
-                                surveyQuestion.image = part2.substring(6);
-                            }
-                        }
-
-                        surveyQuestions.push(surveyQuestion);
-                    }
-                }
-            });
+                surveyQuestions.push(surveyQuestion);
+            })
             return surveyQuestions;
         },
 
