@@ -22,6 +22,7 @@ define([], function () {
     survey = {
 
         flag_important_question: "Please answer this question",
+        primeQuestions: null,
 
         //--------------------------------------------------------------------------------------------------------------------//
 
@@ -116,6 +117,19 @@ define([], function () {
             return firstMissing;
         },
 
+        updateForm: function(answer, surveyDefinition){
+            $.each(surveyDefinition, function(iQuestion, questionInfo){
+                if (questionInfo.contingent){
+                    if (questionInfo.contText.toLowerCase().includes(surveyDefinition[survey.primeQuestions].values[answer].toLowerCase())){
+                        $("#qg" + iQuestion).css("visibility", "visible")
+                    }
+                    else{
+                        $("#qg" + iQuestion).css("visibility", "hidden")
+                    }
+                }
+            })
+        },
+
         //--------------------------------------------------------------------------------------------------------------------//
 
         _installPolyfills: function () {
@@ -186,7 +200,7 @@ define([], function () {
             // var surveyQuestions = [], descriptionSplit1, descriptionSplit2, descriptionSplit3, taggedSurveyLines,
             //     surveyLines;
             var surveyQuestions = []
-            $.each(formUI.features, function(ignore, feature){
+            $.each(formUI.features, function(index, feature){
                 var fieldName, surveyQuestion;
                 fieldName = feature.attributes.FIELDNAME;
                 if(fieldDomains[fieldName]){
@@ -198,10 +212,14 @@ define([], function () {
                         important: fieldDomains[fieldName].important,
                         style: feature.attributes.UITYPE,
                         image: feature.attributes.IMG_URL,
-                        contingent: feature.attributes.CONTCOND
+                        contText: feature.attributes.CONTCOND,
+                        contingent: !feature.attributes.CONTCOND ? false : true
                     };
                 }
                 surveyQuestions.push(surveyQuestion);
+                if (!surveyQuestion.contingent){
+                    survey.primeQuestions = index;
+                }
             })
             return surveyQuestions;
         },
@@ -216,18 +234,20 @@ define([], function () {
          */
         _addQuestion: function (surveyContainer, iQuestion, questionInfo, isReadOnly) {
             var question = survey._startQuestion(iQuestion, questionInfo);
+            var primeQFlag = !questionInfo.contingent ? " prime" : " contingent";
             if (questionInfo.style === "button") {
-                question += survey._createButtonChoice(iQuestion, questionInfo, isReadOnly);
+                question += survey._createButtonChoice(iQuestion, questionInfo, isReadOnly, primeQFlag);
             } else if (questionInfo.style === "list") {
-                question += survey._createListChoice(iQuestion, questionInfo, isReadOnly);
+                question += survey._createListChoice(iQuestion, questionInfo, isReadOnly, primeQFlag);
             } else if (questionInfo.style === "dropdown") {
-                question += survey._createDropdownChoice(iQuestion, questionInfo, isReadOnly);
+                question += survey._createDropdownChoice(iQuestion, questionInfo, isReadOnly, primeQFlag);
             } else if (questionInfo.style === "number") {
-                question += survey._createNumberInput(iQuestion, questionInfo, isReadOnly);
+                question += survey._createNumberInput(iQuestion, questionInfo, isReadOnly, primeQFlag);
             } else if (questionInfo.style === "text") {
-                question += survey._createTextLineInput(iQuestion, questionInfo, isReadOnly);
+                question += survey._createTextLineInput(iQuestion, questionInfo, isReadOnly, primeQFlag);
             }
             question += survey._wrapupQuestion(iQuestion, questionInfo, isReadOnly);
+
             $(surveyContainer).append(question);
 
             // Fix radio-button toggling
@@ -266,8 +286,9 @@ define([], function () {
         _startQuestion: function (iQuestion, questionInfo) {
             // <div class='form-group'>
             //   <label for='q1'>Is there a structure on the property? <span class='glyphicon glyphicon-star'></span></label><br>
+            var contDisplay = questionInfo.contingent ? " style='visibility: hidden;'" : "";
             var start =
-                "<div id='qg" + iQuestion + "' class='form-group'>"
+                "<div id='qg" + iQuestion + "' class='form-group'" + contDisplay + ">"
                 + "<label for='q" + iQuestion + "'>" + questionInfo.question + (questionInfo.important
                 ? "&nbsp;<div class='importantQuestion sprites star' title=\""
                 + survey.flag_important_question + "\"></div>"
@@ -287,7 +308,7 @@ define([], function () {
          * @return {string} HTML for radio buttons
          * @private
          */
-        _createButtonChoice: function (iQuestion, questionInfo, isReadOnly) {
+        _createButtonChoice: function (iQuestion, questionInfo, isReadOnly, primeQFlag) {
             // <div id='q1' class='btn-group'>
             //   <button type='button' class='btn'>Yes</button>
             //   <button type='button' class='btn'>No</button>
@@ -296,7 +317,7 @@ define([], function () {
             var buttons = "<div id='q" + iQuestion + "' class='btn-group'>";
             var domain = questionInfo.domain.split('|');
             $.each(domain, function (i, choice) {
-                buttons += "<button type='button' class='btn' value='" + i + "' " + (isReadOnly
+                buttons += "<button type='button' class='btn"+ primeQFlag +"' value='" + i + "' " + (isReadOnly
                     ? "disabled"
                     : "") + ">" + choice + "</button>";
             });
@@ -312,7 +333,7 @@ define([], function () {
          * @return {string} HTML for radio buttons
          * @private
          */
-        _createListChoice: function (iQuestion, questionInfo, isReadOnly) {
+        _createListChoice: function (iQuestion, questionInfo, isReadOnly, primeQFlag) {
             // <div class='radio'><label><input type='radio' name='q1' id='optionFound1' value='0'>Crawlspace</label></div>
             // <div class='radio'><label><input type='radio' name='q1' id='optionFound2' value='1'>Raised</label></div>
             // <div class='radio'><label><input type='radio' name='q1' id='optionFound3' value='2'>Elevated</label></div>
@@ -321,7 +342,7 @@ define([], function () {
             var list = "";
             var domain = questionInfo.domain.split('|');
             $.each(domain, function (i, choice) {
-                list += "<div class='radio'><label><input type='radio' name='q" + iQuestion + "' value='" + i
+                list += "<div class='radio'><label><input type='radio' class='"+ primeQFlag +"' name='q" + iQuestion + "' value='" + i
                     + "' " + (isReadOnly
                     ? "disabled"
                     : "") + ">" + choice + "</label></div>";
@@ -337,7 +358,7 @@ define([], function () {
          * @return {object} HTML for radio buttons
          * @private
          */
-        _createDropdownChoice: function (iQuestion, questionInfo, isReadOnly) {
+        _createDropdownChoice: function (iQuestion, questionInfo, isReadOnly, primeQFlag) {
             // <select id='q1' class='dropdown-group'>
             //   <option value='Yes'>Yes</option>
             //   <option value='No'>No</option>
@@ -346,7 +367,7 @@ define([], function () {
             var list = "<select id='q" + iQuestion + "' class='dropdown-group'>";
             var domain = questionInfo.domain.split('|');
             $.each(domain, function (i, choice) {
-                list += "<option value='" + questionInfo.values[i] + "'" + (isReadOnly
+                list += "<option class='" + primeQFlag + "' value='" + questionInfo.values[i] + "'" + (isReadOnly
                     ? " disabled"
                     : "") + ">" + choice + "</option>";
             });
@@ -362,9 +383,10 @@ define([], function () {
          * @return {object} HTML for radio buttons
          * @private
          */
-        _createNumberInput: function (iQuestion, questionInfo, isReadOnly) {
+        _createNumberInput: function (iQuestion, questionInfo, isReadOnly, primeQFlag) {
             // <input id='q1' type='number' class='number-input'>
-            var list = "<input id='q" + iQuestion + "' type='number' class='number-input'>";
+            var primeQFlag = questionInfo.contingent ? " answer" : "";
+            var list = "<input id='q" + iQuestion + "' type='number' class='number-input" + primeQFlag + "'>";
             return list;
         },
 
@@ -376,9 +398,9 @@ define([], function () {
          * @return {object} HTML for radio buttons
          * @private
          */
-        _createTextLineInput: function (iQuestion, questionInfo, isReadOnly) {
+        _createTextLineInput: function (iQuestion, questionInfo, isReadOnly, primeQFlag) {
             // <input id='q1' type='text' class='text-input'>
-            var list = "<input id='q" + iQuestion + "' type='text' class='text-input'>";
+            var list = "<input id='q" + iQuestion + "' type='text' class='text-input" + primeQFlag + "'>";
             return list;
         },
 
