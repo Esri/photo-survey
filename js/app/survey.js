@@ -120,11 +120,23 @@ define([], function () {
         updateForm: function(answer, surveyDefinition){
             $.each(surveyDefinition, function(iQuestion, questionInfo){
                 if (questionInfo.contingent){
-                    if (questionInfo.contText.toLowerCase().includes(surveyDefinition[survey.primeQuestions].values[answer].toLowerCase())){
-                        $("#qg" + iQuestion).css("visibility", "visible")
+                    if (surveyDefinition[survey.primeQuestions].style === "dropdown" ||
+                    surveyDefinition[survey.primeQuestions].style === "text" ||
+                    surveyDefinition[survey.primeQuestions].style === "number"){
+                        if (questionInfo.contText.toLowerCase().includes(answer.toLowerCase())){
+                            $("#qg" + iQuestion).css("visibility", "visible")
+                        }
+                        else{
+                            $("#qg" + iQuestion).css("visibility", "hidden")
+                        }
                     }
                     else{
-                        $("#qg" + iQuestion).css("visibility", "hidden")
+                        if (questionInfo.contText.toLowerCase().includes(surveyDefinition[survey.primeQuestions].values[answer].toLowerCase())){
+                            $("#qg" + iQuestion).css("visibility", "visible")
+                        }
+                        else{
+                            $("#qg" + iQuestion).css("visibility", "hidden")
+                        }
                     }
                 }
             })
@@ -179,7 +191,7 @@ define([], function () {
 
         /**
          * Parses HTML text such as appears in a webmap's feature layer's popup to generate a set of survey questions.
-         * @param {object} formUI Text from source
+         * @param {object} formUI Results of Query to the Form UI table in the feature service. Contains survey UI information.
          * @param {object} fieldDomains List of field domains and field required/optional state as created by function
          * createSurveyDictionary using the 'fields' property of a feature service
          * @return {array} List of survey question objects, each of which contains question, field, style, domain, important
@@ -187,22 +199,11 @@ define([], function () {
          * @private
          */
         _parseSurvey: function (formUI, fieldDomains) {
-            // Survey is written as a series of lines in the popup. Each line is expected to have arbitrary text followed by
-            // a feature layer field name in braces followed by a question style flag also in braces.
-            // Here is a sample source:
-            //  <p>Is there a Structure on the Property? <b>{<font color='#0000ff'>Structure</font>} </b><b>{<span
-            //  style='background-color:rgb(255, 0, 0);'>button</span>}</b></p><p><ul><li>Is the lot overgrown? <b>{Lot}
-            //  </b><b>{button}</b><br /></li><li>Foundation type: <b>{<font color='#ffff00' style='background-color:
-            //  rgb(255, 69, 0);'>FoundationType</font>} </b><b>{radio}</b><br /></li></ul></p><p><b><br /></b></p><p>Is
-            //  there roof damage? <b>{RoofDamage} </b><b>{button}</b></p><p>Is the exterior damaged? <b>{ExteriorDamage}
-            //  </b><b>{button}</b></p><p></p><ol><li>Is there graffiti? <b>{Graffiti} </b><b>{button}</b><br /></li><li>
-            //  Are there boarded windows/doors? <b>{Boarded} </b><b>{button}</b><br /></li></ol>
-            // var surveyQuestions = [], descriptionSplit1, descriptionSplit2, descriptionSplit3, taggedSurveyLines,
-            //     surveyLines;
             var surveyQuestions = []
             $.each(formUI.features, function(index, feature){
                 var fieldName, surveyQuestion;
                 fieldName = feature.attributes.FIELDNAME;
+                //Check to see that the field has a domain associated with it. Questions must have domains
                 if(fieldDomains[fieldName]){
                     surveyQuestion = {
                         question: feature.attributes.QUESTION,
@@ -217,6 +218,7 @@ define([], function () {
                     };
                 }
                 surveyQuestions.push(surveyQuestion);
+                //Check to see if survey question is a primary question and add the survey to the index
                 if (!surveyQuestion.contingent){
                     survey.primeQuestions = index;
                 }
@@ -234,7 +236,8 @@ define([], function () {
          */
         _addQuestion: function (surveyContainer, iQuestion, questionInfo, isReadOnly) {
             var question = survey._startQuestion(iQuestion, questionInfo);
-            var primeQFlag = !questionInfo.contingent ? " prime" : " contingent";
+            var primeQFlag = !questionInfo.contingent ? "prime" : " contingent";
+            primeQFlag = questionInfo.style === "dropdown" ? "primeD" : primeQFlag;
             if (questionInfo.style === "button") {
                 question += survey._createButtonChoice(iQuestion, questionInfo, isReadOnly, primeQFlag);
             } else if (questionInfo.style === "list") {
@@ -317,7 +320,7 @@ define([], function () {
             var buttons = "<div id='q" + iQuestion + "' class='btn-group'>";
             var domain = questionInfo.domain.split('|');
             $.each(domain, function (i, choice) {
-                buttons += "<button type='button' class='btn"+ primeQFlag +"' value='" + i + "' " + (isReadOnly
+                buttons += "<button type='button' class='btn "+ primeQFlag +"' value='" + i + "' " + (isReadOnly
                     ? "disabled"
                     : "") + ">" + choice + "</button>";
             });
@@ -364,10 +367,10 @@ define([], function () {
             //   <option value='No'>No</option>
             //   <option value='Notsure'>Not sure</option>
             // </select>
-            var list = "<select id='q" + iQuestion + "' class='dropdown-group'>";
+            var list = "<select id='q" + iQuestion + "' class='dropdown-group " + primeQFlag + "'>";
             var domain = questionInfo.domain.split('|');
             $.each(domain, function (i, choice) {
-                list += "<option class='" + primeQFlag + "' value='" + questionInfo.values[i] + "'" + (isReadOnly
+                list += "<option value='" + questionInfo.values[i] + "'" + (isReadOnly
                     ? " disabled"
                     : "") + ">" + choice + "</option>";
             });
@@ -386,7 +389,7 @@ define([], function () {
         _createNumberInput: function (iQuestion, questionInfo, isReadOnly, primeQFlag) {
             // <input id='q1' type='number' class='number-input'>
             var primeQFlag = questionInfo.contingent ? " answer" : "";
-            var list = "<input id='q" + iQuestion + "' type='number' class='number-input" + primeQFlag + "'>";
+            var list = "<input id='q" + iQuestion + "' type='number' class='number-input " + primeQFlag + "'>";
             return list;
         },
 
@@ -400,7 +403,7 @@ define([], function () {
          */
         _createTextLineInput: function (iQuestion, questionInfo, isReadOnly, primeQFlag) {
             // <input id='q1' type='text' class='text-input'>
-            var list = "<input id='q" + iQuestion + "' type='text' class='text-input" + primeQFlag + "'>";
+            var list = "<input id='q" + iQuestion + "' type='text' class='text-input " + primeQFlag + "'>";
             return list;
         },
 

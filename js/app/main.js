@@ -586,7 +586,11 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
 
     $(document).on("click", ".prime", function(){
         survey.updateForm($(this).val(), prepareAppConfigInfo.survey);
-    })
+    });
+
+    $(document).on("change", ".primeD", function(){
+        survey.updateForm($(this).val(), prepareAppConfigInfo.survey);
+    });
 
     $("#userSignoutSelection").on('click', function () {
         $(document).triggerHandler('signedOut:user');
