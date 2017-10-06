@@ -64,7 +64,7 @@ define(['parseConfigInfo', 'fetchConfigInfo', 'survey'], function (parseConfigIn
             url: "",
             id: "",
             objectIdField: "",
-            queryString: "/query?where=1=1&objectIds=&time=&resultType=none&outFields=*&returnIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=json"
+            queryString: "/query?where=1=1&objectIds=&time=&resultType=none&outFields=*&returnIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&orderByFields=QORDER&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=json"
         },
         survey: [],
 
