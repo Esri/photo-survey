@@ -585,11 +585,11 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
     });
 
     $(document).on("click", ".prime", function(){
-        survey.updateForm($(this).val(), prepareAppConfigInfo.survey);
+        survey.updateForm($(this).val(), $(this).data("id"), prepareAppConfigInfo.survey);
     });
 
     $(document).on("change", ".primeD", function(){
-        survey.updateForm($(this).val(), prepareAppConfigInfo.survey);
+        survey.updateForm($(this).val(), $(this).data("id"), prepareAppConfigInfo.survey);
     });
 
     $("#userSignoutSelection").on('click', function () {
