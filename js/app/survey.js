@@ -123,47 +123,40 @@ define([], function () {
             $.each (surveyDefinition, function(iQuestion, questionInfo){
                 // Put child questions at the back of question group when found
                 if (questionInfo.parent === questionID){
-                    surveyGroup.push(questionInfo)
+                    surveyGroup.push(questionInfo);
                 }
                 // Put parent at front of question group when found
                 if (questionInfo.id === questionID){
-                    surveyGroup.unshift(questionInfo)
+                    surveyGroup.unshift(questionInfo);
                 }
             })
+            //Identifying Decendants of Current Group
             $.each (surveyDefinition, function(iQuestion, questionInfo){
                 if (questionInfo.origorder > surveyGroup[surveyGroup.length - 1].origorder){
-                    descendants.push(questionInfo)
+                    descendants.push(questionInfo);
                 }
             })
             $.each(surveyGroup, function(index, questionInfo){
                 if (index > 0){
                     if (surveyGroup[0].style === "dropdown" || surveyGroup[0].style === "text" || surveyGroup[0].style === "number"){
                         if (questionInfo.conditions.toLowerCase().includes(answer.toLowerCase())){
-                            $("#qg" + questionInfo.origorder).css("visibility", "visible")
+                            $("#qg" + questionInfo.origorder).css("visibility", "visible");
                         }
                         else{
-                            $("#qg" + questionInfo.origorder).css("visibility", "hidden")
+                            survey._clearQuestions([questionInfo]);
                             if (descendants &&  descendants.length > 0){    
-                                $.each(descendants, function(index, questionInfo){
-                                    $("#qg" + questionInfo.origorder).css("visibility", "hidden")
-                                })
+                                survey._clearQuestions(descendants);
                             }
                         }
                     }
                     else{
                         if (questionInfo.conditions.toLowerCase().includes(surveyGroup[0].values[answer].toLowerCase())){
-                            $("#qg" + questionInfo.origorder).css("visibility", "visible")
+                            $("#qg" + questionInfo.origorder).css("visibility", "visible");
                         }
                         else{
-                            $("#qg" + questionInfo.origorder).css("visibility", "hidden")
-                            $('#q' + questionInfo.origorder + " .active").removeClass("active");
-                            $('input[name=q' + questionInfo.origorder + ']:checked').prop('checked', false);
+                            survey._clearQuestions([questionInfo]);    
                             if (descendants &&  descendants.length > 0){    
-                                $.each(descendants, function(index, questionInfo){
-                                    $("#qg" + questionInfo.origorder).css("visibility", "hidden");
-                                    $('#q' + questionInfo.origorder + " .active").removeClass("active");
-                                    $('input[name=q' + questionInfo.origorder + ']:checked').prop('checked', false);
-                                })
+                                survey._clearQuestions(descendants);
                             }
                         }
                     }
@@ -217,8 +210,13 @@ define([], function () {
 
             return fieldDomains;
         },
-        _clearDescendants: function (descendants){
-
+        _clearQuestions: function (descendants){
+            $.each(descendants, function(index, questionInfo){
+                $("#qg" + questionInfo.origorder).css("visibility", "hidden");
+                $('#q' + questionInfo.origorder + " .active").removeClass("active");
+                $('input[name=q' + questionInfo.origorder + ']:checked').prop('checked', false);
+                $('#q' + questionInfo.origorder).val("");
+            })
         },
         /**
          * Parses HTML text such as appears in a webmap's feature layer's popup to generate a set of survey questions.
