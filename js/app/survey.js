@@ -99,7 +99,7 @@ define([], function () {
                     }
                 }
 
-                // Flag missing importants
+                // Flag missing importants and only enforce questions that are visible
                 if (questionInfo.important && $("#qg" + iQuestion).is(':visible')) {
                     if (iQuestionResult) {
                         $("#qg" + iQuestion).removeClass("flag-error");
@@ -116,9 +116,18 @@ define([], function () {
             return firstMissing;
         },
 
+        /**
+         * Updates the survey question visibility based on display conditions being met
+         * Only "Parent" questions have the ability to run this function
+         * @param {string} answer Current value of survey answer
+         * @param {integer} questionID ID from the "data-id" attribute of the question clicked
+         * @param {array} surveyDefinition List of survey question objects, each of which contains question, field,
+         * style, domain, important
+         */
         updateForm: function(answer, questionID, surveyDefinition){
             var surveyGroup = [];
             var descendants = [];
+            //Creating group of question to be updated, with Parent at first position and Children thereafter
             $.each (surveyDefinition, function(iQuestion, questionInfo){
                 // Put child questions at the back of question group when found
                 if (questionInfo.parent === questionID){
@@ -129,7 +138,7 @@ define([], function () {
                     surveyGroup.unshift(questionInfo);
                 }
             })
-            //Identifying Decendants of Current Group
+            //Identifying descendants of current question Group.
             $.each (surveyDefinition, function(iQuestion, questionInfo){
                 if (questionInfo.origorder > surveyGroup[surveyGroup.length - 1].origorder){
                     descendants.push(questionInfo);
@@ -158,7 +167,7 @@ define([], function () {
                     }
                 }
             })
-            //If any questions are not be displayed then clear descendants as well
+            //If any questions are not to be displayed then clear descendants as well
             if (clearCount > 0 && descendants && descendants.length > 0){
                 survey._clearQuestions(descendants);
             }
@@ -210,6 +219,11 @@ define([], function () {
 
             return fieldDomains;
         },
+
+        /**
+         * Clears question responses and hides them based on type of question
+         * @param {array} questionList List of questions
+         */
         _clearQuestions: function (questionList){
             $.each(questionList, function(index, questionInfo){
                 $("#qg" + questionInfo.origorder).hide("fast");

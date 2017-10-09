@@ -168,7 +168,7 @@ define(['parseConfigInfo'], function (parseConfigInfo) {
                         featureSvcData.opLayerParams = data.operationalLayers[0];
                         featureSvcData.formUIParams = data.tables[0];
 
-                        // Get the app's webmap's feature service's data
+                        // Get the app's webmap's feature service's data and the survey questions table data
                         $.when(fetchConfigInfo.getFeatureSvcData(featureSvcData.opLayerParams.url),
                                 fetchConfigInfo.getFeatureSvcData(featureSvcData.formUIParams.url))
                         .done(function (svcdata, uidata) {
