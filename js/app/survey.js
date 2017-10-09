@@ -22,7 +22,6 @@ define([], function () {
     survey = {
 
         flag_important_question: "Please answer this question",
-        primeQuestions: null,
 
         //--------------------------------------------------------------------------------------------------------------------//
 
@@ -101,7 +100,7 @@ define([], function () {
                 }
 
                 // Flag missing importants
-                if (questionInfo.important) {
+                if (questionInfo.important && $("#qg" + iQuestion).is(':visible')) {
                     if (iQuestionResult) {
                         $("#qg" + iQuestion).removeClass("flag-error");
                     } else {
@@ -136,32 +135,33 @@ define([], function () {
                     descendants.push(questionInfo);
                 }
             })
+            var clearCount = 0;
             $.each(surveyGroup, function(index, questionInfo){
                 if (index > 0){
                     if (surveyGroup[0].style === "dropdown" || surveyGroup[0].style === "text" || surveyGroup[0].style === "number"){
                         if (questionInfo.conditions.toLowerCase().includes(answer.toLowerCase())){
-                            $("#qg" + questionInfo.origorder).css("visibility", "visible");
+                            $("#qg" + questionInfo.origorder).show("fast");
                         }
                         else{
                             survey._clearQuestions([questionInfo]);
-                            if (descendants &&  descendants.length > 0){    
-                                survey._clearQuestions(descendants);
-                            }
+                            clearCount++
                         }
                     }
                     else{
                         if (questionInfo.conditions.toLowerCase().includes(surveyGroup[0].values[answer].toLowerCase())){
-                            $("#qg" + questionInfo.origorder).css("visibility", "visible");
+                            $("#qg" + questionInfo.origorder).show("fast");
                         }
                         else{
-                            survey._clearQuestions([questionInfo]);    
-                            if (descendants &&  descendants.length > 0){    
-                                survey._clearQuestions(descendants);
-                            }
+                            survey._clearQuestions([questionInfo]);
+                            clearCount++;    
                         }
                     }
                 }
             })
+            //If any questions are not be displayed then clear descendants as well
+            if (clearCount > 0 && descendants && descendants.length > 0){
+                survey._clearQuestions(descendants);
+            }
         },
 
         //--------------------------------------------------------------------------------------------------------------------//
@@ -210,12 +210,20 @@ define([], function () {
 
             return fieldDomains;
         },
-        _clearQuestions: function (descendants){
-            $.each(descendants, function(index, questionInfo){
-                $("#qg" + questionInfo.origorder).css("visibility", "hidden");
-                $('#q' + questionInfo.origorder + " .active").removeClass("active");
-                $('input[name=q' + questionInfo.origorder + ']:checked').prop('checked', false);
-                $('#q' + questionInfo.origorder).val("");
+        _clearQuestions: function (questionList){
+            $.each(questionList, function(index, questionInfo){
+                $("#qg" + questionInfo.origorder).hide("fast");
+                if (questionInfo.style === "button"){
+                    $('#q' + questionInfo.origorder + " .active").removeClass("active");
+                } else if (questionInfo.style === "list"){
+                    $('input[name=q' + questionInfo.origorder + ']:checked').prop('checked', false);
+                } else if (questionInfo.style === "number" || questionInfo.style === "text"){
+                    $('#q' + questionInfo.origorder).val("");
+                } else if (questionInfo.style === "dropdown"){
+                    $("#q" + questionInfo.origorder).each(function (indexInArray, input) {
+                        input.selectedIndex = -1;
+                    });
+                }
             })
         },
         /**
@@ -241,7 +249,7 @@ define([], function () {
                         field: fieldName,
                         domain: fieldDomains[fieldName].domain,
                         values: fieldDomains[fieldName].values,
-                        important: fieldDomains[fieldName].important,
+                        important: feature.attributes.REQUIRED == "Yes" ? true : false,
                         style: feature.attributes.INPUTTYPE,
                         image: feature.attributes.IMG_URL,
                         imagepos: feature.attributes.IMG_POS,
@@ -323,7 +331,7 @@ define([], function () {
         _startQuestion: function (iQuestion, questionInfo) {
             // <div class='form-group'>
             //   <label for='q1'>Is there a structure on the property? <span class='glyphicon glyphicon-star'></span></label><br>
-            var contDisplay = !questionInfo.parent ? "" : " style='visibility: hidden;'";
+            var contDisplay = !questionInfo.parent ? "" : " style='display: none;'";
             var start =
                 "<div id='qg" + iQuestion + "' class='form-group'" + contDisplay + ">"
                 + "<label for='q" + iQuestion + "'>" + questionInfo.question + (questionInfo.important
