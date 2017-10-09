@@ -196,10 +196,13 @@ define(['parseConfigInfo', 'fetchConfigInfo', 'survey'], function (parseConfigIn
                             prepareAppConfigInfo.formUISvcParams.objectIdField = data.formUISvcParams.objectIdField;
                             prepareAppConfigInfo.formUISvcParams.canBeUpdated = data.formUISvcParams.canBeUpdated;
 
-                            //Access Survey Form UI Config Info from FORM UI setting table in the service
+                            //Access Survey Form UI Config Info from Survey Questions setting table in the service
                             
                             $.getJSON(prepareAppConfigInfo.formUISvcParams.url + 
                                         prepareAppConfigInfo.formUISvcParams.queryString, function(results){
+                                if (!results){
+                                    prepareAppConfigInfo.surveyReady.reject()
+                                }
                                 prepareAppConfigInfo.survey = survey.createSurvey(
                                     results, data.featureSvcParams.fields);
                                 prepareAppConfigInfo.surveyReady.resolve();
