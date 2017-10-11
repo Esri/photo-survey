@@ -134,15 +134,15 @@ define([], function () {
                     surveyGroup.push(questionInfo);
                 }
                 // Put parent at front of question group when found
-                if (questionInfo.id === questionID){
+                else if (questionInfo.id === questionID){
                     surveyGroup.unshift(questionInfo);
                 }
-            })
-            //Identifying descendants of current question Group.
-            $.each (surveyDefinition, function(iQuestion, questionInfo){
-                if (questionInfo.origorder > surveyGroup[surveyGroup.length - 1].origorder){
-                    descendants.push(questionInfo);
+                else{
+                    if(survey._findAncestor(questionID, questionInfo, surveyDefinition)){
+                        descendants.push(questionInfo)
+                    }
                 }
+                
             })
             var clearCount = 0;
             $.each(surveyGroup, function(index, questionInfo){
@@ -219,7 +219,44 @@ define([], function () {
 
             return fieldDomains;
         },
-
+        /**
+         * Checks to see if a specific question has an ancestor up question
+         * tree with the matching ancestorID
+         * @param {integer} ancestorID ID of the ancestor to check for relationship
+         * @param {object} questionInfo Question object to compare against for ancestors
+         * @param {array} array of survey questions objects
+         * @return {boolean} Boolean (Is question related to provided ancestorID?)
+         */
+        _findAncestor: function(ancestorID, questionInfo, surveyDefinition){
+            if(questionInfo.parent){
+                if (questionInfo.parent == ancestorID){
+                    return true;
+                }
+                //Go up the survey tree recursively until parent is null or ancestor match is found
+                else{
+                    return survey._findAncestor(ancestorID, survey._questionByID(questionInfo.parent, surveyDefinition), surveyDefinition);
+                }
+            }
+            else{
+                return false;
+            }
+        },
+        /**
+         * Finds a specific question based on its ID from survey questions
+         * @param {integer} id ID of question to be found 
+         * @param {array} surveyDefinition array of survey questions objects
+         * @return {object} The found question object
+         */
+        _questionByID: function(id, surveyDefinition){
+            var foundQuestion = {}
+            $.each(surveyDefinition, function(index, questionInfo){
+                if (questionInfo.id === id){
+                    foundQuestion = questionInfo;
+                    return false;
+                }
+            });
+            return foundQuestion;
+        },
         /**
          * Clears question responses and hides them based on type of question
          * @param {array} questionList List of questions
@@ -241,7 +278,7 @@ define([], function () {
             })
         },
         /**
-         * Parses HTML text such as appears in a webmap's feature layer's popup to generate a set of survey questions.
+         * Parses incoming survey parameters from the SurveyQuestions table in the service.
          * @param {object} formUI Results of Query to the Form UI table in the feature service. Contains survey UI information.
          * @param {object} fieldDomains List of field domains and field required/optional state as created by function
          * createSurveyDictionary using the 'fields' property of a feature service
@@ -274,10 +311,6 @@ define([], function () {
                     };
                 }
                 surveyQuestions.push(surveyQuestion);
-                // //Check to see if survey question is a primary question and add the survey to the index
-                // if (!surveyQuestion.contingent){
-                //     survey.primeQuestions = index;
-                // }
             })
             return surveyQuestions;
         },
@@ -292,6 +325,7 @@ define([], function () {
          */
         _addQuestion: function (surveyContainer, iQuestion, questionInfo, isReadOnly) {
             var question = survey._startQuestion(iQuestion, questionInfo);
+            //Create parent flags if question type is parent (domain value 0)
             var primeQFlag = questionInfo.questionType === 0 ? "prime" : " contingent";
             primeQFlag = questionInfo.style === "dropdown" ? "primeD" : primeQFlag;
             if (questionInfo.style === "button") {
@@ -345,9 +379,11 @@ define([], function () {
         _startQuestion: function (iQuestion, questionInfo) {
             // <div class='form-group'>
             //   <label for='q1'>Is there a structure on the property? <span class='glyphicon glyphicon-star'></span></label><br>
-            var contDisplay = !questionInfo.parent ? "" : " style='display: none;'";
+
+            // Determine whether to show question on first load. Applies to questions with no Parents
+            var initDisplay = !questionInfo.parent ? "" : " style='display: none;'";
             var start =
-                "<div id='qg" + iQuestion + "' class='form-group'" + contDisplay + ">"
+                "<div id='qg" + iQuestion + "' class='form-group'" + initDisplay + ">"
                 + "<label for='q" + iQuestion + "'>" + questionInfo.question + (questionInfo.important
                 ? "&nbsp;<div class='importantQuestion sprites star' title=\""
                 + survey.flag_important_question + "\"></div>"
