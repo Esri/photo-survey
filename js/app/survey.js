@@ -137,6 +137,7 @@ define([], function () {
                 else if (questionInfo.id === questionID){
                     surveyGroup.unshift(questionInfo);
                 }
+                // If question is outside of question group check to see if it is a descendant
                 else{
                     if(survey._findAncestor(questionID, questionInfo, surveyDefinition)){
                         descendants.push(questionInfo)
