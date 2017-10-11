@@ -33,7 +33,23 @@ AngleField = arcpy.GetParameterAsText(5)
 Geodatabase =  arcpy.GetParameterAsText(6)
 Parcels = arcpy.GetParameterAsText(7)
 ParcelPIN = arcpy.GetParameterAsText(8)
-config_file = arcpy.GetParameterAsText(9)
+TemplateGDB = arcpy.GetParameterAsText(9)
+
+# Retrieve Template Feature Class and Template Questions Table from Template Geodatabase
+arcpy.env.workspace = TemplateGDB
+TemplateFC = arcpy.ListFeatureClasses()
+TemplateQTable = arcpy.ListTables()
+TemplateFC = TemplateGDB + "\\" + TemplateFC[0]
+TemplateQTable = TemplateGDB +"\\" + TemplateQTable[0]
+
+# DomGDB = arcpy.Describe(Geodatabase)
+# domains = DomGDB.Domains
+# dmCount = len(domains)
+# if dmCount > 0:
+# 	for domain in domains:
+# 		arcpy.DeleteDomain_management(Geodatabase, domain)
+# else:
+#  	pass
 
 arcpy.AddMessage("Step 1:  Loading input parameters")
 
@@ -228,10 +244,10 @@ if CameraInput == 'Associate Photo with Parcel':
 
 	ParcelPointClassHelper = """{}\\PointsTemp""".format(Geodatabase)
 	ParcelPointHelper = """{}\\PhotoPoints""".format(Geodatabase)
-	arcpy.CreateFeatureclass_management(Geodatabase, "PhotoPoints", "POINT", "", "", "", Parcels)
+	arcpy.FeatureClassToFeatureClass_conversion(TemplateFC,Geodatabase,"PhotoPoints")
+	arcpy.DefineProjection_management(ParcelPointHelper, SRHelper)
 	arcpy.AddField_management(ParcelPointHelper, ParcelPIN, "TEXT", "", "", "50", ParcelPIN, "NULLABLE", "NON_REQUIRED")
 	arcpy.FeatureToPoint_management(ParcelsFeatureClass, ParcelPointClassHelper, "INSIDE")
-
 else:
 	pass
 
@@ -243,13 +259,7 @@ if CameraInput == 'Associate Geotagged Photo with Point (photo has location)':
 	#_______________________________________________________________________________#
 
 	ParcelPointHelper = """{}\\PhotoPoints""".format(Geodatabase)
-	arcpy.CreateFeatureclass_management(Geodatabase, "PhotoPoints", "Point", "", "DISABLED", "DISABLED",
-										"GEOGCS['GCS_WGS_1984',DATUM['D_WGS_1984',SPHEROID['WGS_1984',6378137.0,298.257223563]],"
-										"PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]],"
-										"VERTCS['WGS_1984',DATUM['D_WGS_1984',SPHEROID['WGS_1984',6378137.0,298.257223563]],"
-										"PARAMETER['Vertical_Shift',0.0],PARAMETER['Direction',1.0],"
-										"UNIT['Meter',1.0]];-400 -400 1000000000;-100000 10000;-100000 10000;8.98315284119522E-09;0.001;0.001;"
-										"IsHighPrecision", "", "0", "0", "0")
+	arcpy.FeatureClassToFeatureClass_conversion(TemplateFC,Geodatabase,"PhotoPoints")
 else:
 	pass
 
@@ -262,250 +272,14 @@ if CameraInput == 'Associate Non-Geotagged Photo with specified Point (no locati
 	#_______________________________________________________________________________#
 
 	ParcelPointHelper = """{}\\PhotoPoints""".format(Geodatabase)
-	arcpy.CreateFeatureclass_management(Geodatabase, "PhotoPoints", "Point", "", "DISABLED", "DISABLED",
-										"GEOGCS['GCS_WGS_1984',DATUM['D_WGS_1984',SPHEROID['WGS_1984',6378137.0,298.257223563]],"
-										"PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]],"
-										"VERTCS['WGS_1984',DATUM['D_WGS_1984',SPHEROID['WGS_1984',6378137.0,298.257223563]],"
-										"PARAMETER['Vertical_Shift',0.0],PARAMETER['Direction',1.0],"
-										"UNIT['Meter',1.0]];-400 -400 1000000000;-100000 10000;-100000 10000;8.98315284119522E-09;0.001;0.001;"
-										"IsHighPrecision", "", "0", "0", "0")
+	arcpy.FeatureClassToFeatureClass_conversion(TemplateFC,Geodatabase,"PhotoPoints")
 else:
 	pass
 
-
-#______________________________________________________________________________#
-#
-# Adding Survey Fields
-#______________________________________________________________________________#
-
-
-DomGDB = arcpy.Describe(Geodatabase)
-domains = DomGDB.Domains
-dmCount = len(domains)
-if dmCount > 0:
-	for domain in domains:
-		arcpy.DeleteDomain_management(Geodatabase, domain)
-else:
-	pass
 if CameraInput == "Associate Photo with Parcel":
-	arcpy.AddMessage("Step 8:  Adding survey questions")
+	arcpy.AddMessage("Step 8:  Adding survey question fields")
 else:
-	arcpy.AddMessage("Step 2:  Adding Survey questions")
-
-try:
-	config = ConfigParser.ConfigParser()
-except NameError:
-	config = configparser.ConfigParser()
-
-config.read(config_file)
-
-Domain1 = config.get('DOMAINS', "Domain1")
-Domain2 = config.get('DOMAINS', "Domain2")
-Domain3 = config.get('DOMAINS', "Domain3")
-Domain4 = config.get('DOMAINS', "Domain4")
-Domain5 = config.get('DOMAINS', "Domain5")
-
-if Domain1 == "":
-	pass
-else:
-	arcpy.CreateDomain_management(Geodatabase, Domain1, Domain1, "TEXT", "CODED")
-if Domain2 == "":
-	pass
-else:
-	arcpy.CreateDomain_management(Geodatabase, Domain2, Domain2, "TEXT", "CODED")
-if Domain3 == "":
-	pass
-else:
-	arcpy.CreateDomain_management(Geodatabase, Domain3, Domain3, "TEXT", "CODED")
-if Domain4 == "":
-	pass
-else:
-	arcpy.CreateDomain_management(Geodatabase, Domain4, Domain4, "TEXT", "CODED")
-if Domain5 == "":
-	pass
-else:
-	arcpy.CreateDomain_management(Geodatabase, Domain5, Domain5, "TEXT", "CODED")
-
-Domain1Values = config.get('DOMAIN_VALUES', "Domain1")
-Domain2Values = config.get('DOMAIN_VALUES', "Domain2")
-Domain3Values = config.get('DOMAIN_VALUES', "Domain3")
-Domain4Values = config.get('DOMAIN_VALUES', "Domain4")
-Domain5Values = config.get('DOMAIN_VALUES', "Domain5")
-
-if Domain1Values == "":
-	pass
-else:
-	DomainList1 = ast.literal_eval(Domain1Values)
-	for codex in DomainList1:
-		arcpy.AddCodedValueToDomain_management(Geodatabase, Domain1, codex, codex)
-if Domain2Values == "":
-	pass
-else:
-	DomainList2 = ast.literal_eval(Domain2Values)
-	for codex in DomainList2:
-		arcpy.AddCodedValueToDomain_management(Geodatabase, Domain2, codex, codex)
-if Domain3Values == "":
-	pass
-else:
-	DomainList3 = ast.literal_eval(Domain3Values)
-	for codex in DomainList3:
-		arcpy.AddCodedValueToDomain_management(Geodatabase, Domain3, codex, codex)
-if Domain4Values == "":
-	pass
-else:
-	DomainList4 = ast.literal_eval(Domain4Values)
-	for codex in DomainList4:
-		arcpy.AddCodedValueToDomain_management(Geodatabase, Domain4, codex, codex)
-if Domain5Values == "":
-	pass
-else:
-	DomainList5 = ast.literal_eval(Domain5Values)
-	for codex in DomainList5:
-		arcpy.AddCodedValueToDomain_management(Geodatabase, Domain5, codex, codex)
-
-Field1  = config.get('FIELDS', "Field1")
-Field2  = config.get('FIELDS', "Field2")
-Field3  = config.get('FIELDS', "Field3")
-Field4  = config.get('FIELDS', "Field4")
-Field5  = config.get('FIELDS', "Field5")
-Field6  = config.get('FIELDS', "Field6")
-Field7  = config.get('FIELDS', "Field7")
-Field8  = config.get('FIELDS', "Field8")
-Field9  = config.get('FIELDS', "Field9")
-Field10 = config.get('FIELDS', "Field10")
-
-Field1Alias = config.get('FIELDS_ALIAS', "Field1")
-Field2Alias = config.get('FIELDS_ALIAS', "Field2")
-Field3Alias = config.get('FIELDS_ALIAS', "Field3")
-Field4Alias = config.get('FIELDS_ALIAS', "Field4")
-Field5Alias = config.get('FIELDS_ALIAS', "Field5")
-Field6Alias = config.get('FIELDS_ALIAS', "Field6")
-Field7Alias = config.get('FIELDS_ALIAS', "Field7")
-Field8Alias = config.get('FIELDS_ALIAS', "Field8")
-Field9Alias = config.get('FIELDS_ALIAS', "Field9")
-Field10Alias = config.get('FIELDS_ALIAS', "Field10")
-
-ValueRequired1 = config.get('VALUE_REQUIRED', "Field1")
-ValueRequired2 = config.get('VALUE_REQUIRED', "Field2")
-ValueRequired3 = config.get('VALUE_REQUIRED', "Field3")
-ValueRequired4 = config.get('VALUE_REQUIRED', "Field4")
-ValueRequired5 = config.get('VALUE_REQUIRED', "Field5")
-ValueRequired6 = config.get('VALUE_REQUIRED', "Field6")
-ValueRequired7 = config.get('VALUE_REQUIRED', "Field7")
-ValueRequired8 = config.get('VALUE_REQUIRED', "Field8")
-ValueRequired9 = config.get('VALUE_REQUIRED', "Field9")
-ValueRequired10 = config.get('VALUE_REQUIRED', "Field10")
-
-DomainSet1 = config.get('FIELD_DOMAIN', "Field1")
-DomainSet2 = config.get('FIELD_DOMAIN', "Field2")
-DomainSet3 = config.get('FIELD_DOMAIN', "Field3")
-DomainSet4 = config.get('FIELD_DOMAIN', "Field4")
-DomainSet5 = config.get('FIELD_DOMAIN', "Field5")
-DomainSet6 = config.get('FIELD_DOMAIN', "Field6")
-DomainSet7 = config.get('FIELD_DOMAIN', "Field7")
-DomainSet8 = config.get('FIELD_DOMAIN', "Field8")
-DomainSet9 = config.get('FIELD_DOMAIN', "Field9")
-DomainSet10 = config.get('FIELD_DOMAIN', "Field10")
-
-if Field1 == "":
-	pass
-else:
-	arcpy.AddField_management(ParcelPointHelper, Field1, "TEXT", "", "", "25", Field1Alias, ValueRequired1)
-
-if DomainSet1 == "":
-    pass
-else:
-	arcpy.AssignDomainToField_management(ParcelPointHelper, Field1, DomainSet1)
-
-if Field2 == "":
-	pass
-else:
-	arcpy.AddField_management(ParcelPointHelper, Field2, "TEXT", "", "", "25", Field2Alias, ValueRequired2)
-
-if DomainSet2 == "":
-    pass
-else:
-	arcpy.AssignDomainToField_management(ParcelPointHelper, Field2, DomainSet2)
-
-if Field3 == "":
-	pass
-else:
-	arcpy.AddField_management(ParcelPointHelper, Field3, "TEXT", "", "", "25", Field3Alias, ValueRequired3)
-
-if DomainSet3 == "":
-    pass
-else:
-	arcpy.AssignDomainToField_management(ParcelPointHelper, Field3, DomainSet3)
-
-if Field4 == "":
-	pass
-else:
-	arcpy.AddField_management(ParcelPointHelper, Field4, "TEXT", "", "", "25", Field4Alias, ValueRequired4)
-
-if DomainSet4 == "":
-    pass
-else:
-    arcpy.AssignDomainToField_management(ParcelPointHelper, Field4, DomainSet4)
-
-if Field5 == "":
-	pass
-else:
-	arcpy.AddField_management(ParcelPointHelper, Field5, "TEXT", "", "", "25", Field5Alias, ValueRequired5)
-
-if DomainSet5 == "":
-    pass
-else:
-	arcpy.AssignDomainToField_management(ParcelPointHelper, Field5, DomainSet5)
-
-if Field6 == "":
-	pass
-else:
-	arcpy.AddField_management(ParcelPointHelper, Field6, "TEXT", "", "", "25", Field6Alias, ValueRequired6)
-
-if DomainSet6 == "":
-    pass
-else:
-	arcpy.AssignDomainToField_management(ParcelPointHelper, Field6, DomainSet6)
-
-if Field7 == "":
-	pass
-else:
-	arcpy.AddField_management(ParcelPointHelper, Field7, "TEXT", "", "", "25", Field7Alias, ValueRequired7)
-
-if DomainSet7 == "":
-    pass
-else:
-	arcpy.AssignDomainToField_management(ParcelPointHelper, Field7, DomainSet7)
-
-if Field8 == "":
-	pass
-else:
-	arcpy.AddField_management(ParcelPointHelper, Field8, "TEXT", "", "", "25", Field8Alias, ValueRequired8)
-
-if DomainSet8 == "":
-    pass
-else:
-	arcpy.AssignDomainToField_management(ParcelPointHelper, Field8, DomainSet8)
-
-if Field9 == "":
-	pass
-else:
-	arcpy.AddField_management(ParcelPointHelper, Field9, "TEXT", "", "", "25", Field9Alias, ValueRequired9)
-
-if DomainSet9 == "":
-    pass
-else:
-	arcpy.AssignDomainToField_management(ParcelPointHelper, Field9, DomainSet9)
-
-if Field10 == "":
-	pass
-else:
-	arcpy.AddField_management(ParcelPointHelper, Field10, "TEXT", "", "", "25", Field10Alias, ValueRequired10)
-
-if DomainSet10 == "":
-    pass
-else:
-	arcpy.AssignDomainToField_management(ParcelPointHelper, Field10, DomainSet10)
+	arcpy.AddMessage("Step 2:  Adding Survey question fields")
 
 if CameraInput == 'Associate Photo with Parcel':
 
@@ -620,7 +394,14 @@ if CameraInput == 'Associate Photo with Parcel':
 else:
 	pass
 
+#______________________________________________________________________________#
+#
+# Add Template Table to Staging GeoDatabase
+#______________________________________________________________________________#
 
+arcpy.TableToTable_conversion(TemplateQTable,Geodatabase,"SurveyQuestions")
 
-
-
+if CameraInput == "Associate Photo with Parcel":
+	arcpy.AddMessage("Step 13: Adding survey questions template table to staging geodatabase")
+else:
+	arcpy.AddMessage("Step 6: Adding survey questions template table to staging geodatabase")
