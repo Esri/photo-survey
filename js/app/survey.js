@@ -327,6 +327,7 @@ define([], function () {
          */
         _addQuestion: function (surveyContainer, iQuestion, questionInfo, isReadOnly) {
             var question = survey._startQuestion(iQuestion, questionInfo);
+            //Question Object Needs to exist in order for HTML element to be created
             if (questionInfo){
                 //Create parent flags if question type is parent (domain value 0)
                 var primeQFlag = questionInfo.questionType === 0 ? "prime" : " contingent";
@@ -346,7 +347,7 @@ define([], function () {
             }
 
             $(surveyContainer).append(question);
-
+            //Question Object Needs to exist in order for HTML element to be created
             if(questionInfo){
             // Fix radio-button toggling
                 if (questionInfo.style === "button") {
@@ -386,8 +387,9 @@ define([], function () {
             // <div class='form-group'>
             //   <label for='q1'>Is there a structure on the property? <span class='glyphicon glyphicon-star'></span></label><br>
 
-            // Determine whether to show question on first load. Applies to questions with no Parents
+            //Check for question info object
             if (questionInfo){
+                // Determine whether to show question on first load. Applies to questions with no parents
                 var initDisplay = !questionInfo.parent ? "" : " style='display: none;'";
                 var start =
                     "<div id='qg" + iQuestion + "' class='form-group'" + initDisplay + ">"
@@ -400,6 +402,7 @@ define([], function () {
                     start += "<img src='" + questionInfo.image + "' class='image-before'/><br>";
                 }
             }
+            //If object is not defined or null then display it with error text
             else{
                 var start = "<div id = 'qg" + iQuestion + "' class='form-group' style='color: red'>" +
                 "Question " + iQuestion + " " + survey.error_text + "<br></div>"
