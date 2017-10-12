@@ -22,6 +22,7 @@ define([], function () {
     survey = {
 
         flag_important_question: "Please answer this question",
+        error_text: "Error displaying question, please check that field name from survey question table matches the photo points feature service",
 
         //--------------------------------------------------------------------------------------------------------------------//
 
@@ -292,7 +293,7 @@ define([], function () {
             $.each(formUI.features, function(index, feature){
                 var fieldName, surveyQuestion;
                 fieldName = feature.attributes.FIELDNAME;
-                //Check to see that the field has a domain associated with it. Questions must have domains
+                //Check to see that the field exists in feature class
                 if(fieldDomains[fieldName]){
                     surveyQuestion = {
                         id: feature.attributes.OBJECTID,
@@ -326,47 +327,51 @@ define([], function () {
          */
         _addQuestion: function (surveyContainer, iQuestion, questionInfo, isReadOnly) {
             var question = survey._startQuestion(iQuestion, questionInfo);
-            //Create parent flags if question type is parent (domain value 0)
-            var primeQFlag = questionInfo.questionType === 0 ? "prime" : " contingent";
-            primeQFlag = questionInfo.style === "dropdown" ? "primeD" : primeQFlag;
-            if (questionInfo.style === "button") {
-                question += survey._createButtonChoice(iQuestion, questionInfo, isReadOnly, primeQFlag);
-            } else if (questionInfo.style === "list") {
-                question += survey._createListChoice(iQuestion, questionInfo, isReadOnly, primeQFlag);
-            } else if (questionInfo.style === "dropdown") {
-                question += survey._createDropdownChoice(iQuestion, questionInfo, isReadOnly, primeQFlag);
-            } else if (questionInfo.style === "number") {
-                question += survey._createNumberInput(iQuestion, questionInfo, isReadOnly, primeQFlag);
-            } else if (questionInfo.style === "text") {
-                question += survey._createTextLineInput(iQuestion, questionInfo, isReadOnly, primeQFlag);
+            if (questionInfo){
+                //Create parent flags if question type is parent (domain value 0)
+                var primeQFlag = questionInfo.questionType === 0 ? "prime" : " contingent";
+                primeQFlag = questionInfo.style === "dropdown" ? "primeD" : primeQFlag;
+                if (questionInfo.style === "button") {
+                    question += survey._createButtonChoice(iQuestion, questionInfo, isReadOnly, primeQFlag);
+                } else if (questionInfo.style === "list") {
+                    question += survey._createListChoice(iQuestion, questionInfo, isReadOnly, primeQFlag);
+                } else if (questionInfo.style === "dropdown") {
+                    question += survey._createDropdownChoice(iQuestion, questionInfo, isReadOnly, primeQFlag);
+                } else if (questionInfo.style === "number") {
+                    question += survey._createNumberInput(iQuestion, questionInfo, isReadOnly, primeQFlag);
+                } else if (questionInfo.style === "text") {
+                    question += survey._createTextLineInput(iQuestion, questionInfo, isReadOnly, primeQFlag);
+                }
+                question += survey._wrapupQuestion(iQuestion, questionInfo, isReadOnly);
             }
-            question += survey._wrapupQuestion(iQuestion, questionInfo, isReadOnly);
 
             $(surveyContainer).append(question);
 
+            if(questionInfo){
             // Fix radio-button toggling
-            if (questionInfo.style === "button") {
-                $('#q' + iQuestion + ' button').click(function (evt) {
-                    $(evt.currentTarget).addClass('active').siblings().removeClass('active');
-                    $("#qg" + iQuestion).removeClass("flag-error");
-                });
+                if (questionInfo.style === "button") {
+                    $('#q' + iQuestion + ' button').click(function (evt) {
+                        $(evt.currentTarget).addClass('active').siblings().removeClass('active');
+                        $("#qg" + iQuestion).removeClass("flag-error");
+                    });
 
-            } else if (questionInfo.style === "list") {
-                $("[name=q" + iQuestion + "]").click(function (evt) {
-                    $("#qg" + iQuestion).removeClass("flag-error");
-                });
+                } else if (questionInfo.style === "list") {
+                    $("[name=q" + iQuestion + "]").click(function (evt) {
+                        $("#qg" + iQuestion).removeClass("flag-error");
+                    });
 
-            } else {
-                // Start with nothing selected in dropdown
-                if (questionInfo.style === "dropdown") {
-                    $("#q" + iQuestion).each(function (indexInArray, input) {
-                        input.selectedIndex = -1;
+                } else {
+                    // Start with nothing selected in dropdown
+                    if (questionInfo.style === "dropdown") {
+                        $("#q" + iQuestion).each(function (indexInArray, input) {
+                            input.selectedIndex = -1;
+                        });
+                    }
+
+                    $('#q' + iQuestion).change(function (evt) {
+                        $("#qg" + iQuestion).removeClass("flag-error");
                     });
                 }
-
-                $('#q' + iQuestion).change(function (evt) {
-                    $("#qg" + iQuestion).removeClass("flag-error");
-                });
             }
         },
 
@@ -382,16 +387,22 @@ define([], function () {
             //   <label for='q1'>Is there a structure on the property? <span class='glyphicon glyphicon-star'></span></label><br>
 
             // Determine whether to show question on first load. Applies to questions with no Parents
-            var initDisplay = !questionInfo.parent ? "" : " style='display: none;'";
-            var start =
-                "<div id='qg" + iQuestion + "' class='form-group'" + initDisplay + ">"
-                + "<label for='q" + iQuestion + "'>" + questionInfo.question + (questionInfo.important
-                ? "&nbsp;<div class='importantQuestion sprites star' title=\""
-                + survey.flag_important_question + "\"></div>"
-                : "")
-                    + "</label><br>";
-            if (questionInfo.image && questionInfo.image.length > 0 && questionInfo.imagepos === "Before") {
-                start += "<img src='" + questionInfo.image + "' class='image-before'/><br>";
+            if (questionInfo){
+                var initDisplay = !questionInfo.parent ? "" : " style='display: none;'";
+                var start =
+                    "<div id='qg" + iQuestion + "' class='form-group'" + initDisplay + ">"
+                    + "<label for='q" + iQuestion + "'>" + questionInfo.question + (questionInfo.important
+                    ? "&nbsp;<div class='importantQuestion sprites star' title=\""
+                    + survey.flag_important_question + "\"></div>"
+                    : "")
+                        + "</label><br>";
+                if (questionInfo.image && questionInfo.image.length > 0 && questionInfo.imagepos === "Before") {
+                    start += "<img src='" + questionInfo.image + "' class='image-before'/><br>";
+                }
+            }
+            else{
+                var start = "<div id = 'qg" + iQuestion + "' class='form-group' style='color: red'>" +
+                "Question " + iQuestion + " " + survey.error_text + "<br></div>"
             }
             return start;
         },
