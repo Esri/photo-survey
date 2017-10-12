@@ -399,7 +399,7 @@ else:
 # Add Template Table to Staging GeoDatabase
 #______________________________________________________________________________#
 
-arcpy.TableToTable_conversion(TemplateQTable,Geodatabase,"SurveyQuestions")
+arcpy.Copy_management(TemplateQTable,Geodatabase + "//SurveyQuestions")
 
 if CameraInput == "Associate Photo with Parcel":
 	arcpy.AddMessage("Step 13: Adding survey questions template table to staging geodatabase")
