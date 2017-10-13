@@ -12,13 +12,8 @@
 
 import arcpy
 import math
-import ast
-import sys, os, datetime
-from os.path import dirname, join, exists, splitext, isfile
-try:
-	import ConfigParser
-except ImportError:
-	import configparser
+import sys, os
+from os.path import join
 
 arcpy.env.overwriteOutput = True
 
@@ -26,11 +21,11 @@ arcpy.env.overwriteOutput = True
 
 CameraInput = arcpy.GetParameterAsText(0)
 SinglePhotos = arcpy.GetParameterAsText(1)
-Location =  arcpy.GetParameterAsText(2)
+Location = arcpy.GetParameterAsText(2)
 PassengerPhotos = arcpy.GetParameterAsText(3)
 DriverPhotos = arcpy.GetParameterAsText(4)
 AngleField = arcpy.GetParameterAsText(5)
-Geodatabase =  arcpy.GetParameterAsText(6)
+Geodatabase = arcpy.GetParameterAsText(6)
 Parcels = arcpy.GetParameterAsText(7)
 ParcelPIN = arcpy.GetParameterAsText(8)
 TemplateGDB = arcpy.GetParameterAsText(9)
@@ -41,15 +36,6 @@ TemplateFC = arcpy.ListFeatureClasses()
 TemplateQTable = arcpy.ListTables()
 TemplateFC = TemplateGDB + "\\" + TemplateFC[0]
 TemplateQTable = TemplateGDB +"\\" + TemplateQTable[0]
-
-# DomGDB = arcpy.Describe(Geodatabase)
-# domains = DomGDB.Domains
-# dmCount = len(domains)
-# if dmCount > 0:
-# 	for domain in domains:
-# 		arcpy.DeleteDomain_management(Geodatabase, domain)
-# else:
-#  	pass
 
 arcpy.AddMessage("Step 1:  Loading input parameters")
 
