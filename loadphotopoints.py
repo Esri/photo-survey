@@ -1,10 +1,10 @@
 """
-	@author: bus
+	@author: Esri
 	@contact: cbuscaglia@esri.com
 	@company: Esri
-	@version: 1.3.0
+	@version: 2.0
 	@description: Photo Survey Tool to load photos
-	@requirements: Python 2.7.x or higher, ArcGIS 10.2, 10.3.x, 10.4 (also ArcGIS Pro)
+	@requirements: Python 2.7.x or higher, ArcGIS ArcMap 10.2, 10.3.x, 10.4, ArcGIS Pro 2.0 and above (also ArcGIS Pro)
 	@copyright: Esri, 2015
 
 """
@@ -151,7 +151,7 @@ if CameraInput == 'Associate Photo with Parcel':
 
 	arcpy.DeleteField_management(PhotoFeatureClass2, "IN_FID;NEAR_FID;NEAR_DIST")
 	arcpy.AddField_management(PhotoFeatureClass2, "REVERSE", "TEXT", "", "", "5", "", "NULLABLE", "NON_REQUIRED", "")
-	arcpy.CalculateField_management(PhotoFeatureClass2, "REVERSE", "\"YES\"", "PYTHON", "")
+	arcpy.CalculateField_management(PhotoFeatureClass2, "REVERSE", "\"NO\"", "PYTHON", "")
 	arcpy.Delete_management(NEAR)
 
 	#______________________________________________________________________________#
@@ -236,7 +236,7 @@ if CameraInput == 'Associate Photo with Parcel':
 	arcpy.DeleteField_management(PhotoFeatureClass2, "Path")
 	arcpy.DeleteField_management(PhotoFeatureClass3, "Path")
 	arcpy.AddField_management(PhotoFeatureClass3, "REVERSE", "TEXT", "", "", "5", "", "NULLABLE", "NON_REQUIRED", "")
-	arcpy.CalculateField_management(PhotoFeatureClass3, "REVERSE", "\"NO\"", "PYTHON", "")
+	arcpy.CalculateField_management(PhotoFeatureClass3, "REVERSE", "\"YES\"", "PYTHON", "")
 
 	arcpy.Append_management(PhotoFeatureClass2, PhotoFeatureClass3, "NO_TEST", "", "")
 
