@@ -51,6 +51,9 @@ define(
             signinLoginPrompt: "S'il vous plaît vous connecter pour commencer",
             noMoreSurveys: "Il n'y a pas de sondages disponibles à ce moment. Merci pour votre participation.",
             guestLabel: "Invité"
+        },
+        messages: {
+            error_text: "Question $ {0} Erreur lors de l'affichage de la question, veuillez vérifier que le nom du champ de la table des questions du sondage correspond au service de la fonction"
         }
     })
 );

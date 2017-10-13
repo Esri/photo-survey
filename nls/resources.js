@@ -51,6 +51,9 @@ define({
             signinLoginPrompt: "Please sign in to get started",
             noMoreSurveys: "There are no surveys available at this time; thank you for your participation.",
             guestLabel: "Guest"
+        },
+        messages: {
+            error_text: "Question ${0} Error displaying question, please check that field name from survey question table matches the photo points feature service"
         }
     }),
     "ar": 0,

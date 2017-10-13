@@ -20,9 +20,6 @@ define([], function () {
     'use strict';
     var survey;
     survey = {
-
-        flag_important_question: "Please answer this question",
-
         //--------------------------------------------------------------------------------------------------------------------//
 
         /**
@@ -99,8 +96,8 @@ define([], function () {
                     }
                 }
 
-                // Flag missing importants
-                if (questionInfo.important) {
+                // Flag missing importants and only enforce questions that are visible
+                if (questionInfo.important && $("#qg" + iQuestion).is(':visible')) {
                     if (iQuestionResult) {
                         $("#qg" + iQuestion).removeClass("flag-error");
                     } else {
@@ -114,6 +111,63 @@ define([], function () {
 
             // Return the first missing important (if any)
             return firstMissing;
+        },
+
+        /**
+         * Updates the survey question visibility based on display conditions being met
+         * Only "Parent" questions have the ability to run this function
+         * @param {string} answer Current value of survey answer
+         * @param {integer} questionID ID from the "data-id" attribute of the question clicked
+         * @param {array} surveyDefinition List of survey question objects, each of which contains question, field,
+         * style, domain, important
+         */
+        updateForm: function(answer, questionID, surveyDefinition){
+            var surveyGroup = [];
+            var descendants = [];
+            //Creating group of question to be updated, with Parent at first position and Children thereafter
+            $.each (surveyDefinition, function(iQuestion, questionInfo){
+                // Put child questions at the back of question group when found
+                if (questionInfo.parent === questionID){
+                    surveyGroup.push(questionInfo);
+                }
+                // Put parent at front of question group when found
+                else if (questionInfo.id === questionID){
+                    surveyGroup.unshift(questionInfo);
+                }
+                // If question is outside of question group check to see if it is a descendant
+                else{
+                    if(survey._findAncestor(questionID, questionInfo, surveyDefinition)){
+                        descendants.push(questionInfo);
+                    }
+                }
+            })
+            var clearCount = 0;
+            $.each(surveyGroup, function(index, questionInfo){
+                if (index > 0){
+                    if (surveyGroup[0].style === "dropdown" || surveyGroup[0].style === "text" || surveyGroup[0].style === "number"){
+                        if (questionInfo.conditions.toLowerCase().indexOf(answer.toLowerCase()) !== -1){
+                            $("#qg" + questionInfo.origorder).show("fast");
+                        }
+                        else{
+                            survey._clearQuestions([questionInfo]);
+                            clearCount++;
+                        }
+                    }
+                    else{
+                        if (questionInfo.conditions.toLowerCase().indexOf(surveyGroup[0].values[answer].toLowerCase()) !== -1){
+                            $("#qg" + questionInfo.origorder).show("fast");
+                        }
+                        else{
+                            survey._clearQuestions([questionInfo]);
+                            clearCount++;    
+                        }
+                    }
+                }
+            })
+            //If any questions are not to be displayed then clear descendants as well
+            if (clearCount > 0 && descendants && descendants.length > 0){
+                survey._clearQuestions(descendants);
+            }
         },
 
         //--------------------------------------------------------------------------------------------------------------------//
@@ -162,100 +216,99 @@ define([], function () {
 
             return fieldDomains;
         },
-
         /**
-         * Parses HTML text such as appears in a webmap's feature layer's popup to generate a set of survey questions.
-         * @param {string} source Text from source
+         * Checks to see if a specific question has an ancestor up question
+         * tree with the matching ancestorID
+         * @param {integer} ancestorID ID of the ancestor to check for relationship
+         * @param {object} questionInfo Question object to compare against for ancestors
+         * @param {array} array of survey questions objects
+         * @return {boolean} Boolean (Is question related to provided ancestorID?)
+         */
+        _findAncestor: function(ancestorID, questionInfo, surveyDefinition){
+            if(questionInfo.parent){
+                if (questionInfo.parent == ancestorID){
+                    return true;
+                }
+                //Go up the survey tree recursively until parent is null or ancestor match is found
+                else{
+                    return survey._findAncestor(ancestorID, survey._questionByID(questionInfo.parent, surveyDefinition), surveyDefinition);
+                }
+            }
+            else{
+                return false;
+            }
+        },
+        /**
+         * Finds a specific question based on its ID from survey questions
+         * @param {integer} id ID of question to be found 
+         * @param {array} surveyDefinition array of survey questions objects
+         * @return {object} The found question object
+         */
+        _questionByID: function(id, surveyDefinition){
+            var foundQuestion = {}
+            $.each(surveyDefinition, function(index, questionInfo){
+                if (questionInfo.id === id){
+                    foundQuestion = questionInfo;
+                    return false;
+                }
+            });
+            return foundQuestion;
+        },
+        /**
+         * Clears question responses and hides them based on type of question
+         * @param {array} questionList List of questions
+         */
+        _clearQuestions: function (questionList){
+            $.each(questionList, function(index, questionInfo){
+                $("#qg" + questionInfo.origorder).hide("fast");
+                if (questionInfo.style === "button"){
+                    $('#q' + questionInfo.origorder + " .active").removeClass("active");
+                } else if (questionInfo.style === "list"){
+                    $('input[name=q' + questionInfo.origorder + ']:checked').prop('checked', false);
+                } else if (questionInfo.style === "number" || questionInfo.style === "text"){
+                    $('#q' + questionInfo.origorder).val("");
+                } else if (questionInfo.style === "dropdown"){
+                    $("#q" + questionInfo.origorder).each(function (indexInArray, input) {
+                        input.selectedIndex = -1;
+                    });
+                }
+            })
+        },
+        /**
+         * Parses incoming survey parameters from the SurveyQuestions table in the service.
+         * @param {object} formUI Results of Query to the Form UI table in the feature service. Contains survey UI information.
          * @param {object} fieldDomains List of field domains and field required/optional state as created by function
          * createSurveyDictionary using the 'fields' property of a feature service
          * @return {array} List of survey question objects, each of which contains question, field, style, domain, important
          * properties
          * @private
          */
-        _parseSurvey: function (source, fieldDomains) {
-            // Survey is written as a series of lines in the popup. Each line is expected to have arbitrary text followed by
-            // a feature layer field name in braces followed by a question style flag also in braces.
-            // Here is a sample source:
-            //  <p>Is there a Structure on the Property? <b>{<font color='#0000ff'>Structure</font>} </b><b>{<span
-            //  style='background-color:rgb(255, 0, 0);'>button</span>}</b></p><p><ul><li>Is the lot overgrown? <b>{Lot}
-            //  </b><b>{button}</b><br /></li><li>Foundation type: <b>{<font color='#ffff00' style='background-color:
-            //  rgb(255, 69, 0);'>FoundationType</font>} </b><b>{radio}</b><br /></li></ul></p><p><b><br /></b></p><p>Is
-            //  there roof damage? <b>{RoofDamage} </b><b>{button}</b></p><p>Is the exterior damaged? <b>{ExteriorDamage}
-            //  </b><b>{button}</b></p><p></p><ol><li>Is there graffiti? <b>{Graffiti} </b><b>{button}</b><br /></li><li>
-            //  Are there boarded windows/doors? <b>{Boarded} </b><b>{button}</b><br /></li></ol>
-            var surveyQuestions = [], descriptionSplit1, descriptionSplit2, descriptionSplit3, taggedSurveyLines,
-                surveyLines;
-
-            // 1. split on <div>, <p>, <br />, and <li>, all of which could be used to separate lines
-            descriptionSplit2 = [];
-            descriptionSplit3 = [];
-            taggedSurveyLines = [];
-            descriptionSplit1 = source.split("<div>");
-            $.each(descriptionSplit1, function (ignore, line) {
-                $.merge(descriptionSplit2, line.split("<p>"));
-            });
-            $.each(descriptionSplit2, function (ignore, line) {
-                $.merge(descriptionSplit3, line.split("<br />"));
-            });
-            $.each(descriptionSplit3, function (ignore, line) {
-                $.merge(taggedSurveyLines, line.split("<li>"));
-            });
-
-            // 2. remove all html tags (could have <b>, <i>, <u>, <ol>, <ul>, <li>, <a>, <font>, <span>, <br>,
-            // and their closures included or explicit)
-            surveyLines = [];
-            $.each(taggedSurveyLines, function (ignore, line) {
-                var cleanedLine = survey._textOnly(line).trim();
-                if (cleanedLine.length > 0) {
-                    surveyLines.push(cleanedLine);
+        _parseSurvey: function (formUI, fieldDomains) {
+            var surveyQuestions = []
+            $.each(formUI.features, function(index, feature){
+                var fieldName, surveyQuestion;
+                fieldName = feature.attributes.FIELDNAME;
+                //Check to see that the field exists in feature class
+                if(fieldDomains[fieldName]){
+                    surveyQuestion = {
+                        id: feature.attributes.OBJECTID,
+                        question: feature.attributes.QTEXT,
+                        questionType: feature.attributes.QTYPE,
+                        field: fieldName,
+                        domain: fieldDomains[fieldName].domain,
+                        values: fieldDomains[fieldName].values,
+                        important: feature.attributes.REQUIRED == "Yes" ? true : false,
+                        style: feature.attributes.INPUTTYPE,
+                        image: feature.attributes.IMG_URL,
+                        imagepos: feature.attributes.IMG_POS,
+                        conditions: feature.attributes.DISPCOND,
+                        order: feature.attributes.QORDER - 1,
+                        origorder: index,
+                        parent: feature.attributes.PARENTID
+                    };
                 }
-            });
-
-            // 3. Separate into question, field, and style
-            // e.g., "Is there a Structure on the Property? {Structure} {button}"
-            $.each(surveyLines, function (ignore, line) {
-                var paramParts, trimmedParts, fieldName, surveyQuestion, part2, part3;
-
-                paramParts = line.split("{");
-                trimmedParts = [];
-                $.each(paramParts, function (ignore, part) {
-                    var trimmed = part.replace("}", "").trim();
-                    if (trimmed.length > 0) {
-                        trimmedParts.push(trimmed);
-                    }
-                });
-
-                // Should have three parts now: question, field, style; we can add in the question's
-                // domain and importance from the fieldDomain dictionary created just above
-                if (trimmedParts.length >= 3) {
-                    fieldName = trimmedParts[1];
-                    if (fieldDomains[fieldName]) {
-                        surveyQuestion = {
-                            question: trimmedParts[0],
-                            field: fieldName,
-                            domain: fieldDomains[fieldName].domain,
-                            values: fieldDomains[fieldName].values,
-                            important: fieldDomains[fieldName].important
-                        };
-
-                        part2 = trimmedParts[2];
-                        surveyQuestion.style = part2;
-                        if (trimmedParts.length > 3) {
-                            part3 = trimmedParts[3];
-                            if (part3.startsWith("image=")) {
-                                surveyQuestion.startsWithImage = false;
-                                surveyQuestion.image = part3.substring(6);
-                            } else if (part2.startsWith("image=")) {
-                                surveyQuestion.startsWithImage = true;
-                                surveyQuestion.style = part3;
-                                surveyQuestion.image = part2.substring(6);
-                            }
-                        }
-
-                        surveyQuestions.push(surveyQuestion);
-                    }
-                }
-            });
+                surveyQuestions.push(surveyQuestion);
+            })
             return surveyQuestions;
         },
 
@@ -269,43 +322,52 @@ define([], function () {
          */
         _addQuestion: function (surveyContainer, iQuestion, questionInfo, isReadOnly) {
             var question = survey._startQuestion(iQuestion, questionInfo);
-            if (questionInfo.style === "button") {
-                question += survey._createButtonChoice(iQuestion, questionInfo, isReadOnly);
-            } else if (questionInfo.style === "list") {
-                question += survey._createListChoice(iQuestion, questionInfo, isReadOnly);
-            } else if (questionInfo.style === "dropdown") {
-                question += survey._createDropdownChoice(iQuestion, questionInfo, isReadOnly);
-            } else if (questionInfo.style === "number") {
-                question += survey._createNumberInput(iQuestion, questionInfo, isReadOnly);
-            } else if (questionInfo.style === "text") {
-                question += survey._createTextLineInput(iQuestion, questionInfo, isReadOnly);
+            //Question Object Needs to exist in order for HTML element to be created
+            if (questionInfo){
+                //Create parent flags if question type is parent (domain value 0)
+                var primeQFlag = questionInfo.questionType === 0 ? "prime" : " contingent";
+                primeQFlag = questionInfo.style === "dropdown" ? "primeD" : primeQFlag;
+                if (questionInfo.style === "button") {
+                    question += survey._createButtonChoice(iQuestion, questionInfo, isReadOnly, primeQFlag);
+                } else if (questionInfo.style === "list") {
+                    question += survey._createListChoice(iQuestion, questionInfo, isReadOnly, primeQFlag);
+                } else if (questionInfo.style === "dropdown") {
+                    question += survey._createDropdownChoice(iQuestion, questionInfo, isReadOnly, primeQFlag);
+                } else if (questionInfo.style === "number") {
+                    question += survey._createNumberInput(iQuestion, questionInfo, isReadOnly, primeQFlag);
+                } else if (questionInfo.style === "text") {
+                    question += survey._createTextLineInput(iQuestion, questionInfo, isReadOnly, primeQFlag);
+                }
+                question += survey._wrapupQuestion(iQuestion, questionInfo, isReadOnly);
             }
-            question += survey._wrapupQuestion(iQuestion, questionInfo, isReadOnly);
+
             $(surveyContainer).append(question);
-
+            //Question Object Needs to exist in order for HTML element to be created
+            if(questionInfo){
             // Fix radio-button toggling
-            if (questionInfo.style === "button") {
-                $('#q' + iQuestion + ' button').click(function (evt) {
-                    $(evt.currentTarget).addClass('active').siblings().removeClass('active');
-                    $("#qg" + iQuestion).removeClass("flag-error");
-                });
+                if (questionInfo.style === "button") {
+                    $('#q' + iQuestion + ' button').click(function (evt) {
+                        $(evt.currentTarget).addClass('active').siblings().removeClass('active');
+                        $("#qg" + iQuestion).removeClass("flag-error");
+                    });
 
-            } else if (questionInfo.style === "list") {
-                $("[name=q" + iQuestion + "]").click(function (evt) {
-                    $("#qg" + iQuestion).removeClass("flag-error");
-                });
+                } else if (questionInfo.style === "list") {
+                    $("[name=q" + iQuestion + "]").click(function (evt) {
+                        $("#qg" + iQuestion).removeClass("flag-error");
+                    });
 
-            } else {
-                // Start with nothing selected in dropdown
-                if (questionInfo.style === "dropdown") {
-                    $("#q" + iQuestion).each(function (indexInArray, input) {
-                        input.selectedIndex = -1;
+                } else {
+                    // Start with nothing selected in dropdown
+                    if (questionInfo.style === "dropdown") {
+                        $("#q" + iQuestion).each(function (indexInArray, input) {
+                            input.selectedIndex = -1;
+                        });
+                    }
+
+                    $('#q' + iQuestion).change(function (evt) {
+                        $("#qg" + iQuestion).removeClass("flag-error");
                     });
                 }
-
-                $('#q' + iQuestion).change(function (evt) {
-                    $("#qg" + iQuestion).removeClass("flag-error");
-                });
             }
         },
 
@@ -319,15 +381,26 @@ define([], function () {
         _startQuestion: function (iQuestion, questionInfo) {
             // <div class='form-group'>
             //   <label for='q1'>Is there a structure on the property? <span class='glyphicon glyphicon-star'></span></label><br>
-            var start =
-                "<div id='qg" + iQuestion + "' class='form-group'>"
-                + "<label for='q" + iQuestion + "'>" + questionInfo.question + (questionInfo.important
-                ? "&nbsp;<div class='importantQuestion sprites star' title=\""
-                + survey.flag_important_question + "\"></div>"
-                : "")
-                    + "</label><br>";
-            if (questionInfo.image && questionInfo.image.length > 0 && questionInfo.startsWithImage) {
-                start += "<img src='" + questionInfo.image + "' class='image-before'/><br>";
+
+            //Check for question info object
+            if (questionInfo){
+                // Determine whether to show question on first load. Applies to questions with no parents
+                var initDisplay = !questionInfo.parent ? "" : " style='display: none;'";
+                var start =
+                    "<div id='qg" + iQuestion + "' class='form-group'" + initDisplay + ">"
+                    + "<label for='q" + iQuestion + "'>" + questionInfo.question + (questionInfo.important
+                    ? "&nbsp;<div class='importantQuestion sprites star' title=\""
+                    + survey.flag_important_question + "\"></div>"
+                    : "")
+                        + "</label><br>";
+                if (questionInfo.image && questionInfo.image.length > 0 && questionInfo.imagepos === "Before") {
+                    start += "<img src='" + questionInfo.image + "' class='image-before'/><br>";
+                }
+            }
+            //If object is not defined or null then display it with error text
+            else{
+                var start = "<div id = 'qg" + iQuestion + "' class='form-group' style='color: red'>" +
+                survey.error_text.replace("${0}", iQuestion) +"<br></div>"
             }
             return start;
         },
@@ -337,10 +410,11 @@ define([], function () {
          * @param {number} iQuestion Zero-based question number
          * @param {object} questionInfo Survey question, which contains question, field, style, domain, important
          * @param {boolean} isReadOnly Indicates if survey form elements are read-only
+         * @param {string} primeQFlag Adds .prime or .primeD class to html element for help with setting on click trigger in main.js 
          * @return {string} HTML for radio buttons
          * @private
          */
-        _createButtonChoice: function (iQuestion, questionInfo, isReadOnly) {
+        _createButtonChoice: function (iQuestion, questionInfo, isReadOnly, primeQFlag) {
             // <div id='q1' class='btn-group'>
             //   <button type='button' class='btn'>Yes</button>
             //   <button type='button' class='btn'>No</button>
@@ -349,7 +423,7 @@ define([], function () {
             var buttons = "<div id='q" + iQuestion + "' class='btn-group'>";
             var domain = questionInfo.domain.split('|');
             $.each(domain, function (i, choice) {
-                buttons += "<button type='button' class='btn' value='" + i + "' " + (isReadOnly
+                buttons += "<button data-id=" + questionInfo.id + " type='button' class='btn "+ primeQFlag +"' value='" + i + "' " + (isReadOnly
                     ? "disabled"
                     : "") + ">" + choice + "</button>";
             });
@@ -362,10 +436,11 @@ define([], function () {
          * @param {number} iQuestion Zero-based question number
          * @param {object} questionInfo Survey question, which contains question, field, style, domain, important
          * @param {boolean} isReadOnly Indicates if survey form elements are read-only
+         * @param {string} primeQFlag Adds .prime or .primeD class to html element for help with setting on click trigger in main.js
          * @return {string} HTML for radio buttons
          * @private
          */
-        _createListChoice: function (iQuestion, questionInfo, isReadOnly) {
+        _createListChoice: function (iQuestion, questionInfo, isReadOnly, primeQFlag) {
             // <div class='radio'><label><input type='radio' name='q1' id='optionFound1' value='0'>Crawlspace</label></div>
             // <div class='radio'><label><input type='radio' name='q1' id='optionFound2' value='1'>Raised</label></div>
             // <div class='radio'><label><input type='radio' name='q1' id='optionFound3' value='2'>Elevated</label></div>
@@ -374,7 +449,7 @@ define([], function () {
             var list = "";
             var domain = questionInfo.domain.split('|');
             $.each(domain, function (i, choice) {
-                list += "<div class='radio'><label><input type='radio' name='q" + iQuestion + "' value='" + i
+                list += "<div class='radio'><label><input data-id=" + questionInfo.id + " type='radio' class='"+ primeQFlag +"' name='q" + iQuestion + "' value='" + i
                     + "' " + (isReadOnly
                     ? "disabled"
                     : "") + ">" + choice + "</label></div>";
@@ -387,16 +462,17 @@ define([], function () {
          * @param {number} iQuestion Zero-based question number
          * @param {object} questionInfo Survey question, which contains question, field, style, domain, important
          * @param {boolean} isReadOnly Indicates if survey form elements are read-only
+         * @param {string} primeQFlag Adds .prime or .primeD class to html element for help with setting on click trigger in main.js
          * @return {object} HTML for radio buttons
          * @private
          */
-        _createDropdownChoice: function (iQuestion, questionInfo, isReadOnly) {
+        _createDropdownChoice: function (iQuestion, questionInfo, isReadOnly, primeQFlag) {
             // <select id='q1' class='dropdown-group'>
             //   <option value='Yes'>Yes</option>
             //   <option value='No'>No</option>
             //   <option value='Notsure'>Not sure</option>
             // </select>
-            var list = "<select id='q" + iQuestion + "' class='dropdown-group'>";
+            var list = "<select data-id=" + questionInfo.id + " id='q" + iQuestion + "' class='dropdown-group " + primeQFlag + "'>";
             var domain = questionInfo.domain.split('|');
             $.each(domain, function (i, choice) {
                 list += "<option value='" + questionInfo.values[i] + "'" + (isReadOnly
@@ -412,12 +488,14 @@ define([], function () {
          * @param {number} iQuestion Zero-based question number
          * @param {object} questionInfo Survey question, which contains question, field, style, domain, important
          * @param {boolean} isReadOnly Indicates if survey form elements are read-only
+         * @param {string} primeQFlag Adds .prime or .primeD class to html element for help with setting on click trigger in main.js
          * @return {object} HTML for radio buttons
          * @private
          */
-        _createNumberInput: function (iQuestion, questionInfo, isReadOnly) {
+        _createNumberInput: function (iQuestion, questionInfo, isReadOnly, primeQFlag) {
             // <input id='q1' type='number' class='number-input'>
-            var list = "<input id='q" + iQuestion + "' type='number' class='number-input'>";
+            //var primeQFlag = questionInfo.contingent ? " answer" : "";
+            var list = "<input data-id=" + questionInfo.id + " id='q" + iQuestion + "' type='number' class='number-input " + primeQFlag + "'>";
             return list;
         },
 
@@ -426,12 +504,13 @@ define([], function () {
          * @param {number} iQuestion Zero-based question number
          * @param {object} questionInfo Survey question, which contains question, field, style, domain, important
          * @param {boolean} isReadOnly Indicates if survey form elements are read-only
+         * @param {string} primeQFlag Adds .prime or .primeD class to html element for help with setting on click trigger in main.js
          * @return {object} HTML for radio buttons
          * @private
          */
-        _createTextLineInput: function (iQuestion, questionInfo, isReadOnly) {
+        _createTextLineInput: function (iQuestion, questionInfo, isReadOnly, primeQFlag) {
             // <input id='q1' type='text' class='text-input'>
-            var list = "<input id='q" + iQuestion + "' type='text' class='text-input'>";
+            var list = "<input data-id=" + questionInfo.id + " id='q" + iQuestion + "' type='text' class='text-input " + primeQFlag + "'>";
             return list;
         },
 
@@ -447,7 +526,7 @@ define([], function () {
             // </div>
             // <div class='clearfix'></div>
             var wrap = "";
-            if (questionInfo.image && questionInfo.image.length > 0 && !questionInfo.startsWithImage) {
+            if (questionInfo.image && questionInfo.image.length > 0 && questionInfo.imagepos === "After") {
                 wrap += "<img src='" + questionInfo.image + "' class='image-after'/><br>";
             }
             wrap += "</div><div class='clearfix'></div>";
