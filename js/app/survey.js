@@ -144,13 +144,12 @@ define([], function () {
                         descendants.push(questionInfo)
                     }
                 }
-                
             })
             var clearCount = 0;
             $.each(surveyGroup, function(index, questionInfo){
                 if (index > 0){
                     if (surveyGroup[0].style === "dropdown" || surveyGroup[0].style === "text" || surveyGroup[0].style === "number"){
-                        if (questionInfo.conditions.toLowerCase().includes(answer.toLowerCase())){
+                        if (questionInfo.conditions.toLowerCase().indexOf(answer.toLowerCase()) !== -1){
                             $("#qg" + questionInfo.origorder).show("fast");
                         }
                         else{
@@ -159,7 +158,7 @@ define([], function () {
                         }
                     }
                     else{
-                        if (questionInfo.conditions.toLowerCase().includes(surveyGroup[0].values[answer].toLowerCase())){
+                        if (questionInfo.conditions.toLowerCase().indexOf(surveyGroup[0].values[answer].toLowerCase()) !== -1){
                             $("#qg" + questionInfo.origorder).show("fast");
                         }
                         else{
