@@ -437,6 +437,9 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
 
     // Provide the i18n strings to the survey
     survey.flag_important_question = i18n.tooltips.flag_important_question;
+    survey.error_text = i18n.messages.error_text;
+
+
 
     //------------------------------------------------------------------------------------------------------------------------//
     // Wire up app events
@@ -582,6 +585,14 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         $("#profile").fadeOut("fast", function () {
             $("#survey").fadeIn("fast");
         });
+    });
+
+    $(document).on("click", ".prime", function(){
+        survey.updateForm($(this).val(), $(this).data("id"), prepareAppConfigInfo.survey);
+    });
+
+    $(document).on("change", ".primeD", function(){
+        survey.updateForm($(this).val(), $(this).data("id"), prepareAppConfigInfo.survey);
     });
 
     $("#userSignoutSelection").on('click', function () {

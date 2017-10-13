@@ -164,17 +164,25 @@ define(['parseConfigInfo'], function (parseConfigInfo) {
                 $.getJSON(arcgisUrl + webmapId + "/data?f=json&callback=?", function (data) {
                     var featureSvcData = {};
 
-                    if (data && data.operationalLayers && data.operationalLayers.length > 0) {
+                    if (data && data.operationalLayers && data.operationalLayers.length > 0 && data.tables && data.tables.length > 0) {
                         featureSvcData.opLayerParams = data.operationalLayers[0];
+                        featureSvcData.formUIParams = data.tables[0];
 
-                        // Get the app's webmap's feature service's data
-                        fetchConfigInfo.getFeatureSvcData(featureSvcData.opLayerParams.url).done(function (data) {
-                            if (!data || data.error) {
+                        // Get the app's webmap's feature service's data and the survey questions table data
+                        $.when(fetchConfigInfo.getFeatureSvcData(featureSvcData.opLayerParams.url),
+                                fetchConfigInfo.getFeatureSvcData(featureSvcData.formUIParams.url))
+                        .done(function (svcdata, uidata) {
+                            if (!svcdata || svcdata.error || !uidata || uidata.error) {
                                 deferred.reject();
                             }
-                            featureSvcData.featureSvcParams = data;
+                            featureSvcData.featureSvcParams = svcdata;
+                            featureSvcData.formUISvcParams = uidata;
                             deferred.resolve(featureSvcData);
+                        })
+                        .fail(function(){
+                            deferred.resolve({});
                         });
+
                     } else {
                         deferred.resolve({});
                     }
@@ -182,7 +190,6 @@ define(['parseConfigInfo'], function (parseConfigInfo) {
             } else {
                 deferred.resolve({});
             }
-
             return deferred;
         },
 
@@ -199,7 +206,6 @@ define(['parseConfigInfo'], function (parseConfigInfo) {
             if (!deferred) {
                 deferred = $.Deferred();
             }
-
             if (parseConfigInfo.isUsableString(featureSvcUrl)) {
                 $.getJSON(featureSvcUrl + "?f=json&callback=?", function (data) {
                     data.canBeUpdated = data.capabilities && data.capabilities.indexOf("Update") >= 0;
