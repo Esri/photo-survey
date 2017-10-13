@@ -20,10 +20,6 @@ define([], function () {
     'use strict';
     var survey;
     survey = {
-
-        flag_important_question: "Please answer this question",
-        error_text: "Error displaying question, please check that field name from survey question table matches the photo points feature service",
-
         //--------------------------------------------------------------------------------------------------------------------//
 
         /**
@@ -141,7 +137,7 @@ define([], function () {
                 // If question is outside of question group check to see if it is a descendant
                 else{
                     if(survey._findAncestor(questionID, questionInfo, surveyDefinition)){
-                        descendants.push(questionInfo)
+                        descendants.push(questionInfo);
                     }
                 }
             })
@@ -154,7 +150,7 @@ define([], function () {
                         }
                         else{
                             survey._clearQuestions([questionInfo]);
-                            clearCount++
+                            clearCount++;
                         }
                     }
                     else{
@@ -404,7 +400,7 @@ define([], function () {
             //If object is not defined or null then display it with error text
             else{
                 var start = "<div id = 'qg" + iQuestion + "' class='form-group' style='color: red'>" +
-                "Question " + iQuestion + " " + survey.error_text + "<br></div>"
+                survey.error_text.replace("${0}", iQuestion) +"<br></div>"
             }
             return start;
         },
@@ -414,6 +410,7 @@ define([], function () {
          * @param {number} iQuestion Zero-based question number
          * @param {object} questionInfo Survey question, which contains question, field, style, domain, important
          * @param {boolean} isReadOnly Indicates if survey form elements are read-only
+         * @param {string} primeQFlag Adds .prime or .primeD class to html element for help with setting on click trigger in main.js 
          * @return {string} HTML for radio buttons
          * @private
          */
@@ -439,6 +436,7 @@ define([], function () {
          * @param {number} iQuestion Zero-based question number
          * @param {object} questionInfo Survey question, which contains question, field, style, domain, important
          * @param {boolean} isReadOnly Indicates if survey form elements are read-only
+         * @param {string} primeQFlag Adds .prime or .primeD class to html element for help with setting on click trigger in main.js
          * @return {string} HTML for radio buttons
          * @private
          */
@@ -464,6 +462,7 @@ define([], function () {
          * @param {number} iQuestion Zero-based question number
          * @param {object} questionInfo Survey question, which contains question, field, style, domain, important
          * @param {boolean} isReadOnly Indicates if survey form elements are read-only
+         * @param {string} primeQFlag Adds .prime or .primeD class to html element for help with setting on click trigger in main.js
          * @return {object} HTML for radio buttons
          * @private
          */
@@ -489,6 +488,7 @@ define([], function () {
          * @param {number} iQuestion Zero-based question number
          * @param {object} questionInfo Survey question, which contains question, field, style, domain, important
          * @param {boolean} isReadOnly Indicates if survey form elements are read-only
+         * @param {string} primeQFlag Adds .prime or .primeD class to html element for help with setting on click trigger in main.js
          * @return {object} HTML for radio buttons
          * @private
          */
@@ -504,6 +504,7 @@ define([], function () {
          * @param {number} iQuestion Zero-based question number
          * @param {object} questionInfo Survey question, which contains question, field, style, domain, important
          * @param {boolean} isReadOnly Indicates if survey form elements are read-only
+         * @param {string} primeQFlag Adds .prime or .primeD class to html element for help with setting on click trigger in main.js
          * @return {object} HTML for radio buttons
          * @private
          */

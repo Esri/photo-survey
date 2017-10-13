@@ -437,6 +437,9 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
 
     // Provide the i18n strings to the survey
     survey.flag_important_question = i18n.tooltips.flag_important_question;
+    survey.error_text = i18n.messages.error_text;
+
+
 
     //------------------------------------------------------------------------------------------------------------------------//
     // Wire up app events
