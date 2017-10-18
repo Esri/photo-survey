@@ -137,7 +137,7 @@ if CameraInput == 'Associate Photo with Parcel':
 
 	arcpy.DeleteField_management(PhotoFeatureClass2, "IN_FID;NEAR_FID;NEAR_DIST")
 	arcpy.AddField_management(PhotoFeatureClass2, "REVERSE", "TEXT", "", "", "5", "", "NULLABLE", "NON_REQUIRED", "")
-	arcpy.CalculateField_management(PhotoFeatureClass2, "REVERSE", "\"NO\"", "PYTHON", "")
+	arcpy.CalculateField_management(PhotoFeatureClass2, "REVERSE", "\"YES\"", "PYTHON", "")
 	arcpy.Delete_management(NEAR)
 
 	#______________________________________________________________________________#
@@ -222,7 +222,7 @@ if CameraInput == 'Associate Photo with Parcel':
 	arcpy.DeleteField_management(PhotoFeatureClass2, "Path")
 	arcpy.DeleteField_management(PhotoFeatureClass3, "Path")
 	arcpy.AddField_management(PhotoFeatureClass3, "REVERSE", "TEXT", "", "", "5", "", "NULLABLE", "NON_REQUIRED", "")
-	arcpy.CalculateField_management(PhotoFeatureClass3, "REVERSE", "\"YES\"", "PYTHON", "")
+	arcpy.CalculateField_management(PhotoFeatureClass3, "REVERSE", "\"NO\"", "PYTHON", "")
 
 	arcpy.Append_management(PhotoFeatureClass2, PhotoFeatureClass3, "NO_TEST", "", "")
 
