@@ -9,6 +9,8 @@
         "overviewMapInitiallyOpen": false,
         "overviewMapBasemap": "Streets",
         "overviewMapZoom": 16,
+        "showSkip": true,
+        "skipButtonText": "Skip",
 
         "proxyProgram": "proxy/proxy.ashx",
 
@@ -19,7 +21,7 @@
         "showGuest": "true",
         "facebookAppId": "",
         "googleplusClientId": "",
-        "showTwitter": "true",
+        "showTwitter": "false",
 
 
         "googleplusLogoutUrl": "https://accounts.google.com/logout",

@@ -168,9 +168,9 @@ define(['diag'], function (diag) {
             url = dataAccess.featureServiceUrl + "query?where=" + dataAccess.validCandidateCondition
                     + "&objectIds=&returnIdsOnly=true&returnCountOnly=false&outFields=" + dataAccess.fixedQueryParams
                     + "&callback=?";
-            $.getJSON(url, function handleCandidatesClosure(results) {
+            $.post(url, function handleCandidatesClosure(results) {
                 dataAccess.handleCandidates(results, randomizeSelection, deferred);
-            });
+            },'json');
 
             return deferred;
         },
