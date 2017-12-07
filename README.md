@@ -1,4 +1,4 @@
-s# photo-survey
+# photo-survey
 
 Photo Survey is a configurable JavaScript application designed to crowdsource property damage assessments, inventory blighted properties, target reappraisal efforts, identify structures that could pose safety concerns, as well as gather information from photos collected from camera traps, such as wildlife photos.
 
