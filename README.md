@@ -1,12 +1,12 @@
-# photo-survey
+s# photo-survey
 
 Photo Survey is a configurable JavaScript application designed to crowdsource property damage assessments, inventory blighted properties, target reappraisal efforts, identify structures that could pose safety concerns, as well as gather information from photos collected from camera traps, such as wildlife photos.
 
 This application includes data management tools designed to process photos and publish pre-authored survey questions.
 
-* Try the [Photo Survey (Local Government) application](http://links.esri.com/localgovernment/tryit/PhotoSurvey/)
-* Try the [Damage Assessment Survey application](http://links.esri.com/stategovernment/tryit/PhotoSurvey/)
-* Try the [Wildlife Photo Survey application](http://links.esri.com/stategovernment/tryit/wildlifephotosurvey)
+* Try the [Photo Survey (Local Government) application](http://links.esri.com/localgovernment/tryit/PhotoSurveys/)
+* Try the [Damage Assessment Survey application](http://links.esri.com/stategovernment/tryit/PhotoSurveys/)
+* Try the [Wildlife Photo Survey application](http://links.esri.com/stategovernment/tryit/wildlifephotosurveys/)
 
 [![Image of the Photo Survey application](photo-survey.png "Photo Survey application")](http://links.esri.com/localgovernment/tryit/PhotoSurvey/)
 
@@ -25,7 +25,7 @@ You'll need to convert to an application in IIS and use the ASP .NET 4.0 or 4.5.
 
 **Start now using your own services and maps**
 
-For more information on requirements and publication steps, see [Photo Survey for Local Government](http://links.esri.com/localgovernment/help/PhotoSurvey/) help or the [Photo Survey for State Government](http://solutions.arcgis.com/state-government/help/photo-survey/) help.
+For more information on requirements and publication steps, see [Photo Survey for Local Government](http://solutions.arcgis.com/local-government/help/photo-surveys/) help or the [Photo Survey for State Government](http://solutions.arcgis.com/state-government/help/photo-surveys/) help.
 
 ## Resources
 
