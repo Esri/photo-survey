@@ -1,6 +1,6 @@
 # photo-survey
 
-***If you implemented the June 2016 (or before) version of the application, upgrade to the December 2017 version (release) of the application. The December 2017 version of the application has been updated to use a table to configure survey questions, and so has the implementation process.  The previous versions have been placed into mature support, for detailed instructions, please visit this documentation (http://solutions.arcgis.com/local-government/help/photo-surveys/get-started/upgrade-application/) page.***
+***If you implemented the June 2016 (or before) version of the application, upgrade to the December 2017 version (release) of the application. The December 2017 version of the application has been updated to use a table to configure survey questions, and so has the implementation process.  The previous versions have been placed into mature support, for detailed instructions, please visit this [documentation](http://solutions.arcgis.com/local-government/help/photo-surveys/get-started/upgrade-application/) page.***
 
 Photo Survey is a configurable JavaScript application designed to crowdsource property damage assessments, inventory blighted properties, target reappraisal efforts, identify structures that could pose safety concerns, as well as gather information from photos collected from camera traps, such as wildlife photos.
 
