@@ -51,6 +51,9 @@ define(
             signinLoginPrompt: "Bitte loggen Sie ein, um loszulegen",
             noMoreSurveys: "Es sind keine Umfragen vorhanden zu diesem Zeitpunkt; vielen Dank für Ihre Teilnahme.",
             guestLabel: "Gast"
+        },
+        messages: {
+            error_text: "Frage $ {0} Fehler, der die Frage anzeigt, überprüfen Sie bitte, ob der Feldname aus der Umfrage-Frage-Tabelle mit dem Feature"
         }
     })
 );
