@@ -8,7 +8,7 @@ from azure.cognitiveservices.vision.customvision.training.models import ImageUrl
 def imageListChunks(imgList,chunkSize):
     return [imgList[pos:pos + chunkSize] for pos in range(0, len(imgList), chunkSize)]
 def imageList(tagName):
-    url = "https://api.github.com/repos/esri/photo-survey/contents/Training%20Photos/{}?ref=image-recognition".format(tagName)
+    url = "https://api.github.com/repos/esri/photo-survey/contents/Training%20Photos/{}?ref=blight-detection".format(tagName)
     response = requests.get(url)
     imgList = json.loads(response.text)
     if response.status_code == 200:

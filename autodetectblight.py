@@ -46,35 +46,35 @@ AITagFields = {
 }
 
 categoryList = categories.split(";")
-#arcpy.AddMessage(categoryList)
-
-# for category in categoryList:
-#     fieldInfo = {
-#         "name": category + "_prb",
-#         "type": "esriFieldTypeDouble",
-#         "alias": category + " Probability",
-#         "nullable": True,
-#         "editable": True,
-#     }
-#     AITagFields['fields'].append(fieldInfo)
-
-# try:
-#     feature_layer.manager.add_to_definition(AITagFields)
-#     arcpy.AddMessage("Adding AI Tag Fields")
-# except:
-#     e = sys.exc_info()[1]
-#     errorMsg = e.args[0].split('\n')
-#     arcpy.AddMessage(e)
-#     if (errorMsg[1] == "(Error Code: 403)"):
-#         arcpy.AddMessage("You do not have permissions to add a field to this service")
-#         sys.exit()
-#     else:
-#         pass
 exFieldList = [field.name for field in arcpy.ListFields(fcURL)]
+
+
+
 for category in categoryList:
     fieldName = category + "_prb"
     if fieldName not in exFieldList and fieldName.lower() not in exFieldList:
-        arcpy.AddField_management(fcURL,category + "_prb", field_type = "DOUBLE", field_alias=category + " Probability")
+        fieldInfo = {
+            "name": category.lower() + "_prb",
+            "type": "esriFieldTypeDouble",
+            "alias": category + " Probability",
+            "nullable": True,
+            "editable": True
+        }
+        AITagFields['fields'].append(fieldInfo)
+
+        try:
+            feature_layer.manager.add_to_definition(AITagFields)
+            arcpy.AddMessage("Adding AI Tag Fields")
+        except:
+            e = sys.exc_info()[1]
+            arcpy.AddError(e)
+            arcpy.AddError("Error adding blight probability field, check to see that you have permissions on the Feature Service")
+            sys.exit(1)
+
+# for category in categoryList:
+#     fieldName = category + "_prb"
+#     if fieldName not in exFieldList and fieldName.lower() not in exFieldList:
+#         arcpy.AddField_management(fcURL,category + "_prb", field_type = "DOUBLE", field_alias=category + " Probability")
 
 trainer = training_api.TrainingApi(trainingkey)
 predictor = prediction_endpoint.PredictionEndpoint(predictionkey)
@@ -147,7 +147,7 @@ for ids, values in attachmentids.items():
 #         midVal = values[int(len(values) / 2)]
 #         attachmentids[key] = midVal 
 
-features = feature_layer.query(where=whereClause)
+features = feature_layer.query(where=whereClause, return_geometry=False)
 featuresDict = [feature for feature in features if feature.get_value(flOID) in attachmentids]
 count = 0
 arcpy.SetProgressor("step", "Analyzing Photos", 0, len(attachmentids) * len(predictProjects) ,1)
@@ -173,12 +173,9 @@ for key, value in sorted(attachmentids.items()):
         except:
             pass
         for prediction in results.predictions:
-            if prediction.tag in categoryList or prediction.tag == "Overgrown" :
+            if prediction.tag in categoryList:
                 #arcpy.AddMessage("\t" + prediction.tag + ": {0:.2f}%".format(prediction.probability * 100))
-                if prediction.tag == "Overgrown":
-                    feature.set_value("Overgrowth" + "_prb", prediction.probability * 100)
-                else:
-                    feature.set_value(prediction.tag + "_prb", prediction.probability * 100)
+                feature.set_value(prediction.tag.lower() + "_prb", prediction.probability * 100)
         arcpy.SetProgressorPosition()
     #startTime = dt.datetime.now()
     #arcpy.AddMessage(feature)
