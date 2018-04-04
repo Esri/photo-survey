@@ -114,7 +114,7 @@ if CameraInput == 'Associate Photo with Parcel':
 
 	snapenv = [ParcelsFeatureClass, "EDGE", "30 Feet"]
 	arcpy.Snap_edit(PhotoFeatureClass2, [snapenv])
-
+	parcelsOID = arcpy.Describe(ParcelsFeatureClass).OIDFieldName
 
 	Nearhelper = """{}\\NEAR""".format(Geodatabase)
 	NEAR = Nearhelper
@@ -123,7 +123,7 @@ if CameraInput == 'Associate Photo with Parcel':
 
 	arcpy.AddMessage("Step 4:  Associating passenger photo points to nearest parcel")
 
-	arcpy.JoinField_management(NEAR, "NEAR_FID", ParcelsFeatureClass, "OBJECTID", ParcelPIN)
+	arcpy.JoinField_management(NEAR, "NEAR_FID", ParcelsFeatureClass, parcelsOID, ParcelPIN)
 
 	# Export non-matched Photos to table (no GPS, wrong attributes, etc.)
 
@@ -201,7 +201,7 @@ if CameraInput == 'Associate Photo with Parcel':
 	arcpy.GenerateNearTable_analysis(PhotoFeatureClass3, ParcelsFeatureClass, NEAR,
 									 "5 Feet", "NO_LOCATION", "NO_ANGLE", "CLOSEST", "0", "GEODESIC")
 	arcpy.AddMessage("Step 6:  Associating driver photo points to nearest parcel")
-	arcpy.JoinField_management(NEAR, "NEAR_FID", ParcelsFeatureClass, "OBJECTID", ParcelPIN)
+	arcpy.JoinField_management(NEAR, "NEAR_FID", ParcelsFeatureClass, parcelsOID, ParcelPIN)
 
 	# Export non-matched Photos to table (no GPS, wrong attributes, etc.)
 
