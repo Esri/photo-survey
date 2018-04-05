@@ -1,5 +1,6 @@
 from azure.cognitiveservices.vision.customvision.prediction import prediction_endpoint
 from azure.cognitiveservices.vision.customvision.prediction.prediction_endpoint import models
+from azure.cognitiveservices.vision.customvision.training.models import ImageUrlCreateEntry
 from azure.cognitiveservices.vision.customvision.training import training_api
 from arcgis.gis import GIS
 from arcgis.features import FeatureLayer, Feature
@@ -7,6 +8,19 @@ import sys
 import arcpy
 import datetime as dt
 import requests
+import json
+
+# TRAIN MODELS IF NEEDED*****************************************************************************************************
+def imageListChunks(imgList,chunkSize):
+    return [imgList[pos:pos + chunkSize] for pos in range(0, len(imgList), chunkSize)]
+def imageList(tagName):
+    comm_url = "https://api.github.com/repos/esri/photo-survey/contents/Training%20Photos/{}?ref=blight-detection".format(tagName)
+    response = requests.get(comm_url)
+    imgList = json.loads(response.text)
+    if response.status_code == 200:
+        return [img['download_url'] for img in imgList]
+    else:
+        sys.exit(1)
 
 fcURL = arcpy.GetParameterAsText(0)
 categories = arcpy.GetParameterAsText(1)
@@ -14,6 +28,49 @@ trainingkey = arcpy.GetParameterAsText(2)
 predictionkey = arcpy.GetParameterAsText(3)
 whereClause = "1=1"
 
+trainer = training_api.TrainingApi(trainingkey)
+
+categoryList = categories.split(";")
+
+#Get Existing Project List from Azure:
+existingProjects = [project.name for project in trainer.get_projects()]
+
+# Create a new project
+for name in categoryList:
+    #If the project already exists than no new models will be created
+    if name not in existingProjects:
+        arcpy.AddMessage("Creating Model {}...".format(name))
+        project = trainer.create_project(name)
+
+        #Negative Tag Name
+        negTagname = "Not_{}".format(name)
+
+        #Make two tags in the new project
+        positive_tag = trainer.create_tag(project.id, name)
+        negative_tag = trainer.create_tag(project.id, negTagname)
+
+        imageEntryList = [ImageUrlCreateEntry(image_url, [positive_tag.id]) for image_url in imageList(name)]
+        negEntryList = [ImageUrlCreateEntry(image_url, [negative_tag.id]) for image_url in imageList(negTagname)]
+
+        arcpy.AddMessage("Loading training photos into model...")
+        for imgChunk in imageListChunks(imageEntryList, 63):
+            trainer.create_images_from_urls(project.id,imgChunk)
+        for imgChunk in imageListChunks(negEntryList, 63):
+            trainer.create_images_from_urls(project.id,imgChunk)
+        arcpy.AddMessage("Training Model...")
+        iteration = trainer.train_project(project.id)
+        while iteration.status == "Training":
+            iteration = trainer.get_iteration(project.id, iteration.id)
+            time.sleep(3)
+
+        # The iteration is now trained. Make it the default project endpoint
+        trainer.update_iteration(project.id, iteration.id, is_default=True)
+        
+        arcpy.AddMessage("Done!")
+    else:
+        arcpy.AddMessage("'{}' model already exists. Skipping...".format(name))
+
+# PREDICT PHOTO****************************************************************************************
 if not fcURL.startswith('http'):
     desc = arcpy.Describe(fcURL)
     url = desc.path
@@ -45,7 +102,6 @@ AITagFields = {
     "fields": []
 }
 
-categoryList = categories.split(";")
 exFieldList = [field.name for field in arcpy.ListFields(fcURL)]
 
 
@@ -64,49 +120,19 @@ for category in categoryList:
 
         try:
             feature_layer.manager.add_to_definition(AITagFields)
-            arcpy.AddMessage("Adding AI Tag Fields")
+            arcpy.AddMessage("Adding Probability Score Fields")
         except:
             e = sys.exc_info()[1]
             arcpy.AddError(e)
             arcpy.AddError("Error adding blight probability field, check to see that you have permissions on the Feature Service")
             sys.exit(1)
 
-# for category in categoryList:
-#     fieldName = category + "_prb"
-#     if fieldName not in exFieldList and fieldName.lower() not in exFieldList:
-#         arcpy.AddField_management(fcURL,category + "_prb", field_type = "DOUBLE", field_alias=category + " Probability")
-
-trainer = training_api.TrainingApi(trainingkey)
+#trainer = training_api.TrainingApi(trainingkey)
 predictor = prediction_endpoint.PredictionEndpoint(predictionkey)
 
 projectList = trainer.get_projects()
 
-# for project in projectList:
-#     arcpy.AddMessage("Project: " + project.name)
-#     arcpy.AddMessage("Project ID: " + project.id)
-#     tags = trainer.get_tags(project.id)
-#     arcpy.AddMessage("****Project Tags****")
-#     for tag in tags.tags:
-#         arcpy.AddMessage("Tag Name: " + tag.name)
-#         arcpy.AddMessage("Tag ID: " + tag.id)
-
 predictProjects = [{"projectID":project.id, "currentIteration":trainer.get_iterations(project.id)[-2].id, "name":project.name} for project in projectList if project.name in categoryList]
-# arcpy.AddMessage(predictProjects)
-# for project in predictProjects:
-#     arcpy.AddMessage("Project: " + project["name"])
-#     arcpy.AddMessage("Project ID: " + project["projectID"])
-#     arcpy.AddMessage("Project Iter: " + project["currentIteration"])
-#     tags = trainer.get_tags(project["projectID"], project["currentIteration"])
-#     arcpy.AddMessage("****Project Tags****")
-#     for tag in tags.tags:
-#         imageList = trainer.get_tagged_images(project["projectID"],project["currentIteration"],[tag.id], take=250)
-#         for num,image in enumerate(imageList):
-#             img_data = requests.get(image.image_uri).content
-#             with open(r'C:\Projects\photo-survey-ai\Photos\{}{}.jpg'.format(tag.name,num), 'wb') as imagestream:
-#                 imagestream.write(img_data)
-#             arcpy.AddMessage(image.image_uri)
-#         arcpy.AddMessage("Tag Name: " + tag.name)
-#         arcpy.AddMessage("Tag ID: " + tag.id)
 
 features = feature_layer.query(where=whereClause, return_ids_only=True)
 id_list = features['objectIds']
@@ -153,36 +179,24 @@ count = 0
 arcpy.SetProgressor("step", "Analyzing Photos", 0, len(attachmentids) * len(predictProjects) ,1)
 for key, value in sorted(attachmentids.items()):
     url = feature_layer.url + '/{0}/attachments/{1}'.format(key, value)
-    #arcpy.AddMessage(url)
     feature = featuresDict[count]
     count += 1
-    #whereQuery = "{} = {}".format(flOID, key)
-    #features = feature_layer.query(where=whereQuery)
-    #feature = [feature for feature in features][0]
     for project in predictProjects:
         arcpy.SetProgressorLabel("Analyzing Photos: Detecting Category '{}' in Feature {} of {}".format(project["name"],count,len(attachmentids)))
-        #while True:
-        try:
-            #startTime = dt.datetime.now()
-            results = predictor.predict_image_url(project["projectID"], project["currentIteration"], url=url)
-            #seconds = dt.datetime.now() - startTime
-            #arcpy.AddMessage("Prediction Time: "  + str(seconds.microseconds))
-            #break
-        except arcpy.ExecuteError:
-            print(arcpy.GetMessages())
-        except:
-            pass
+        while True:
+            try:
+                results = predictor.predict_image_url(project["projectID"], project["currentIteration"], url=url)
+                break
+            except arcpy.ExecuteError:
+                print(arcpy.GetMessages())
+            except:
+                pass
         for prediction in results.predictions:
             if prediction.tag in categoryList:
-                #arcpy.AddMessage("\t" + prediction.tag + ": {0:.2f}%".format(prediction.probability * 100))
                 feature.set_value(prediction.tag.lower() + "_prb", prediction.probability * 100)
         arcpy.SetProgressorPosition()
-    #startTime = dt.datetime.now()
-    #arcpy.AddMessage(feature)
+
     feature_layer.edit_features(updates=[feature])
-    #arcpy.AddMessage(results)
-    #seconds = dt.datetime.now() - startTime
-    #arcpy.AddMessage("Update Time: "  + str(seconds.microseconds))
 
     
 
