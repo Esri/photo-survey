@@ -25,7 +25,7 @@ def imageList(tagName):
 fcURL = arcpy.GetParameterAsText(0)
 categories = arcpy.GetParameterAsText(1)
 trainingkey = arcpy.GetParameterAsText(2)
-predictionkey = arcpy.GetParameterAsText(3)
+
 whereClause = "1=1"
 
 trainer = training_api.TrainingApi(trainingkey)
@@ -95,22 +95,22 @@ target = GIS("pro")
 feature_layer = FeatureLayer(fcURL, target)
 flOID = arcpy.Describe(fcURL).OIDFieldName
 
-
-#Add AI Tag Field to feature class
+#Add Probability Score Fields
 
 AITagFields = {
     "fields": []
 }
 
-exFieldList = [field.name for field in arcpy.ListFields(fcURL)]
+exFieldList = [field.name for field in feature_layer.properties.fields]
 
 
-
+fieldAdd = False
 for category in categoryList:
-    fieldName = category + "_prb"
-    if fieldName not in exFieldList and fieldName.lower() not in exFieldList:
+    fieldName = (category + "_prb").lower()
+    if fieldName not in exFieldList:
+        fieldAdd = True
         fieldInfo = {
-            "name": category.lower() + "_prb",
+            "name": fieldName,
             "type": "esriFieldTypeDouble",
             "alias": category + " Probability",
             "nullable": True,
@@ -118,16 +118,25 @@ for category in categoryList:
         }
         AITagFields['fields'].append(fieldInfo)
 
-        try:
-            feature_layer.manager.add_to_definition(AITagFields)
-            arcpy.AddMessage("Adding Probability Score Fields")
-        except:
-            e = sys.exc_info()[1]
-            arcpy.AddError(e)
-            arcpy.AddError("Error adding blight probability field, check to see that you have permissions on the Feature Service")
-            sys.exit(1)
+if fieldAdd:
+    try:
+        feature_layer.manager.add_to_definition(AITagFields)
+        arcpy.AddMessage("Adding Probability Score Fields...")
+    except:
+        e = sys.exc_info()[1]
+        arcpy.AddError(e)
+        customMessage = """
+        Error adding blight probability field, check to see that you have permissions on the Feature Service.\n
+        Ensure that you input layer was added to the map through portal and that you are logged in to the
+        organization that the hosted feature service belongs to.\n
+        """
+        arcpy.AddError(customMessage)
+        sys.exit(1)
 
-#trainer = training_api.TrainingApi(trainingkey)
+#Acquire Prediction Key Programmatically
+account = trainer.get_account_info()
+predictionkey = account.keys.prediction_keys.primary_key
+
 predictor = prediction_endpoint.PredictionEndpoint(predictionkey)
 
 projectList = trainer.get_projects()
