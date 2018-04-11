@@ -19,11 +19,10 @@ from PIL import ImageEnhance
 
 
 TARGET_LUM = 100
-MAXDIM = 640
 
 
-def get_train_test(positives_dir):
-    pos = {x: True for x in glob.glob(positives_dir + '/*')}
+def imgDict(directory):
+    pos = {x: True for x in glob.glob(directory + '/*.jpg')}
 
     all_dict = pos
     test_filenames = all_dict.keys()
@@ -31,7 +30,7 @@ def get_train_test(positives_dir):
     return {x: all_dict[x] for x in test_filenames}
 
 
-def preprocess(image_dict, output_dir):
+def preprocess(image_dict, output_dir, enh, imgS):
     preprocessed = {}
     arcpy.SetProgressor("step","Processing Photos...",1,len(image_dict))
     for x, label in image_dict.items():
@@ -41,25 +40,25 @@ def preprocess(image_dict, output_dir):
 
         #Resize
 
-        widthSize = MAXDIM
-        heightSize = MAXDIM
+        widthSize = imgS
+        heightSize = imgS
 
         (width, height) = img.size  # get the size of the input image
 
-        if width > MAXDIM or height > MAXDIM: #only resize if height or width is greater than maxdim
+        if width > imgSize or height > imgS: #only resize if height or width is greater than maxdim
             if width > height:
-                heightSize = (MAXDIM * height) / width
+                heightSize = (imgS * height) / width
             elif height > width:
-                widthSize = (MAXDIM * width) / height
+                widthSize = (imgS * width) / height
 
         img = img.resize((widthSize, int(heightSize)), Image.ANTIALIAS)
 
 
         #Enhance Photo
-
-        lum = brightness(img)
-        enhancer = ImageEnhance.Brightness(img)
-        img = enhancer.enhance(1.0 + ((TARGET_LUM - lum) / lum))
+        if enh:
+            lum = brightness(img)
+            enhancer = ImageEnhance.Brightness(img)
+            img = enhancer.enhance(1.0 + ((TARGET_LUM - lum) / lum))
 
         img.save(newpath, exif=exif)
         arcpy.SetProgressorPosition()
@@ -75,18 +74,19 @@ def brightness(im):
     return sum(gs) / stat.count[0]
 
 
-def main(inputDir, outputDir):
-    test_images = get_train_test(inputDir)
-    print('got {0} test images'.format(len(test_images)))
-
-    #if os.path.exists(outputDir):
-        #shutil.rmtree(outputDir)
-    #os.mkdir(os.path.join(outputDir))
-
-    test_pre = preprocess(test_images, outputDir)
+def main(inputDir, outDir, enh, imgS):
+    imgList = imgDict(inputDir)
+    if imgList:
+        preprocess(imgList, outDir, enh, imgS)
+    else:
+        arcpy.AddMessage("No images available to process. Check input directory for JPG photos")
 
 
 if __name__ == '__main__':
-    argv = tuple(arcpy.GetParameterAsText(i)
-                 for i in range(arcpy.GetArgumentCount()))
+    inpDir = arcpy.GetParameterAsText(0)
+    outputDir = arcpy.GetParameterAsText(1)
+    enhBright = arcpy.GetParameter(2)
+    imgSize = arcpy.GetParameter(3)
+
+    argv = (inpDir, outputDir, enhBright, imgSize)
     main(*argv)

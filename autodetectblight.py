@@ -68,7 +68,7 @@ for name in categoryList:
         
         arcpy.AddMessage("Done!")
     else:
-        arcpy.AddMessage("'{}' model already exists. Skipping...".format(name))
+        arcpy.AddMessage("Loading '{}' model for blight detection...".format(name))
 
 # PREDICT PHOTO****************************************************************************************
 if not fcURL.startswith('http'):
@@ -191,10 +191,10 @@ for key, value in sorted(attachmentids.items()):
     feature = featuresDict[count]
     count += 1
     for project in predictProjects:
-        arcpy.SetProgressorLabel("Analyzing Photos: Detecting Category '{}' in Feature {} of {}".format(project["name"],count,len(attachmentids)))
+        arcpy.SetProgressorLabel("Detecting Category '{}' in Feature {} of {}".format(project["name"],count,len(attachmentids)))
         while True:
             try:
-                results = predictor.predict_image_url(project["projectID"], project["currentIteration"], url=url)
+                results = predictor.predict_image_url_with_no_store(project["projectID"], project["currentIteration"], url=url)
                 break
             except arcpy.ExecuteError:
                 print(arcpy.GetMessages())
