@@ -1,13 +1,19 @@
-# -*- coding: utf-8 -*-
-import argparse
+"""
+	@author: Esri
+	@contact: rcosby@esri.com
+	@company: Esri
+	@version: 1.0
+	@description: Photo Survey Tool to Resize and/or enhance photos
+	@requirements: Python 3.5.x and ArcGIS Pro 2.x
+	@copyright: Esri, 2017
+
+"""
+
 import os
 import glob
 import sys
-import random
-import pickle
 import math
 import shutil
-import numpy as np
 import arcpy
 
 
@@ -21,19 +27,18 @@ from PIL import ImageEnhance
 TARGET_LUM = 100
 
 
-def imgDict(directory):
-    pos = {x: True for x in glob.glob(directory + '/*.jpg')}
+def getSupportedImages(directory):
 
-    all_dict = pos
-    test_filenames = all_dict.keys()
+    imgTypes = ('jpg', 'jpeg')
+    imgList = []
+    for img in imgTypes:
+        imgList.extend(glob.glob(directory + "/*.{}".format(img)))
+   
+    return imgList
 
-    return {x: all_dict[x] for x in test_filenames}
-
-
-def preprocess(image_dict, output_dir, enh, imgS):
-    preprocessed = {}
-    arcpy.SetProgressor("step","Processing Photos...",1,len(image_dict))
-    for x, label in image_dict.items():
+def processImages(image_list, output_dir, enh, imgS):
+    arcpy.SetProgressor("step","Processing Photos...",0,len(image_list))
+    for x in image_list:
         newpath = os.path.join(output_dir, os.path.basename(x))
         img = Image.open(x)
         exif = img.info['exif']
@@ -62,9 +67,8 @@ def preprocess(image_dict, output_dir, enh, imgS):
 
         img.save(newpath, exif=exif)
         arcpy.SetProgressorPosition()
-        preprocessed[newpath] = label
 
-    return preprocessed
+    return
 
 
 def brightness(im):
@@ -75,11 +79,11 @@ def brightness(im):
 
 
 def main(inputDir, outDir, enh, imgS):
-    imgList = imgDict(inputDir)
+    imgList = getSupportedImages(inputDir)
     if imgList:
-        preprocess(imgList, outDir, enh, imgS)
+        processImages(imgList, outDir, enh, imgS)
     else:
-        arcpy.AddMessage("No images available to process. Check input directory for JPG photos")
+        arcpy.AddError("No images available to process. Check input directory for JPG photos")
 
 
 if __name__ == '__main__':
