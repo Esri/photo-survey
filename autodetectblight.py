@@ -49,8 +49,8 @@ for name in categoryList:
         positive_tag = trainer.create_tag(project.id, name)
         negative_tag = trainer.create_tag(project.id, negTagname)
 
-        imageEntryList = [ImageUrlCreateEntry(image_url, [positive_tag.id]) for image_url in imageList(name)]
-        negEntryList = [ImageUrlCreateEntry(image_url, [negative_tag.id]) for image_url in imageList(negTagname)]
+        imageEntryList = [ImageUrlCreateEntry(url=image_url, tag_ids=[positive_tag.id]) for image_url in imageList(name)]
+        negEntryList = [ImageUrlCreateEntry(url=image_url, tag_ids=[negative_tag.id]) for image_url in imageList(negTagname)]
 
         arcpy.AddMessage("Loading training photos into model...")
         for imgChunk in imageListChunks(imageEntryList, 63):
