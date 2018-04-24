@@ -143,58 +143,36 @@ projectList = trainer.get_projects()
 
 predictProjects = [{"projectID":project.id, "currentIteration":trainer.get_iterations(project.id)[-2].id, "name":project.name} for project in projectList if project.name in categoryList]
 
-features = feature_layer.query(where=whereClause, return_ids_only=True)
-id_list = features['objectIds']
+arcpy.SetProgressorLabel("Gathering Attachment URLs from Service")
 
+# Get Attachment URLS
+results = feature_layer.attachments.search(where=whereClause)
 attachmentids = {}
-progCount = 0
-arcpy.SetProgressor("step", "Gathering Attachment URLs from Service", 0, len(id_list), 1)
-for ids in id_list:
-    attachmentlist = feature_layer.attachments.get_list(oid=ids)
-    attachmentids[ids] = [x['id'] for x in attachmentlist]
-    arcpy.SetProgressorPosition()
 
-#Remove items from dictionary if there is No Attachments for that feature
-attachmentids = {key: value for key, value in attachmentids.items() if value != []}
+for att in results:
+    attachmentids[att['PARENTOBJECTID']] = []
+for att in results:
+    attachmentids[att['PARENTOBJECTID']].append(fcURL + "/{}/attachments/{}".format(att['PARENTOBJECTID'], att['ID']))
 
-tagIds = ""
-#Remove all the photos but the one in the middle of each house
-for ids, values in attachmentids.items():
+#Remove all attachments but the one in the middle of each house
+for key, values in attachmentids.items():
     if values:
         midVal = values[int(len(values) / 2)]
-        attachmentids[ids] = midVal
-        tagIds += str(ids) + ","
-#arcpy.AddMessage(attachmentids)
-
-# arcpy.SetProgressorLabel("Gathering Attachment URLs from Service")
-# # Upcoming attachment service search update change
-# results = feature_layer.attachments.search(where=whereClause)
-# attachmentids = {}
-
-# for att in results:
-#     attachmentids[att['PARENTOBJECTID']] = []
-# for att in results:
-#     attachmentids[att['PARENTOBJECTID']].append(fcURL + "/{}/attachments/{}".format(att['PARENTOBJECTID'], att['ID']))
-
-# #Remove all attachments but the one in the middle of each house
-# for key, values in attachmentids.items():
-#     if values:
-#         midVal = values[int(len(values) / 2)]
-#         attachmentids[key] = midVal 
+        attachmentids[key] = midVal 
 
 features = feature_layer.query(where=whereClause, return_geometry=False)
 featuresDict = [feature for feature in features if feature.get_value(flOID) in attachmentids]
 count = 0
 arcpy.SetProgressor("step", "Analyzing Photos", 0, len(attachmentids) * len(predictProjects) ,1)
 for key, value in sorted(attachmentids.items()):
-    url = feature_layer.url + '/{0}/attachments/{1}'.format(key, value)
+    #url = feature_layer.url + '/{0}/attachments/{1}'.format(key, value)
     feature = featuresDict[count]
     count += 1
     for project in predictProjects:
         arcpy.SetProgressorLabel("Detecting Category '{}' in Feature {} of {}".format(project["name"],count,len(attachmentids)))
         while True:
             try:
-                results = predictor.predict_image_url_with_no_store(project["projectID"], project["currentIteration"], url=url)
+                results = predictor.predict_image_url_with_no_store(project["projectID"], project["currentIteration"], url=value)
                 break
             except arcpy.ExecuteError:
                 print(arcpy.GetMessages())
