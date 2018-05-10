@@ -29,7 +29,10 @@ def processImage(x, output_dir, enh, imgS):
 
     newpath = os.path.join(output_dir, os.path.basename(x))
     img = Image.open(x)
-    exif = img.info['exif']
+    if 'exif' in img.info:
+        exif = img.info['exif']
+    else:
+        exif = None
 
     #Resize
 
@@ -52,8 +55,10 @@ def processImage(x, output_dir, enh, imgS):
         lum = brightness(img)
         enhancer = ImageEnhance.Brightness(img)
         img = enhancer.enhance(1.0 + ((TARGET_LUM - lum) / lum))
-
-    img.save(newpath, exif=exif)
+    if exif:
+        img.save(newpath, exif=exif)
+    else:
+        img.save(newpath)
     del img
     #arcpy.SetProgressorPosition()
 
