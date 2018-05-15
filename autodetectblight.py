@@ -14,7 +14,7 @@ import json
 def imageListChunks(imgList,chunkSize):
     return [imgList[pos:pos + chunkSize] for pos in range(0, len(imgList), chunkSize)]
 def imageList(tagName):
-    comm_url = "https://api.github.com/repos/esri/photo-survey/contents/Training%20Photos/{}?ref=blight-detection".format(tagName)
+    comm_url = "https://api.github.com/repos/esri/photo-survey/contents/Training%20Photos/{}?ref=blight-images".format(tagName)
     response = requests.get(comm_url)
     imgList = json.loads(response.text)
     if response.status_code == 200:
