@@ -8,7 +8,7 @@ This application includes data management tools designed to process photos and p
 
 * Try the [Photo Survey (Local Government) application](http://links.esri.com/localgovernment/tryit/PhotoSurveys/)
 * Try the [Damage Assessment Survey application](http://links.esri.com/stategovernment/tryit/PhotoSurveys/)
-* Try the [Wildlife Photo Survey application](http://links.esri.com/stategovernment/tryit/wildlifephotosurveys/)
+* Try the [Wildlife Photo Survey application](http://links.esri.com/stategovernment/tryit/wildlifephotosurvey/)
 
 [![Image of the Photo Survey application](photo-survey.png "Photo Survey application")](http://links.esri.com/localgovernment/tryit/PhotoSurvey/)
 
