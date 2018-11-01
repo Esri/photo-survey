@@ -313,7 +313,7 @@ define([], function () {
         },
 
         /**
-         * Creates a survey form in the specified element.
+         * Checks to see that button, list, and dropdown questio styles have a domain set
          * @param {object} questionInfo Survey question, which contains question, field, style, domain, important
          */
         _checkDomain: function(questionInfo){
