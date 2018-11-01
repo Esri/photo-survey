@@ -314,6 +314,22 @@ define([], function () {
 
         /**
          * Creates a survey form in the specified element.
+         * @param {object} questionInfo Survey question, which contains question, field, style, domain, important
+         */
+        _checkDomain: function(questionInfo){
+            var reqDomain = ["button", "list", "dropdown"];
+            if (!isNaN(questionInfo.domain) && (reqDomain.includes(questionInfo.style))){
+                return false;
+            }
+            else{
+                return true;
+            }            
+        },
+
+
+
+        /**
+         * Creates a survey form in the specified element.
          * @param {div} surveyContainer Element containing survey form
          * @param {number} iQuestion Zero-based question number
          * @param {object} questionInfo Survey question, which contains question, field, style, domain, important
@@ -323,7 +339,7 @@ define([], function () {
         _addQuestion: function (surveyContainer, iQuestion, questionInfo, isReadOnly) {
             var question = survey._startQuestion(iQuestion, questionInfo);
             //Question Object Needs to exist in order for HTML element to be created
-            if (questionInfo){
+            if (questionInfo && survey._checkDomain(questionInfo)){
                 //Create parent flags if question type is parent (domain value 0)
                 var primeQFlag = questionInfo.questionType === 0 ? "prime" : " contingent";
                 primeQFlag = questionInfo.style === "dropdown" ? "primeD" : primeQFlag;
@@ -384,17 +400,25 @@ define([], function () {
 
             //Check for question info object
             if (questionInfo){
-                // Determine whether to show question on first load. Applies to questions with no parents
-                var initDisplay = !questionInfo.parent ? "" : " style='display: none;'";
-                var start =
-                    "<div id='qg" + iQuestion + "' class='form-group'" + initDisplay + ">"
-                    + "<label for='q" + iQuestion + "'>" + questionInfo.question + (questionInfo.important
-                    ? "&nbsp;<div class='importantQuestion sprites star' title=\""
-                    + survey.flag_important_question + "\"></div>"
-                    : "")
-                        + "</label><br>";
-                if (questionInfo.image && questionInfo.image.length > 0 && questionInfo.imagepos === "Before") {
-                    start += "<img src='" + questionInfo.image + "' class='image-before'/><br>";
+                //Check to see if button, list, and dropdown questions have a domain set
+                var reqDomain = ["button", "list", "dropdown"];
+                if (!survey._checkDomain(questionInfo)){
+                    var start = "<div id = 'qg" + iQuestion + "' class='form-group' style='color: red'>" +
+                    survey.domain_error_text.replace("${0}", iQuestion) +"<br></div>" 
+                }
+                else{
+                    // Determine whether to show question on first load. Applies to questions with no parents
+                    var initDisplay = !questionInfo.parent ? "" : " style='display: none;'";
+                    var start =
+                        "<div id='qg" + iQuestion + "' class='form-group'" + initDisplay + ">"
+                        + "<label for='q" + iQuestion + "'>" + questionInfo.question + (questionInfo.important
+                        ? "&nbsp;<div class='importantQuestion sprites star' title=\""
+                        + survey.flag_important_question + "\"></div>"
+                        : "")
+                            + "</label><br>";
+                    if (questionInfo.image && questionInfo.image.length > 0 && questionInfo.imagepos === "Before") {
+                        start += "<img src='" + questionInfo.image + "' class='image-before'/><br>";
+                    }
                 }
             }
             //If object is not defined or null then display it with error text

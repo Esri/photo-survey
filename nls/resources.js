@@ -53,7 +53,8 @@ define({
             guestLabel: "Guest"
         },
         messages: {
-            error_text: "Question ${0} Error displaying question, please check that field name from survey question table matches the photo points feature service"
+            error_text: "Question ${0} Error displaying question, please check that field name from survey question table matches the photo points feature service",
+            domain_error_text: "Question ${0} Error displaying question. Button, list, and dropdown style questions require that the associated field has a domain."
         }
     }),
     "ar": 0,
