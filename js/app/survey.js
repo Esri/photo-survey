@@ -313,7 +313,7 @@ define([], function () {
         },
 
         /**
-         * Checks to see that button, list, and dropdown questio styles have a domain set
+         * Checks to see that button, list, and dropdown question styles have a domain set
          * @param {object} questionInfo Survey question, which contains question, field, style, domain, important
          */
         _checkDomain: function(questionInfo){
@@ -401,7 +401,6 @@ define([], function () {
             //Check for question info object
             if (questionInfo){
                 //Check to see if button, list, and dropdown questions have a domain set
-                var reqDomain = ["button", "list", "dropdown"];
                 if (!survey._checkDomain(questionInfo)){
                     var start = "<div id = 'qg" + iQuestion + "' class='form-group' style='color: red'>" +
                     survey.domain_error_text.replace("${0}", iQuestion) +"<br></div>" 
