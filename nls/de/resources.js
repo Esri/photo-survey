@@ -53,7 +53,8 @@ define(
             guestLabel: "Gast"
         },
         messages: {
-            error_text: "Frage $ {0} Fehler, der die Frage anzeigt, überprüfen Sie bitte, ob der Feldname aus der Umfrage-Frage-Tabelle mit dem Feature"
+            error_text: "Frage $ {0} Fehler, der die Frage anzeigt, überprüfen Sie bitte, ob der Feldname aus der Umfrage-Frage-Tabelle mit dem Feature",
+            domain_error_text: "Frage $ {0} Fehler beim Anzeigen der Frage. Fragen zu Schaltflächen, Listen und Dropdown-Formaten erfordern, dass das verknüpfte Feld eine Domäne hat."
         }
     })
 );
