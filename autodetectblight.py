@@ -13,20 +13,41 @@ import json
 # TRAIN MODELS IF NEEDED*****************************************************************************************************
 def imageListChunks(imgList,chunkSize):
     return [imgList[pos:pos + chunkSize] for pos in range(0, len(imgList), chunkSize)]
+
 def imageList(tagName):
-    resolveShortlink = requests.get("http://links.esri.com/localgovernment/photosurvey/images")
-    resolveUrl = resolveShortlink.url
-    comm_url = "{}/{}?ref=blight-images".format(resolveUrl,tagName)
-    response = requests.get(comm_url)
-    imgList = json.loads(response.text)
-    if response.status_code == 200:
-        return [img['download_url'] for img in imgList]
-    else:
+    errorMessage = "Error building image detection model. Unable to retrieve model training images."
+    try:
+        resolveShortlink = requests.get("http://links.esri.com/localgovernment/photosurvey/images")
+        resolveUrl = resolveShortlink.url
+        comm_url = "{}/{}?ref=blight-images".format(resolveUrl,tagName)
+        response = requests.get(comm_url)
+        imgList = json.loads(response.text)
+        if response.status_code == 200:
+            return [img['download_url'] for img in imgList]
+        else:
+            arcpy.AddError(errorMessage)
+            sys.exit(1)
+    except Exception as e:
+        arcpy.AddError(e.message)
+        arcpy.AddError(errorMessage)
         sys.exit(1)
+
+
+
+def checkValidProject(tr, prj):
+    iterations = tr.get_iterations(prj.id)
+    if len(iterations) == 1:
+        if iterations[0].status == "New":
+            return False
+    if not iterations:
+        return False
+    return True
+
 
 fcURL = arcpy.GetParameterAsText(0)
 categories = arcpy.GetParameterAsText(1)
 trainingkey = arcpy.GetParameterAsText(2)
+predictionkey = arcpy.GetParameterAsText(3)
 
 whereClause = "1=1"
 
@@ -34,8 +55,18 @@ trainer = training_api.TrainingApi(trainingkey)
 
 categoryList = categories.split(";")
 
-#Get Existing Project List from Azure:
-existingProjects = [project.name for project in trainer.get_projects()]
+existingProjects = []
+
+#Check existing projects for validity
+for project in trainer.get_projects():
+    if project.name in categoryList:
+        if checkValidProject(trainer, project):
+            # Valid project to do predictions with
+            existingProjects.append(project.name)
+        else:
+            # Not a valid project because its either missing tags or hasn't been trained. Remove the model.
+            arcpy.AddMessage("Invalid image detection model '{}' found. Rebuilding the model...".format(project.name))
+            trainer.delete_project(project.id)
 
 # Create a new project
 for name in categoryList:
@@ -97,6 +128,7 @@ target = GIS("pro")
 feature_layer = FeatureLayer(fcURL, target)
 flOID = arcpy.Describe(fcURL).OIDFieldName
 
+
 #Add Probability Score Fields
 
 AITagFields = {
@@ -135,10 +167,6 @@ if fieldAdd:
         arcpy.AddError(customMessage)
         sys.exit(1)
 
-#Acquire Prediction Key Programmatically
-account = trainer.get_account_info()
-predictionkey = account.keys.prediction_keys.primary_key
-
 predictor = prediction_endpoint.PredictionEndpoint(predictionkey)
 
 projectList = trainer.get_projects()
@@ -149,6 +177,7 @@ arcpy.SetProgressorLabel("Gathering Attachment URLs from Service")
 
 # Get Attachment URLS
 results = feature_layer.attachments.search(where=whereClause)
+tokenStr = "?token={}".format(target._con.token)
 attachmentids = {}
 
 for att in results:
@@ -172,14 +201,7 @@ for key, value in sorted(attachmentids.items()):
     count += 1
     for project in predictProjects:
         arcpy.SetProgressorLabel("Detecting Category '{}' in Feature {} of {}".format(project["name"],count,len(attachmentids)))
-        while True:
-            try:
-                results = predictor.predict_image_url_with_no_store(project["projectID"], project["currentIteration"], url=value)
-                break
-            except arcpy.ExecuteError:
-                print(arcpy.GetMessages())
-            except:
-                pass
+        results = predictor.predict_image_url_with_no_store(project["projectID"], project["currentIteration"], url=value + tokenStr)
         for prediction in results.predictions:
             if prediction.tag in categoryList:
                 feature.set_value(prediction.tag.lower() + "_prb", prediction.probability * 100)
