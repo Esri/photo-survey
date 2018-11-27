@@ -37,6 +37,11 @@ TemplateQTable = arcpy.ListTables()
 TemplateFC = TemplateGDB + "\\" + TemplateFC[0]
 TemplateQTable = TemplateGDB +"\\" + TemplateQTable[0]
 
+#Invalid Photo IDs
+invalidPhotosTablePassenger = Geodatabase + "\\InvalidPhotosPassenger"
+invalidPhotosTableDriver = Geodatabase + "\\InvalidPhotosDriver"
+invalidPhotosTable = Geodatabase + "\\InvalidPhotos"
+
 arcpy.AddMessage("Step 1:  Loading input parameters")
 
 if str (AngleField) == 'true':
@@ -52,7 +57,7 @@ if CameraInput == 'Associate Photo with Parcel':
 	#_______________________________________________________________________________#
 
 	PhotoFeatureClass = Geodatabase + "\\PointAttachmentsTemp" #"""{}\\PointAttachmentsTemp""".format(Geodatabase)
-	arcpy.GeoTaggedPhotosToPoints_management(PassengerPhotos, PhotoFeatureClass, "", "ONLY_GEOTAGGED", "NO_ATTACHMENTS")
+	arcpy.GeoTaggedPhotosToPoints_management(PassengerPhotos, PhotoFeatureClass, invalidPhotosTablePassenger, "ONLY_GEOTAGGED", "NO_ATTACHMENTS")
 
 	#______________________________________________________________________________#
 	#
@@ -146,7 +151,7 @@ if CameraInput == 'Associate Photo with Parcel':
 	#______________________________________________________________________________#
 
 	PhotoFeatureClass = Geodatabase + "\\PointAttachmentsTemp"
-	arcpy.GeoTaggedPhotosToPoints_management(DriverPhotos, PhotoFeatureClass, "", "ONLY_GEOTAGGED", "NO_ATTACHMENTS")
+	arcpy.GeoTaggedPhotosToPoints_management(DriverPhotos, PhotoFeatureClass, invalidPhotosTableDriver, "ONLY_GEOTAGGED", "NO_ATTACHMENTS")
 
 	#______________________________________________________________________________#
 	#
@@ -289,7 +294,7 @@ if CameraInput == 'Associate Geotagged Photo with Point (photo has location)':
     arcpy.AddMessage("Step 5:  Creating Photo Attachments")
     ParcelPointHelperTemp = Geodatabase + "\\ParcelPointsTemp"
     ParcelPointsMerged = Geodatabase + "\\ParcelPointsMerged"
-    arcpy.GeoTaggedPhotosToPoints_management(SinglePhotos, ParcelPointHelperTemp, "", "ONLY_GEOTAGGED", "NO_ATTACHMENTS")
+    arcpy.GeoTaggedPhotosToPoints_management(SinglePhotos, ParcelPointHelperTemp, invalidPhotosTable, "ONLY_GEOTAGGED", "NO_ATTACHMENTS")
     arcpy.Merge_management(ParcelPointHelperTemp + ';' + ParcelPointHelper, ParcelPointsMerged)
     PointsMerged2 = Geodatabase + "\\PhotoPoint"
     arcpy.Rename_management(ParcelPointsMerged, PointsMerged2)
@@ -314,7 +319,7 @@ if CameraInput == 'Associate Non-Geotagged Photo with specified Point (no locati
     arcpy.AddMessage("Step 5:  Creating Photo Attachments")
     PointHelperTemp = Geodatabase + "\\PointsTemp"
     PointsMerged = Geodatabase + "\\PointsMerged"
-    arcpy.GeoTaggedPhotosToPoints_management(SinglePhotos, PointHelperTemp, "", "ALL_PHOTOS", "NO_ATTACHMENTS")
+    arcpy.GeoTaggedPhotosToPoints_management(SinglePhotos, PointHelperTemp, invalidPhotosTable, "ALL_PHOTOS", "NO_ATTACHMENTS")
     arcpy.Merge_management(PointHelperTemp + ';' + ParcelPointHelper, PointsMerged)
     PointsMerged2 = Geodatabase + "\\PhotoPoint"
     arcpy.Rename_management(PointsMerged, PointsMerged2)
