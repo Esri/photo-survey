@@ -77,7 +77,12 @@ def execute(inputDir, outDir, enh, imgS):
     pythonExePath = sys.exec_prefix + "\\pythonw.exe"
 
     multiprocessing.set_executable(pythonExePath)
-    pool = multiprocessing.Pool(processes=int(multiprocessing.cpu_count() / 2))
+
+    cpus = 1
+    if int(multiprocessing.cpu_count / 2) > 1:
+        cpus = int(multiprocessing.cpu_count / 2)
+         
+    pool = multiprocessing.Pool(processes=cpus)
     
     if imgList:
         pool.starmap(processImage, [(img, outDir, enh, imgS) for img in imgList])
