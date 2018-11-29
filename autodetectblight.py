@@ -43,6 +43,9 @@ def checkValidProject(tr, prj):
         return False
     return True
 
+def getCurrentIteration(tr, prj):
+    return sorted(tr.get_iterations(prj.id), key=lambda itr: itr.trained_at, reverse=True)[0]
+
 
 fcURL = arcpy.GetParameterAsText(0)
 categories = arcpy.GetParameterAsText(1)
@@ -171,7 +174,7 @@ predictor = prediction_endpoint.PredictionEndpoint(predictionkey)
 
 projectList = trainer.get_projects()
 
-predictProjects = [{"projectID":project.id, "currentIteration":trainer.get_iterations(project.id)[-2].id, "name":project.name} for project in projectList if project.name in categoryList]
+predictProjects = [{"projectID":project.id, "currentIteration":getCurrentIteration(trainer,project).id, "name":project.name} for project in projectList if project.name in categoryList]
 
 arcpy.SetProgressorLabel("Gathering Attachment URLs from Service")
 
@@ -203,8 +206,8 @@ for key, value in sorted(attachmentids.items()):
         arcpy.SetProgressorLabel("Detecting Category '{}' in Feature {} of {}".format(project["name"],count,len(attachmentids)))
         results = predictor.predict_image_url_with_no_store(project["projectID"], project["currentIteration"], url=value + tokenStr)
         for prediction in results.predictions:
-            if prediction.tag in categoryList:
-                feature.set_value(prediction.tag.lower() + "_prb", prediction.probability * 100)
+            if prediction.tag_name in categoryList:
+                feature.set_value(prediction.tag_name.lower() + "_prb", prediction.probability * 100)
         arcpy.SetProgressorPosition()
 
     feature_layer.edit_features(updates=[feature])
