@@ -123,8 +123,7 @@ define(['diag'], function (diag) {
             deferred = $.Deferred();
 
             url = dataAccess.featureServiceUrl + "query?where=" + (condition || dataAccess.validCandidateCondition)
-                    + "&objectIds=&returnIdsOnly=false&returnCountOnly=true&outFields=" + dataAccess.fixedQueryParams
-                    + "&callback=?";
+                    + "&objectIds=&returnIdsOnly=false&returnCountOnly=true&outFields=" + dataAccess.fixedQueryParams;
             $.getJSON(url, function handleObjectCountClosure(results) {
                 dataAccess.handleObjectCount(results, deferred, condition);
             });
@@ -166,8 +165,7 @@ define(['diag'], function (diag) {
 
             // Get the ids of available unsurveyed candidates
             url = dataAccess.featureServiceUrl + "query?where=" + dataAccess.validCandidateCondition
-                    + "&objectIds=&returnIdsOnly=true&returnCountOnly=false&outFields=" + dataAccess.fixedQueryParams
-                    + "&callback=?";
+                    + "&objectIds=&returnIdsOnly=true&returnCountOnly=false&outFields=" + dataAccess.fixedQueryParams;
             $.post(url, function handleCandidatesClosure(results) {
                 dataAccess.handleCandidates(results, randomizeSelection, deferred);
             },'json');
@@ -210,15 +208,14 @@ define(['diag'], function (diag) {
             // Get the candidate's attributes
             attributesDeferred = $.Deferred();
             objectAttrsUrl = dataAccess.featureServiceUrl + "query?objectIds=" + objectId
-                    + "&returnIdsOnly=false&returnCountOnly=false&outFields=*" + dataAccess.fixedQueryParams
-                    + "&callback=?";
+                    + "&returnIdsOnly=false&returnCountOnly=false&outFields=*" + dataAccess.fixedQueryParams;
             $.getJSON(objectAttrsUrl, function handleCandidateAttrsClosure(results) {
                 dataAccess.handleCandidateAttrs(results, attributesDeferred);
             });
 
             // Get the candidate's attachments
             attachmentsDeferred = $.Deferred();
-            objectAttachmentsUrl = dataAccess.featureServiceUrl + objectId + "/attachments?f=json&callback=?";
+            objectAttachmentsUrl = dataAccess.featureServiceUrl + objectId + "/attachments?f=json";
             $.getJSON(objectAttachmentsUrl, function handleCandidateAttachmentsClosure(results) {
                 dataAccess.handleCandidateAttachments(objectId, results, attributesDeferred, attachmentsDeferred);
             });
