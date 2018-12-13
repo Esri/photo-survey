@@ -72,7 +72,7 @@ define(['parseConfigInfo'], function (parseConfigInfo) {
             }
 
             if (parseConfigInfo.isUsableString(appId)) {
-                $.getJSON(arcgisUrl + appId + "/data?f=json&callback=?", function (data) {
+                $.getJSON(arcgisUrl + appId + "/data?f=json", function (data) {
                     deferred.resolve((data && data.values) || {});
                 });
             } else {
@@ -103,7 +103,7 @@ define(['parseConfigInfo'], function (parseConfigInfo) {
             deferreds.origImageUrl = origImageUrlDeferred || $.Deferred();
 
             if (parseConfigInfo.isUsableString(webmapId)) {
-                $.getJSON(arcgisUrl + webmapId + "?f=json&callback=?", function (data) {
+                $.getJSON(arcgisUrl + webmapId + "?f=json", function (data) {
                     var normalizedData = {}, imageUrl, iExt;
                     if (!data || data.error) {
                         deferreds.params.reject();
@@ -161,7 +161,7 @@ define(['parseConfigInfo'], function (parseConfigInfo) {
             }
 
             if (parseConfigInfo.isUsableString(webmapId)) {
-                $.getJSON(arcgisUrl + webmapId + "/data?f=json&callback=?", function (data) {
+                $.getJSON(arcgisUrl + webmapId + "/data?f=json", function (data) {
                     var featureSvcData = {};
 
                     if (data && data.operationalLayers && data.operationalLayers.length > 0 && data.tables && data.tables.length > 0) {
@@ -207,7 +207,7 @@ define(['parseConfigInfo'], function (parseConfigInfo) {
                 deferred = $.Deferred();
             }
             if (parseConfigInfo.isUsableString(featureSvcUrl)) {
-                $.getJSON(featureSvcUrl + "?f=json&callback=?", function (data) {
+                $.getJSON(featureSvcUrl + "?f=json", function (data) {
                     data.canBeUpdated = data.capabilities && data.capabilities.indexOf("Update") >= 0;
                     deferred.resolve(data);
                 });
