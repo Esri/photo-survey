@@ -47,7 +47,7 @@ def processImage(x, output_dir, enh, imgS):
         elif height > width:
             widthSize = (imgS * width) / height
 
-    img = img.resize((widthSize, int(heightSize)), Image.ANTIALIAS)
+    img = img.resize((int(widthSize), int(heightSize)), Image.ANTIALIAS)
 
 
     #Enhance Photo
