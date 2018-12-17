@@ -290,21 +290,19 @@ if CameraInput == 'Associate Geotagged Photo with Point (photo has location)':
     arcpy.AddMessage("Step 3:  Adding application required fields")
     arcpy.AddField_management(ParcelPointHelper, "BSTPHOTOID", "TEXT", "", "", "25", "Best Photo Identifier", "NULLABLE", "NON_REQUIRED", "")
     arcpy.AddField_management(ParcelPointHelper, "SRVNAME", "TEXT", "", "", "25", "Surveyor Name", "NULLABLE", "NON_REQUIRED", "")
+    arcpy.AddField_management(ParcelPointHelper, "Path", "TEXT","", "", "254", "Path", "NULLABLE", "NON_REQUIRED", "")
+    arcpy.AddField_management(ParcelPointHelper, "Name", "TEXT","", "", "150", "Name", "NULLABLE", "NON_REQUIRED", "")
+    arcpy.AddField_management(ParcelPointHelper, "DateTime", "TEXT","", "", "100", "DateTime", "NULLABLE", "NON_REQUIRED", "")
+    arcpy.AddField_management(ParcelPointHelper, "Direction", "Double","", "", "", "Direction", "NULLABLE", "NON_REQUIRED", "")
     arcpy.AddMessage("Step 4:  Finalizing photo survey feature class")
     arcpy.AddMessage("Step 5:  Creating Photo Attachments")
     ParcelPointHelperTemp = Geodatabase + "\\ParcelPointsTemp"
-    ParcelPointsMerged = Geodatabase + "\\ParcelPointsMerged"
     arcpy.GeoTaggedPhotosToPoints_management(SinglePhotos, ParcelPointHelperTemp, invalidPhotosTable, "ONLY_GEOTAGGED", "NO_ATTACHMENTS")
-    arcpy.Merge_management(ParcelPointHelperTemp + ';' + ParcelPointHelper, ParcelPointsMerged)
-    PointsMerged2 = Geodatabase + "\\PhotoPoint"
-    arcpy.Rename_management(ParcelPointsMerged, PointsMerged2)
-    arcpy.EnableAttachments_management(PointsMerged2)
-    arcpy.AddAttachments_management(PointsMerged2, "OBJECTID", PointsMerged2, "OBJECTID", "Path", "")
+    arcpy.Append_management(ParcelPointHelperTemp, ParcelPointHelper, "NO_TEST")
+    arcpy.EnableAttachments_management(ParcelPointHelper)
+    arcpy.AddAttachments_management(ParcelPointHelper, "OBJECTID", ParcelPointHelper, "OBJECTID", "Path", "")
     arcpy.Delete_management(ParcelPointHelperTemp)
-    arcpy.Delete_management(ParcelPointHelper)
-    arcpy.DeleteField_management(PointsMerged2, "Path")
-    arcpy.Rename_management(PointsMerged2, ParcelPointHelper)
-
+    arcpy.DeleteField_management(ParcelPointHelper, "Path")
 
 else:
 	pass
@@ -315,25 +313,26 @@ if CameraInput == 'Associate Non-Geotagged Photo with specified Point (no locati
     arcpy.AddMessage("Step 3:  Adding application required fields")
     arcpy.AddField_management(ParcelPointHelper, "BSTPHOTOID", "TEXT", "", "", "25", "Best Photo Identifier", "NULLABLE", "NON_REQUIRED", "")
     arcpy.AddField_management(ParcelPointHelper, "SRVNAME", "TEXT", "", "", "25", "Surveyor Name", "NULLABLE", "NON_REQUIRED", "")
+    arcpy.AddField_management(ParcelPointHelper, "Path", "TEXT","", "", "254", "Path", "NULLABLE", "NON_REQUIRED", "")
+    arcpy.AddField_management(ParcelPointHelper, "Name", "TEXT","", "", "150", "Name", "NULLABLE", "NON_REQUIRED", "")
+    arcpy.AddField_management(ParcelPointHelper, "DateTime", "TEXT","", "", "100", "DateTime", "NULLABLE", "NON_REQUIRED", "")
+    arcpy.AddField_management(ParcelPointHelper, "Direction", "Double","", "", "", "Direction", "NULLABLE", "NON_REQUIRED", "")
     arcpy.AddMessage("Step 4:  Finalizing photo survey feature class")
     arcpy.AddMessage("Step 5:  Creating Photo Attachments")
     PointHelperTemp = Geodatabase + "\\PointsTemp"
-    PointsMerged = Geodatabase + "\\PointsMerged"
     arcpy.GeoTaggedPhotosToPoints_management(SinglePhotos, PointHelperTemp, invalidPhotosTable, "ALL_PHOTOS", "NO_ATTACHMENTS")
-    arcpy.Merge_management(PointHelperTemp + ';' + ParcelPointHelper, PointsMerged)
-    PointsMerged2 = Geodatabase + "\\PhotoPoint"
-    arcpy.Rename_management(PointsMerged, PointsMerged2)
-    arcpy.EnableAttachments_management(PointsMerged2)
-    arcpy.AddAttachments_management(PointsMerged2, "OBJECTID", PointsMerged2, "OBJECTID", "Path", "")
+    arcpy.Append_management(PointHelperTemp, ParcelPointHelper, "NO_TEST")
+    arcpy.EnableAttachments_management(ParcelPointHelper)
+    arcpy.AddAttachments_management(ParcelPointHelper, "OBJECTID", ParcelPointHelper, "OBJECTID", "Path", "")
 
-    shape = arcpy.Describe(PointsMerged2).ShapeFieldName
+    shape = arcpy.Describe(ParcelPointHelper).ShapeFieldName
     fields = ['SHAPE@XY']
     edit = arcpy.da.Editor(Geodatabase)
     edit.startEditing(False, True)
 
     Coord = Location.split(' ')
     Coord2 = ",".join(Coord)
-    with arcpy.da.UpdateCursor(PointsMerged2, "SHAPE@XY") as cur:
+    with arcpy.da.UpdateCursor(ParcelPointHelper, "SHAPE@XY") as cur:
         for row in cur:
             row[0] = eval (Coord2)
             cur.updateRow(row)
@@ -341,8 +340,6 @@ if CameraInput == 'Associate Non-Geotagged Photo with specified Point (no locati
     edit.stopEditing(True)
 
     arcpy.Delete_management(PointHelperTemp)
-    arcpy.Delete_management(ParcelPointHelper)
-    arcpy.Rename_management(PointsMerged2, ParcelPointHelper)
     arcpy.DeleteField_management(ParcelPointHelper, "Path")
 
 else:
