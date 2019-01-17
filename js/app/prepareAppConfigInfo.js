@@ -26,8 +26,8 @@ define(['parseConfigInfo', 'fetchConfigInfo', 'survey'], function (parseConfigIn
         // Available after init's parametersReady deferred
         appParams: {
             // Parameters that can be overridden by the configuration file, webmap, online app, and/or URL
-            webmap: "",
-            useWebmapOrigImg: true,
+            survey123: "",
+            usesurvey123OrigImg: true,
             title: "",
             splashText: "",
             splashBackgroundUrl: "",
@@ -46,7 +46,7 @@ define(['parseConfigInfo', 'fetchConfigInfo', 'survey'], function (parseConfigIn
 
             surveyorNameField: "",
             bestPhotoField: "",
-            filterDefinition: "",
+            //filterDefinition: "",
 
             // Parameters defined here
             showFacebook: "false",
@@ -82,66 +82,67 @@ define(['parseConfigInfo', 'fetchConfigInfo', 'survey'], function (parseConfigIn
          * respectively.
          */
         init: function () {
-            var webmapParamsFetch, webmapDataFetch, webmapFetcher, paramsFromUrl, onlineAppFetch, configFileFetch;
+            //var webmapParamsFetch, webmapDataFetch, webmapFetcher, paramsFromUrl, onlineAppFetch, configFileFetch;
+            var survey123ParamsFetch, survey123DataFetch, survey123Fetcher, paramsFromUrl, onlineAppFetch, configFileFetch;
 
             // Set up external notifications for various stages of preparation
             prepareAppConfigInfo.parametersReady = $.Deferred();
             prepareAppConfigInfo.surveyReady = $.Deferred();
-            prepareAppConfigInfo.webmapOrigImageUrlReady = $.Deferred();
+            prepareAppConfigInfo.survey123OrigImageUrlReady = $.Deferred();
 
             // Prepare for a webmap fetch as soon as we can
-            webmapParamsFetch = $.Deferred();
-            webmapDataFetch = $.Deferred();
-            webmapFetcher = null;
+            survey123ParamsFetch = $.Deferred();
+            survey123DataFetch = $.Deferred();
+            survey123Fetcher = null;
 
             // Get the configuration file
             configFileFetch = fetchConfigInfo.getParamsFromConfigFile("js/configuration.json", configFileFetch);
             $.when(configFileFetch).done(function (paramsFromFile) {
 
                 // Get the URL parameters
-                paramsFromUrl = prepareAppConfigInfo.screenProperties(["webmap", "diag", "test"], fetchConfigInfo.getParamsFromUrl());
+                paramsFromUrl = prepareAppConfigInfo.screenProperties(["survey123", "diag", "test"], fetchConfigInfo.getParamsFromUrl());
 
                 // If webmap specified in the URL, we can start a fetch of its data now
-                if (parseConfigInfo.isUsableString(paramsFromUrl.webmap)) {
-                    webmapFetcher = "url";
-                    fetchConfigInfo.getParamsFromWebmap(paramsFromFile.arcgisUrl,
-                            paramsFromUrl.webmap, webmapParamsFetch, prepareAppConfigInfo.webmapOrigImageUrlReady);
-                    fetchConfigInfo.getWebmapData(paramsFromFile.arcgisUrl,
-                            paramsFromUrl.webmap, webmapDataFetch);
+                if (parseConfigInfo.isUsableString(paramsFromUrl.survey123)) {
+                    survey123Fetcher = "url";
+                    fetchConfigInfo.getParamsFromSurvey123(paramsFromFile.arcgisUrl,
+                            paramsFromUrl.survey123, survey123ParamsFetch, prepareAppConfigInfo.survey123OrigImageUrlReady);
+                    fetchConfigInfo.getSurvey123Data(paramsFromFile.arcgisUrl,
+                            paramsFromUrl.survey123, survey123DataFetch);
                 }
 
                 // If the appId is specified in the URL, fetch its parameters; resolves immediately if no appId
-                onlineAppFetch = $.Deferred();
-                fetchConfigInfo.getParamsFromOnlineApp(paramsFromFile.arcgisUrl, paramsFromUrl.appid).done(function (data) {
-                    if (!webmapFetcher) {
-                        if (data && data.webmap) {
-                            // Use webmap specified in online app
-                            webmapFetcher = "online";
-                            fetchConfigInfo.getParamsFromWebmap(paramsFromFile.arcgisUrl,
-                                    data.webmap, webmapParamsFetch, prepareAppConfigInfo.webmapOrigImageUrlReady);
-                            fetchConfigInfo.getWebmapData(paramsFromFile.arcgisUrl,
-                                    data.webmap, webmapDataFetch);
-                        }
-                    }
-                    onlineAppFetch.resolve(data);
-                });
+                //onlineAppFetch = $.Deferred();
+                // fetchConfigInfo.getParamsFromOnlineApp(paramsFromFile.arcgisUrl, paramsFromUrl.appid).done(function (data) {
+                //     if (!survey123Fetcher) {
+                //         if (data && data.survey123) {
+                //             // Use webmap specified in online app
+                //             survey123Fetcher = "online";
+                //             fetchConfigInfo.getParamsFromWebmap(paramsFromFile.arcgisUrl,
+                //                     data.survey123, survey123ParamsFetch, prepareAppConfigInfo.survey123OrigImageUrlReady);
+                //             fetchConfigInfo.getWebmapData(paramsFromFile.arcgisUrl,
+                //                     data.survey123, survey123DataFetch);
+                //         }
+                //     }
+                //     onlineAppFetch.resolve(data);
+                // });
 
                 // Once we have config file and online app config (if any), see if we have a webmap
                 $.when(onlineAppFetch).done(function (paramsFromOnline) {
                     // If webmapFetcher is still null, that means that the webmap was not specified
                     // in the URL or in the online app; try the config file
-                    if (!webmapFetcher) {
-                        if (paramsFromFile.webmap) {
-                            webmapFetcher = "file";
-                            fetchConfigInfo.getParamsFromWebmap(paramsFromFile.arcgisUrl,
-                                    paramsFromFile.webmap, webmapParamsFetch, prepareAppConfigInfo.webmapOrigImageUrlReady);
-                            fetchConfigInfo.getWebmapData(paramsFromFile.arcgisUrl,
-                                    paramsFromFile.webmap, webmapDataFetch);
+                    if (!survey123Fetcher) {
+                        if (paramsFromFile.survey123) {
+                            survey123Fetcher = "file";
+                            fetchConfigInfo.getParamsFromSurvey123(paramsFromFile.arcgisUrl,
+                                    paramsFromFile.survey123, survey123ParamsFetch, prepareAppConfigInfo.survey123OrigImageUrlReady);
+                            fetchConfigInfo.getSurvey123Data(paramsFromFile.arcgisUrl,
+                                    paramsFromFile.survey123, survey123DataFetch);
                         } else {
                             // We've no webmap; nothing more that can be done
                             prepareAppConfigInfo.parametersReady.resolve(false);
                             prepareAppConfigInfo.surveyReady.resolve(false);
-                            prepareAppConfigInfo.webmapOrigImageUrlReady.resolve(false);
+                            prepareAppConfigInfo.survey123OrigImageUrlReady.resolve(false);
                         }
                     }
 
@@ -177,36 +178,39 @@ define(['parseConfigInfo', 'fetchConfigInfo', 'survey'], function (parseConfigIn
                     });
 
                     // Once we have the webmap's data, we can try assemble the survey
-                    webmapDataFetch.done(function (data) {
+                    survey123DataFetch.done(function (data) {
                         var dictionary;
 
                         if (data.opLayerParams && data.featureSvcParams && data.featureSvcParams.fields && data.formUISvcParams
                                 && data.formUISvcParams.fields) {
-                            prepareAppConfigInfo.featureSvcParams.url = data.opLayerParams.url;
+                            prepareAppConfigInfo.featureSvcParams.url = data.opLayerParams.url + "/0";
                             //Test if user has added a definition expression to the candidate layer, if so set filterDefinition value
-                            if (data.opLayerParams.hasOwnProperty('layerDefinition')){
-                                prepareAppConfigInfo.filterDefinition = data.opLayerParams.layerDefinition.definitionExpression;
-                            }
+                            //if (data.opLayerParams.hasOwnProperty('layerDefinition')){
+                                //prepareAppConfigInfo.filterDefinition = data.opLayerParams.layerDefinition.definitionExpression;
+                            //}
                             prepareAppConfigInfo.featureSvcParams.id = data.featureSvcParams.id;
                             prepareAppConfigInfo.featureSvcParams.objectIdField = data.featureSvcParams.objectIdField;
                             prepareAppConfigInfo.featureSvcParams.canBeUpdated = data.featureSvcParams.canBeUpdated;
 
-                            prepareAppConfigInfo.formUISvcParams.url = data.formUIParams.url;
-                            prepareAppConfigInfo.formUISvcParams.id = data.formUISvcParams.id;
-                            prepareAppConfigInfo.formUISvcParams.objectIdField = data.formUISvcParams.objectIdField;
-                            prepareAppConfigInfo.formUISvcParams.canBeUpdated = data.formUISvcParams.canBeUpdated;
+                            // prepareAppConfigInfo.formUISvcParams.url = data.formUIParams.url;
+                            // prepareAppConfigInfo.formUISvcParams.id = data.formUISvcParams.id;
+                            // prepareAppConfigInfo.formUISvcParams.objectIdField = data.formUISvcParams.objectIdField;
+                            // prepareAppConfigInfo.formUISvcParams.canBeUpdated = data.formUISvcParams.canBeUpdated;
 
-                            //Access Survey Form UI Config Info from Survey Questions setting table in the service
+                            // //Access Survey Form UI Config Info from Survey Questions setting table in the service
                             
-                            $.getJSON(prepareAppConfigInfo.formUISvcParams.url + 
-                                        prepareAppConfigInfo.formUISvcParams.queryString, function(results){
-                                if (!results){
-                                    prepareAppConfigInfo.surveyReady.reject()
-                                }
-                                prepareAppConfigInfo.survey = survey.createSurvey(
-                                    results, data.featureSvcParams.fields);
-                                prepareAppConfigInfo.surveyReady.resolve();
-                            });
+                            // $.getJSON(prepareAppConfigInfo.formUISvcParams.url + 
+                            //             prepareAppConfigInfo.formUISvcParams.queryString, function(results){
+                            //     if (!results){
+                            //         prepareAppConfigInfo.surveyReady.reject()
+                            //     }
+                            //     prepareAppConfigInfo.survey = survey.createSurvey(
+                            //         results, data.featureSvcParams.fields);
+                                
+                            // });
+
+                            prepareAppConfigInfo.surveyReady.resolve();
+
 
 
                         } else {
@@ -223,7 +227,7 @@ define(['parseConfigInfo', 'fetchConfigInfo', 'survey'], function (parseConfigIn
             return {
                 parametersReady: prepareAppConfigInfo.parametersReady,
                 surveyReady: prepareAppConfigInfo.surveyReady,
-                webmapOrigImageUrlReady: prepareAppConfigInfo.webmapOrigImageUrlReady
+                survey123OrigImageUrlReady: prepareAppConfigInfo.survey123OrigImageUrlReady
             };
         },
 

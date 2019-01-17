@@ -97,13 +97,13 @@ define(['parseConfigInfo'], function (parseConfigInfo) {
          * surveyorNameField, bestPhotoField; successful resolution of 'origImageUrl' contains the URL of the original-size
          * image.
          */
-        getParamsFromWebmap: function (arcgisUrl, webmapId, paramsDeferred, origImageUrlDeferred) {
+        getParamsFromSurvey123: function (arcgisUrl, survey123Id, paramsDeferred, origImageUrlDeferred) {
             var deferreds = {};
             deferreds.params = paramsDeferred || $.Deferred();
             deferreds.origImageUrl = origImageUrlDeferred || $.Deferred();
 
-            if (parseConfigInfo.isUsableString(webmapId)) {
-                $.getJSON(arcgisUrl + webmapId + "?f=json", function (data) {
+            if (parseConfigInfo.isUsableString(survey123Id)) {
+                $.getJSON(arcgisUrl + survey123Id + "?f=json", function (data) {
                     var normalizedData = {}, imageUrl, iExt;
                     if (!data || data.error) {
                         deferreds.params.reject();
@@ -126,7 +126,7 @@ define(['parseConfigInfo'], function (parseConfigInfo) {
                         } else {
                             imageUrl = imageUrl + "_orig";
                         }
-                        imageUrl = arcgisUrl + webmapId + "/info/" + imageUrl;
+                        imageUrl = arcgisUrl + survey123Id + "/info/" + imageUrl;
 
                         // Test that this URL is valid
                         fetchConfigInfo.testURL(imageUrl, function (isOK) {
@@ -155,28 +155,27 @@ define(['parseConfigInfo'], function (parseConfigInfo) {
          * @return {object} Deferred indicating when service information is ready; successful resolution includes object with
          * opLayerParams and featureSvcParams
          */
-        getWebmapData: function (arcgisUrl, webmapId, deferred) {
+        getSurvey123Data: function (arcgisUrl, survey123Id, deferred) {
             if (!deferred) {
                 deferred = $.Deferred();
             }
 
-            if (parseConfigInfo.isUsableString(webmapId)) {
-                $.getJSON(arcgisUrl + webmapId + "/data?f=json", function (data) {
-                    var featureSvcData = {};
+            if (parseConfigInfo.isUsableString(survey123Id)) {
+                $.getJSON(arcgisUrl + survey123Id + "/relatedItems?f=json&relationshipType=Survey2Service", function (data) {
 
-                    if (data && data.operationalLayers && data.operationalLayers.length > 0 && data.tables && data.tables.length > 0) {
-                        featureSvcData.opLayerParams = data.operationalLayers[0];
-                        featureSvcData.formUIParams = data.tables[0];
+                    var featureSvcData = {};
+                    if (data && data.total >= 1) {
+                        featureSvcData.opLayerParams = data.relatedItems[0];
+                        //featureSvcData.formUIParams = data.tables[0];
 
                         // Get the app's webmap's feature service's data and the survey questions table data
-                        $.when(fetchConfigInfo.getFeatureSvcData(featureSvcData.opLayerParams.url),
-                                fetchConfigInfo.getFeatureSvcData(featureSvcData.formUIParams.url))
-                        .done(function (svcdata, uidata) {
-                            if (!svcdata || svcdata.error || !uidata || uidata.error) {
+                        $.when(fetchConfigInfo.getFeatureSvcData(featureSvcData.opLayerParams.url + "/0"))
+                        .done(function (svcdata) {
+                            if (!svcdata || svcdata.error) {
                                 deferred.reject();
                             }
                             featureSvcData.featureSvcParams = svcdata;
-                            featureSvcData.formUISvcParams = uidata;
+                            //featureSvcData.formUISvcParams = uidata;
                             deferred.resolve(featureSvcData);
                         })
                         .fail(function(){
@@ -186,6 +185,29 @@ define(['parseConfigInfo'], function (parseConfigInfo) {
                     } else {
                         deferred.resolve({});
                     }
+                    
+                    // if (data && data.operationalLayers && data.operationalLayers.length > 0 && data.tables && data.tables.length > 0) {
+                    //     featureSvcData.opLayerParams = data.operationalLayers[0];
+                    //     featureSvcData.formUIParams = data.tables[0];
+
+                    //     // Get the app's webmap's feature service's data and the survey questions table data
+                    //     $.when(fetchConfigInfo.getFeatureSvcData(featureSvcData.opLayerParams.url),
+                    //             fetchConfigInfo.getFeatureSvcData(featureSvcData.formUIParams.url))
+                    //     .done(function (svcdata, uidata) {
+                    //         if (!svcdata || svcdata.error || !uidata || uidata.error) {
+                    //             deferred.reject();
+                    //         }
+                    //         featureSvcData.featureSvcParams = svcdata;
+                    //         featureSvcData.formUISvcParams = uidata;
+                    //         deferred.resolve(featureSvcData);
+                    //     })
+                    //     .fail(function(){
+                    //         deferred.resolve({});
+                    //     });
+
+                    // } else {
+                    //     deferred.resolve({});
+                    // }
                 });
             } else {
                 deferred.resolve({});
