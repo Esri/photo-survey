@@ -96,18 +96,23 @@
                 <div id="page-title" class="page-title"></div>
 
                 <h2 class="screenreaderInfo">Survey</h2>
-                <article id="survey" role="form">
+                <!-- <article id="survey" role="form"> -->
                     <!-- <div id="surveyContainer" class="form-frame">
                         
                     </div> -->
-                    <div id="surveyContainer">
+                    <!-- <div id="surveyContainer">
                         <iframe id="survey123Frame"></iframe>
-                    </div>
+                    </div> -->
+
                     <!-- <div class="action-bar">
                       <button id="skipBtn" type="button" class="btn skip-button">Skip</button>
                       <button id="submitBtn" type="submit" class="btn pull-right submit-button">Submit survey</button>
                     </div> -->
-                </article>
+                <!-- </article> -->
+                <div class="embed-container">
+                        <iframe id="survey123Frame" width="500" height="400" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" title="Test Photo Survey"></iframe>
+                </div>
+                <!-- <script>var survey123webform = document.getElementById('survey123Frame')[0]; window.addEventListener("message", e => { if (e.data) { var t = JSON.parse(e.data); "survey123:onFormLoaded" === t.event && t.contentHeight && (survey123webform.style.height = t.contentHeight + "px") } });</script> -->
 
                 <article id="profile" class="transparent">
                     <div class="profile-frame">

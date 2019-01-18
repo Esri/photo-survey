@@ -567,12 +567,20 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
             $("#surveyContainer").fadeTo(1000, (isReadOnly
                 ? 0.75
                 : 1.0));
-            if (!isReadOnly) {
-                $("#submitBtn").fadeTo(1000, 1.0);
-                $("#skipBtn").fadeTo(1000, 1.0);
-            }
+            //if (!isReadOnly) {
+               // $("#submitBtn").fadeTo(1000, 1.0);
+               // $("#skipBtn").fadeTo(1000, 1.0);
+            //}
 
-            $("#survey123Frame").attr('src', "https://survey123dev.arcgis.com/share/" + prepareAppConfigInfo.appParams.survey123 + "?embed=onSubmitted&hide=header&objectId=" + candidate.id)
+            $("#survey123Frame").attr('src', "https://survey123dev.arcgis.com/share/" + prepareAppConfigInfo.appParams.survey123 + "?embed=onSubmitted&hide=navbar,header,footer,description,theme&objectId=" + candidate.id)
+
+            var survey123webform = document.getElementById('survey123Frame');
+            window.addEventListener("message", e => {
+                if (e.data) {
+                    var t = JSON.parse(e.data);
+                    "survey123:onFormLoaded" === t.event && t.contentHeight && (survey123webform.style.height = t.contentHeight + "px")
+                }
+            });
 
         }, function () {
             $(document).triggerHandler('show:noSurveys');

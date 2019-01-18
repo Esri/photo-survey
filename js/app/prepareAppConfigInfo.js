@@ -182,7 +182,7 @@ define(['parseConfigInfo', 'fetchConfigInfo', 'survey'], function (parseConfigIn
                         var dictionary;
 
                         if (data.opLayerParams && data.featureSvcParams && data.featureSvcParams.fields) {
-                            prepareAppConfigInfo.featureSvcParams.url = data.opLayerParams.url + "/0";
+                            prepareAppConfigInfo.featureSvcParams.url = data.opLayerParams.serviceInfo.url + "/0";
                             //Test if user has added a definition expression to the candidate layer, if so set filterDefinition value
                             //if (data.opLayerParams.hasOwnProperty('layerDefinition')){
                                 //prepareAppConfigInfo.filterDefinition = data.opLayerParams.layerDefinition.definitionExpression;
