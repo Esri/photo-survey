@@ -116,8 +116,8 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
                 $("#signinParagraph")[0].innerHTML = prepareAppConfigInfo.appParams.splashText;
 
                 // If we're not going to wait for the webmap's original image, just set the splash
-                if (prepareAppConfigInfo.appParams.useWebmapOrigImg) {
-                    prepareAppConfigInfo.webmapOrigImageUrlReady.then(function (url) {
+                if (prepareAppConfigInfo.appParams.useSurvey123OrigImg) {
+                    prepareAppConfigInfo.survey123OrigImageUrlReady.then(function (url) {
                         if (url) {
                             prepareAppConfigInfo.appParams.splashBackgroundUrl = url;
                         }
@@ -572,12 +572,17 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
                 $("#skipBtn").fadeTo(1000, 1.0);
             }
 
+            $("#survey123Frame").attr('src', "https://survey123dev.arcgis.com/share/" + prepareAppConfigInfo.appParams.survey123 + "?embed=onSubmitted&hide=header&objectId=" + candidate.id)
+
         }, function () {
             $(document).triggerHandler('show:noSurveys');
         });
 
         // Create survey
-        survey.createNewForm($("#surveyContainer")[0], prepareAppConfigInfo.survey, isReadOnly);
+        //survey.createNewForm($("#surveyContainer")[0], prepareAppConfigInfo.survey, isReadOnly);
+
+        //$("#survey123Frame").load("http://survey123dev.arcgis.com/share/" + prepareAppConfigInfo.appParams.survey123 + "?embed=onSubmitted&hide=header&objectId=45")
+        
 
         // Show the content
         $("#contentPage").fadeIn("fast");
@@ -602,7 +607,26 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
        // survey.updateForm($(this).val(), $(this).data("id"), prepareAppConfigInfo.survey);
     //});
 
-    //$(window).on('message')
+    $(window).on('message', function(e){
+        var event = e.originalEvent;
+        var eventData = JSON.parse(e.originalEvent.data)
+        if (event.origin == "https://survey123dev.arcgis.com"){
+            if(eventData.event == "survey123:onSubmitted" && eventData.data[0].updateResults[0].success == true){
+                main.candidate.obj.attributes[prepareAppConfigInfo.appParams.surveyorNameField] = handleUserSignin.getUser().name;
+                if (main.iSelectedPhoto >= 0) {
+                    main.candidate.obj.attributes[prepareAppConfigInfo.appParams.bestPhotoField] = main.candidate.attachments[main.iSelectedPhoto].id;
+                }
+                diag.appendWithLF("saving survey for property <i>" + JSON.stringify(main.candidate.obj.attributes) + "</i>");  //???
+                dataAccess.updateCandidate(main.candidate).then(function () {
+                    main.completions += 1;
+                    main.updateCount();
+                    $(document).triggerHandler('show:newSurvey');
+                });
+            }
+        }
+
+    })
+    //https://stackoverflow.com/questions/9904490/jquery-doesnt-support-postmessage-event
 
     $("#userSignoutSelection").on('click', function () {
         $(document).triggerHandler('signedOut:user');

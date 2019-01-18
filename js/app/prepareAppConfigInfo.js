@@ -147,7 +147,7 @@ define(['parseConfigInfo', 'fetchConfigInfo', 'survey'], function (parseConfigIn
                     }
 
                     // Once we have the webmap, we can assemble the app parameters
-                    webmapParamsFetch.done(function (paramsFromWebmap) {
+                    survey123ParamsFetch.done(function (paramsFromSurvey123) {
                         // Parameters priority in increasing-importance order:
                         //  1. barebones structure appParams
                         //  2. configuration file
@@ -157,7 +157,7 @@ define(['parseConfigInfo', 'fetchConfigInfo', 'survey'], function (parseConfigIn
                         prepareAppConfigInfo.appParams = $.extend(
                             prepareAppConfigInfo.appParams,
                             paramsFromFile,
-                            paramsFromWebmap,
+                            paramsFromSurvey123,
                             paramsFromOnline,
                             paramsFromUrl
                         );
@@ -181,8 +181,7 @@ define(['parseConfigInfo', 'fetchConfigInfo', 'survey'], function (parseConfigIn
                     survey123DataFetch.done(function (data) {
                         var dictionary;
 
-                        if (data.opLayerParams && data.featureSvcParams && data.featureSvcParams.fields && data.formUISvcParams
-                                && data.formUISvcParams.fields) {
+                        if (data.opLayerParams && data.featureSvcParams && data.featureSvcParams.fields) {
                             prepareAppConfigInfo.featureSvcParams.url = data.opLayerParams.url + "/0";
                             //Test if user has added a definition expression to the candidate layer, if so set filterDefinition value
                             //if (data.opLayerParams.hasOwnProperty('layerDefinition')){
