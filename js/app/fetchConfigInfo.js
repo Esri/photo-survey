@@ -168,9 +168,9 @@ define(['parseConfigInfo'], function (parseConfigInfo) {
                     if (data && data.serviceInfo) {
                         featureSvcData.opLayerParams = data;
                         //featureSvcData.formUIParams = data.tables[0];
-
+                        featureSvcData.opLayerParams.serviceInfo.url = featureSvcData.opLayerParams.serviceInfo.url + "/0";
                         // Get the app's webmap's feature service's data and the survey questions table data
-                        $.when(fetchConfigInfo.getFeatureSvcData(featureSvcData.opLayerParams.serviceInfo.url + "/0"))
+                        $.when(fetchConfigInfo.getFeatureSvcData(featureSvcData.opLayerParams.serviceInfo.url))
                         .done(function (svcdata) {
                             if (!svcdata || svcdata.error) {
                                 deferred.reject();
