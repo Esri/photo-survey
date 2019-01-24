@@ -564,23 +564,30 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
             main.updatePhotoSelectionDisplay();
 
             // Provide some visual feedback for the switch to a new survey
-            $("#surveyContainer").fadeTo(1000, (isReadOnly
-                ? 0.75
-                : 1.0));
+            // $(".embed-container").fadeTo(1000, (isReadOnly
+            //     ? 0.75
+            //     : 1.0));
+
+            $("#survey123Frame").fadeOut(200)
+            $("#loadimage").show();
+
             //if (!isReadOnly) {
                // $("#submitBtn").fadeTo(1000, 1.0);
                // $("#skipBtn").fadeTo(1000, 1.0);
             //}
 
-            $("#survey123Frame").attr('src', "https://survey123dev.arcgis.com/share/" + prepareAppConfigInfo.appParams.survey123 + "?embed=onSubmitted&hide=navbar,header,footer,description,theme&objectId=" + candidate.id)
+            $("#survey123Frame").attr('src', "https://survey123dev.arcgis.com/share/" 
+            + prepareAppConfigInfo.appParams.survey123 + "?embed=onSubmitted&hide=navbar,header,footer,description,theme,"+
+            "field:" + prepareAppConfigInfo.appParams.surveyorNameField+ ",field:" +  
+            prepareAppConfigInfo.appParams.bestPhotoField+ "&objectId=" + candidate.id)
 
-            var survey123webform = document.getElementById('survey123Frame');
-            window.addEventListener("message", e => {
-                if (e.data) {
-                    var t = JSON.parse(e.data);
-                    "survey123:onFormLoaded" === t.event && t.contentHeight && (survey123webform.style.height = t.contentHeight + "px")
-                }
-            });
+            //var survey123webform = document.getElementById('survey123Frame');
+            //window.addEventListener("message", e => {
+                //if (e.data) {
+                   // var t = JSON.parse(e.data);
+                   // "survey123:onFormLoaded" === t.event && t.contentHeight && (survey123webform.style.height = t.contentHeight + "px")
+              //  }
+            //});
 
         }, function () {
             $(document).triggerHandler('show:noSurveys');
@@ -607,6 +614,16 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         });
     });
 
+    $(document).on('setParam:surveyor', function(){
+        var payload = JSON.stringify({event: 'survey123:setParams', data: ['field:' + prepareAppConfigInfo.appParams.surveyorNameField + '=' + handleUserSignin.getUser().name]})
+        window.frames.survey123webform.postMessage(payload, "*")
+    });
+
+    $(document).on('setParam:bestPhoto', function(){
+        var payload = JSON.stringify({event: 'survey123:setParams', data: ['field:' + prepareAppConfigInfo.appParams.bestPhotoField + '=' + main.candidate.attachments[main.iSelectedPhoto].id]})
+        window.frames.survey123webform.postMessage(payload, "*")
+    });
+
     //$(document).on("click", ".prime", function(){
         //survey.updateForm($(this).val(), $(this).data("id"), prepareAppConfigInfo.survey);
     //});
@@ -620,17 +637,27 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         var eventData = JSON.parse(e.originalEvent.data)
         if (event.origin == "https://survey123dev.arcgis.com"){
             if(eventData.event == "survey123:onSubmitted" && eventData.data[0].updateResults[0].success == true){
-                main.candidate.obj.attributes[prepareAppConfigInfo.appParams.surveyorNameField] = handleUserSignin.getUser().name;
-                if (main.iSelectedPhoto >= 0) {
-                    main.candidate.obj.attributes[prepareAppConfigInfo.appParams.bestPhotoField] = main.candidate.attachments[main.iSelectedPhoto].id;
-                }
-                diag.appendWithLF("saving survey for property <i>" + JSON.stringify(main.candidate.obj.attributes) + "</i>");  //???
-                dataAccess.updateCandidate(main.candidate).then(function () {
-                    main.completions += 1;
-                    main.updateCount();
-                    $(document).triggerHandler('show:newSurvey');
-                });
+                // main.candidate.obj.attributes[prepareAppConfigInfo.appParams.surveyorNameField] = handleUserSignin.getUser().name;
+                // if (main.iSelectedPhoto >= 0) {
+                //     main.candidate.obj.attributes[prepareAppConfigInfo.appParams.bestPhotoField] = main.candidate.attachments[main.iSelectedPhoto].id;
+                // }
+                // diag.appendWithLF("saving survey for property <i>" + JSON.stringify(main.candidate.obj.attributes) + "</i>");  //???
+                // dataAccess.updateCandidate(main.candidate).then(function () {
+                //     main.completions += 1;
+                //     main.updateCount();
+                //     $(document).triggerHandler('show:newSurvey');
+                // });
+                main.completions += 1;
+                main.updateCount();
+                $(document).triggerHandler('show:newSurvey');
             }
+            if(eventData.event == "survey123:onFormLoaded"){
+                $("#survey123Frame").height(eventData.contentHeight * 5);
+                $(document).triggerHandler("setParam:surveyor");
+                $("#loadimage").hide();
+                $("#survey123Frame").fadeIn(1000)
+            }
+            
         }
 
     })
@@ -684,6 +711,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
             ? main.iVisiblePhoto
             : -1;
         main.updatePhotoSelectionDisplay();
+        $(document).triggerHandler('setParam:bestPhoto')
     });
 
     // Manage group of buttons in a radio style

@@ -161,16 +161,18 @@ define(['parseConfigInfo'], function (parseConfigInfo) {
             }
 
             if (parseConfigInfo.isUsableString(survey123Id)) {
+                //"/info/form.info?f=json"
                 //"/relatedItems?f=json&relationshipType=Survey2Service"
-                $.getJSON(arcgisUrl + survey123Id + "/info/form.info?f=json", function (data) {
+                $.getJSON(arcgisUrl + survey123Id + "/relatedItems?f=json&relationshipType=Survey2Service", function (data) {
 
                     var featureSvcData = {};
-                    if (data && data.serviceInfo) {
+                    if (data && data.total >= 1) {
                         featureSvcData.opLayerParams = data;
+                        featureSvcData.opLayerParams.url = featureSvcData.opLayerParams.relatedItems[0].url + "/0"
                         //featureSvcData.formUIParams = data.tables[0];
-                        featureSvcData.opLayerParams.serviceInfo.url = featureSvcData.opLayerParams.serviceInfo.url + "/0";
+                        //featureSvcData.opLayerParams.serviceInfo.url = featureSvcData.opLayerParams.serviceInfo.url + "/0";
                         // Get the app's webmap's feature service's data and the survey questions table data
-                        $.when(fetchConfigInfo.getFeatureSvcData(featureSvcData.opLayerParams.serviceInfo.url))
+                        $.when(fetchConfigInfo.getFeatureSvcData(featureSvcData.opLayerParams.url))
                         .done(function (svcdata) {
                             if (!svcdata || svcdata.error) {
                                 deferred.reject();

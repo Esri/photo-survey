@@ -2,9 +2,9 @@
     "source": "dbd49c155bf249f79bf1e518d56dbbb2",
     "folderId": "052b07ec56b3462c943adcc6959354ec",
     "values": {
-        "survey123": "1260ee1a254f4e5b8a56ef1bea56a201",
+        "survey123": "6f920203993a41849901fe9393b59c88",
         "splashBackgroundUrl": "images/splash.jpg",
-        "useWebmapOrigImg": true,
+        "usesurvey123OrigImg": true,
         "includeOverviewMap": false,
         "overviewMapInitiallyOpen": false,
         "overviewMapBasemap": "Streets",
