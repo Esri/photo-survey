@@ -501,7 +501,8 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
         // Provide some visual feedback for the switch to a new survey
         //$("#submitBtn").fadeTo(100, 0.0).blur();
         //$("#skipBtn").fadeTo(100, 0.0).blur();
-        $("#surveyContainer").fadeTo(100, 0.0);
+        //$("#surveyContainer").fadeTo(100, 0.0);
+        $('#sidebarContent').scrollTop(0);
 
         // Get candidate property
         dataAccess.getCandidate(prepareAppConfigInfo.appParams.randomizeSelection).then(function (candidate) {
