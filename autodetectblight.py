@@ -11,6 +11,10 @@ import requests
 import json
 
 # TRAIN MODELS IF NEEDED*****************************************************************************************************
+
+mode = arcpy.GetParameterInfo()[1].displayName
+mode = bool("dev" in mode)
+
 def imageListChunks(imgList,chunkSize):
     return [imgList[pos:pos + chunkSize] for pos in range(0, len(imgList), chunkSize)]
 
@@ -19,7 +23,12 @@ def imageList(tagName):
     try:
         resolveShortlink = requests.get("http://links.esri.com/localgovernment/photosurvey/images")
         resolveUrl = resolveShortlink.url
-        comm_url = "{}/{}?ref=blight-images".format(resolveUrl,tagName)
+        branch = "blight-images"
+        if mode:
+            branch = "blight-images-dev"
+        else:
+            branch = "blight-images"
+        comm_url = "{}/{}?ref={}".format(resolveUrl,tagName, branch)
         response = requests.get(comm_url)
         imgList = json.loads(response.text)
         if response.status_code == 200:
