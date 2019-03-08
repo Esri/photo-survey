@@ -53,7 +53,8 @@ define(
             guestLabel: "Invité"
         },
         messages: {
-            error_text: "Question $ {0} Erreur lors de l'affichage de la question, veuillez vérifier que le nom du champ de la table des questions du sondage correspond au service de la fonction"
+            error_text: "Question $ {0} Erreur lors de l'affichage de la question, veuillez vérifier que le nom du champ de la table des questions du sondage correspond au service de la fonction",
+            domain_error_text: "Question $ {0} Erreur lors de l'affichage de la question. Les questions de style bouton, liste et liste déroulante nécessitent que le champ associé ait un domaine."
         }
     })
 );

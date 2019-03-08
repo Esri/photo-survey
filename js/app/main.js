@@ -438,6 +438,7 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
     // Provide the i18n strings to the survey
     survey.flag_important_question = i18n.tooltips.flag_important_question;
     survey.error_text = i18n.messages.error_text;
+    survey.domain_error_text = i18n.messages.domain_error_text;
 
 
 
@@ -530,8 +531,14 @@ define(['lib/i18n.min!nls/resources.js', 'prepareAppConfigInfo', 'handleUserSign
             if (prepareAppConfigInfo.appParams.includeOverviewMap) {
                 // Jump the overview map to candidate.obj.geometry after transforming to lat/long;
                 // we've asked the server to give us the geometry in lat/long (outSR=4326) for Leaflet
-                main.overviewMap.setView([candidate.obj.geometry.y, candidate.obj.geometry.x],
-                    prepareAppConfigInfo.appParams.overviewMapZoom);
+                if (candidate.obj.hasOwnProperty('geometry')){
+                        main.overviewMap.setView([candidate.obj.geometry.y, candidate.obj.geometry.x],
+                        prepareAppConfigInfo.appParams.overviewMapZoom);
+                }
+                else{
+                        main.overviewMap.setView([0, 0],
+                        prepareAppConfigInfo.appParams.overviewMapZoom);
+                }
             }
 
             // Gallery

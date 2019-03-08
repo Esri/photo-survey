@@ -37,6 +37,11 @@ TemplateQTable = arcpy.ListTables()
 TemplateFC = TemplateGDB + "\\" + TemplateFC[0]
 TemplateQTable = TemplateGDB +"\\" + TemplateQTable[0]
 
+#Invalid Photo IDs
+invalidPhotosTablePassenger = Geodatabase + "\\InvalidPhotosPassenger"
+invalidPhotosTableDriver = Geodatabase + "\\InvalidPhotosDriver"
+invalidPhotosTable = Geodatabase + "\\InvalidPhotos"
+
 arcpy.AddMessage("Step 1:  Loading input parameters")
 
 if str (AngleField) == 'true':
@@ -51,8 +56,8 @@ if CameraInput == 'Associate Photo with Parcel':
 	# Convert Passenger Photos to Points
 	#_______________________________________________________________________________#
 
-	PhotoFeatureClass = """{}\\PointAttachmentsTemp""".format(Geodatabase)
-	arcpy.GeoTaggedPhotosToPoints_management(PassengerPhotos, PhotoFeatureClass, "", "ONLY_GEOTAGGED", "NO_ATTACHMENTS")
+	PhotoFeatureClass = Geodatabase + "\\PointAttachmentsTemp" #"""{}\\PointAttachmentsTemp""".format(Geodatabase)
+	arcpy.GeoTaggedPhotosToPoints_management(PassengerPhotos, PhotoFeatureClass, invalidPhotosTablePassenger, "ONLY_GEOTAGGED", "NO_ATTACHMENTS")
 
 	#______________________________________________________________________________#
 	#
@@ -66,7 +71,7 @@ if CameraInput == 'Associate Photo with Parcel':
 
 	SR = arcpy.Describe(Parcels)
 	SRHelper = SR.spatialReference
-	PhotoFeatureClass2 = """{}\\PointAttachments""".format(Geodatabase)
+	PhotoFeatureClass2 = Geodatabase + "\\PointAttachments"
 
 	arcpy.Project_management(PhotoFeatureClass, PhotoFeatureClass2, SRHelper)
 	arcpy.DeleteIdentical_management(PhotoFeatureClass2, "Shape")
@@ -84,7 +89,7 @@ if CameraInput == 'Associate Photo with Parcel':
 
 	# Load up the parcel dataset for the property association (and make a copy)
 
-	ParcelsFeatureClass = """{}\\Parcels""".format(Geodatabase)
+	ParcelsFeatureClass = Geodatabase + "\\Parcels"""
 	arcpy.CopyFeatures_management(Parcels, ParcelsFeatureClass)
 
 	arcpy.AddMessage("Step 3:  Copying Parcels to staging geodatabase")
@@ -114,16 +119,16 @@ if CameraInput == 'Associate Photo with Parcel':
 
 	snapenv = [ParcelsFeatureClass, "EDGE", "30 Feet"]
 	arcpy.Snap_edit(PhotoFeatureClass2, [snapenv])
+	parcelsOID = arcpy.Describe(ParcelsFeatureClass).OIDFieldName
 
-
-	Nearhelper = """{}\\NEAR""".format(Geodatabase)
+	Nearhelper = Geodatabase + "\\NEAR"
 	NEAR = Nearhelper
 	arcpy.GenerateNearTable_analysis(PhotoFeatureClass2, ParcelsFeatureClass, NEAR,
 									 "5 Feet", "NO_LOCATION", "NO_ANGLE", "CLOSEST", "0", "GEODESIC")
 
 	arcpy.AddMessage("Step 4:  Associating passenger photo points to nearest parcel")
 
-	arcpy.JoinField_management(NEAR, "NEAR_FID", ParcelsFeatureClass, "OBJECTID", ParcelPIN)
+	arcpy.JoinField_management(NEAR, "NEAR_FID", ParcelsFeatureClass, parcelsOID, ParcelPIN)
 
 	# Export non-matched Photos to table (no GPS, wrong attributes, etc.)
 
@@ -145,8 +150,8 @@ if CameraInput == 'Associate Photo with Parcel':
 	# Convert Driver Photos to Points
 	#______________________________________________________________________________#
 
-	PhotoFeatureClass = """{}\\PointAttachmentsTemp""".format(Geodatabase)
-	arcpy.GeoTaggedPhotosToPoints_management(DriverPhotos, PhotoFeatureClass, "", "ONLY_GEOTAGGED", "NO_ATTACHMENTS")
+	PhotoFeatureClass = Geodatabase + "\\PointAttachmentsTemp"
+	arcpy.GeoTaggedPhotosToPoints_management(DriverPhotos, PhotoFeatureClass, invalidPhotosTableDriver, "ONLY_GEOTAGGED", "NO_ATTACHMENTS")
 
 	#______________________________________________________________________________#
 	#
@@ -160,7 +165,7 @@ if CameraInput == 'Associate Photo with Parcel':
 
 	SR = arcpy.Describe(Parcels)
 	SRHelper = SR.spatialReference
-	PhotoFeatureClass3 = """{}\\PointAttachments2""".format(Geodatabase)
+	PhotoFeatureClass3 = Geodatabase + "\\PointAttachments2"
 
 	arcpy.Project_management(PhotoFeatureClass, PhotoFeatureClass3, SRHelper)
 	arcpy.DeleteIdentical_management(PhotoFeatureClass3, "Shape")
@@ -196,12 +201,12 @@ if CameraInput == 'Associate Photo with Parcel':
 	snapenv = ["PARCELSFL2", "EDGE", "100 Feet"]
 	arcpy.Snap_edit(PhotoFeatureClass3, [snapenv])
 
-	Nearhelper = """{}\\NEAR""".format(Geodatabase)
+	Nearhelper = Geodatabase + "\\NEAR"
 	NEAR = Nearhelper
 	arcpy.GenerateNearTable_analysis(PhotoFeatureClass3, ParcelsFeatureClass, NEAR,
 									 "5 Feet", "NO_LOCATION", "NO_ANGLE", "CLOSEST", "0", "GEODESIC")
 	arcpy.AddMessage("Step 6:  Associating driver photo points to nearest parcel")
-	arcpy.JoinField_management(NEAR, "NEAR_FID", ParcelsFeatureClass, "OBJECTID", ParcelPIN)
+	arcpy.JoinField_management(NEAR, "NEAR_FID", ParcelsFeatureClass, parcelsOID, ParcelPIN)
 
 	# Export non-matched Photos to table (no GPS, wrong attributes, etc.)
 
@@ -228,8 +233,8 @@ if CameraInput == 'Associate Photo with Parcel':
 
 	#Create Photo Attachments
 
-	ParcelPointClassHelper = """{}\\PointsTemp""".format(Geodatabase)
-	ParcelPointHelper = """{}\\PhotoPoints""".format(Geodatabase)
+	ParcelPointClassHelper = Geodatabase + "\\PointsTemp"
+	ParcelPointHelper = Geodatabase + "\\PhotoPoints"
 	arcpy.FeatureClassToFeatureClass_conversion(TemplateFC,Geodatabase,"PhotoPoints")
 	arcpy.DefineProjection_management(ParcelPointHelper, SRHelper)
 	arcpy.AddField_management(ParcelPointHelper, ParcelPIN, "TEXT", "", "", "50", ParcelPIN, "NULLABLE", "NON_REQUIRED")
@@ -244,7 +249,7 @@ if CameraInput == 'Associate Geotagged Photo with Point (photo has location)':
 	# Convert Photos to Points
 	#_______________________________________________________________________________#
 
-	ParcelPointHelper = """{}\\PhotoPoints""".format(Geodatabase)
+	ParcelPointHelper = Geodatabase + "\\PhotoPoints"
 	arcpy.FeatureClassToFeatureClass_conversion(TemplateFC,Geodatabase,"PhotoPoints")
 else:
 	pass
@@ -257,7 +262,7 @@ if CameraInput == 'Associate Non-Geotagged Photo with specified Point (no locati
 	# Convert Photos to Pointsw/ no coordinates
 	#_______________________________________________________________________________#
 
-	ParcelPointHelper = """{}\\PhotoPoints""".format(Geodatabase)
+	ParcelPointHelper = Geodatabase + "\\PhotoPoints"
 	arcpy.FeatureClassToFeatureClass_conversion(TemplateFC,Geodatabase,"PhotoPoints")
 else:
 	pass
@@ -285,21 +290,19 @@ if CameraInput == 'Associate Geotagged Photo with Point (photo has location)':
     arcpy.AddMessage("Step 3:  Adding application required fields")
     arcpy.AddField_management(ParcelPointHelper, "BSTPHOTOID", "TEXT", "", "", "25", "Best Photo Identifier", "NULLABLE", "NON_REQUIRED", "")
     arcpy.AddField_management(ParcelPointHelper, "SRVNAME", "TEXT", "", "", "25", "Surveyor Name", "NULLABLE", "NON_REQUIRED", "")
+    arcpy.AddField_management(ParcelPointHelper, "Path", "TEXT","", "", "254", "Path", "NULLABLE", "NON_REQUIRED", "")
+    arcpy.AddField_management(ParcelPointHelper, "Name", "TEXT","", "", "150", "Name", "NULLABLE", "NON_REQUIRED", "")
+    arcpy.AddField_management(ParcelPointHelper, "DateTime", "TEXT","", "", "100", "DateTime", "NULLABLE", "NON_REQUIRED", "")
+    arcpy.AddField_management(ParcelPointHelper, "Direction", "Double","", "", "", "Direction", "NULLABLE", "NON_REQUIRED", "")
     arcpy.AddMessage("Step 4:  Finalizing photo survey feature class")
     arcpy.AddMessage("Step 5:  Creating Photo Attachments")
-    ParcelPointHelperTemp = """{}\\ParcelPointsTemp""".format(Geodatabase)
-    ParcelPointsMerged = """{}\\ParcelPointsMerged""".format(Geodatabase)
-    arcpy.GeoTaggedPhotosToPoints_management(SinglePhotos, ParcelPointHelperTemp, "", "ONLY_GEOTAGGED", "NO_ATTACHMENTS")
-    arcpy.Merge_management(ParcelPointHelperTemp + ';' + ParcelPointHelper, ParcelPointsMerged)
-    PointsMerged2 = """{}\\PhotoPoint""".format(Geodatabase)
-    arcpy.Rename_management(ParcelPointsMerged, PointsMerged2)
-    arcpy.EnableAttachments_management(PointsMerged2)
-    arcpy.AddAttachments_management(PointsMerged2, "OBJECTID", PointsMerged2, "OBJECTID", "Path", "")
+    ParcelPointHelperTemp = Geodatabase + "\\ParcelPointsTemp"
+    arcpy.GeoTaggedPhotosToPoints_management(SinglePhotos, ParcelPointHelperTemp, invalidPhotosTable, "ONLY_GEOTAGGED", "NO_ATTACHMENTS")
+    arcpy.Append_management(ParcelPointHelperTemp, ParcelPointHelper, "NO_TEST")
+    arcpy.EnableAttachments_management(ParcelPointHelper)
+    arcpy.AddAttachments_management(ParcelPointHelper, "OBJECTID", ParcelPointHelper, "OBJECTID", "Path", "")
     arcpy.Delete_management(ParcelPointHelperTemp)
-    arcpy.Delete_management(ParcelPointHelper)
-    arcpy.DeleteField_management(PointsMerged2, "Path")
-    arcpy.Rename_management(PointsMerged2, ParcelPointHelper)
-
+    arcpy.DeleteField_management(ParcelPointHelper, "Path")
 
 else:
 	pass
@@ -310,25 +313,26 @@ if CameraInput == 'Associate Non-Geotagged Photo with specified Point (no locati
     arcpy.AddMessage("Step 3:  Adding application required fields")
     arcpy.AddField_management(ParcelPointHelper, "BSTPHOTOID", "TEXT", "", "", "25", "Best Photo Identifier", "NULLABLE", "NON_REQUIRED", "")
     arcpy.AddField_management(ParcelPointHelper, "SRVNAME", "TEXT", "", "", "25", "Surveyor Name", "NULLABLE", "NON_REQUIRED", "")
+    arcpy.AddField_management(ParcelPointHelper, "Path", "TEXT","", "", "254", "Path", "NULLABLE", "NON_REQUIRED", "")
+    arcpy.AddField_management(ParcelPointHelper, "Name", "TEXT","", "", "150", "Name", "NULLABLE", "NON_REQUIRED", "")
+    arcpy.AddField_management(ParcelPointHelper, "DateTime", "TEXT","", "", "100", "DateTime", "NULLABLE", "NON_REQUIRED", "")
+    arcpy.AddField_management(ParcelPointHelper, "Direction", "Double","", "", "", "Direction", "NULLABLE", "NON_REQUIRED", "")
     arcpy.AddMessage("Step 4:  Finalizing photo survey feature class")
     arcpy.AddMessage("Step 5:  Creating Photo Attachments")
-    PointHelperTemp = """{}\\PointsTemp""".format(Geodatabase)
-    PointsMerged = """{}\\PointsMerged""".format(Geodatabase)
-    arcpy.GeoTaggedPhotosToPoints_management(SinglePhotos, PointHelperTemp, "", "ALL_PHOTOS", "NO_ATTACHMENTS")
-    arcpy.Merge_management(PointHelperTemp + ';' + ParcelPointHelper, PointsMerged)
-    PointsMerged2 = """{}\\PhotoPoint""".format(Geodatabase)
-    arcpy.Rename_management(PointsMerged, PointsMerged2)
-    arcpy.EnableAttachments_management(PointsMerged2)
-    arcpy.AddAttachments_management(PointsMerged2, "OBJECTID", PointsMerged2, "OBJECTID", "Path", "")
+    PointHelperTemp = Geodatabase + "\\PointsTemp"
+    arcpy.GeoTaggedPhotosToPoints_management(SinglePhotos, PointHelperTemp, invalidPhotosTable, "ALL_PHOTOS", "NO_ATTACHMENTS")
+    arcpy.Append_management(PointHelperTemp, ParcelPointHelper, "NO_TEST")
+    arcpy.EnableAttachments_management(ParcelPointHelper)
+    arcpy.AddAttachments_management(ParcelPointHelper, "OBJECTID", ParcelPointHelper, "OBJECTID", "Path", "")
 
-    shape = arcpy.Describe(PointsMerged2).ShapeFieldName
+    shape = arcpy.Describe(ParcelPointHelper).ShapeFieldName
     fields = ['SHAPE@XY']
     edit = arcpy.da.Editor(Geodatabase)
     edit.startEditing(False, True)
 
     Coord = Location.split(' ')
     Coord2 = ",".join(Coord)
-    with arcpy.da.UpdateCursor(PointsMerged2, "SHAPE@XY") as cur:
+    with arcpy.da.UpdateCursor(ParcelPointHelper, "SHAPE@XY") as cur:
         for row in cur:
             row[0] = eval (Coord2)
             cur.updateRow(row)
@@ -336,8 +340,6 @@ if CameraInput == 'Associate Non-Geotagged Photo with specified Point (no locati
     edit.stopEditing(True)
 
     arcpy.Delete_management(PointHelperTemp)
-    arcpy.Delete_management(ParcelPointHelper)
-    arcpy.Rename_management(PointsMerged2, ParcelPointHelper)
     arcpy.DeleteField_management(ParcelPointHelper, "Path")
 
 else:
@@ -385,9 +387,15 @@ else:
 # Add Template Table to Staging GeoDatabase
 #______________________________________________________________________________#
 
-arcpy.Copy_management(TemplateQTable,Geodatabase + "//SurveyQuestions")
+arcpy.Copy_management(TemplateQTable, Geodatabase + "//SurveyQuestions")
 
 if CameraInput == "Associate Photo with Parcel":
 	arcpy.AddMessage("Step 13: Adding survey questions template table to staging geodatabase")
 else:
 	arcpy.AddMessage("Step 6: Adding survey questions template table to staging geodatabase")
+
+try:
+	arcpy.SetParameter(10, Geodatabase + "\\PhotoPoints")
+	arcpy.SetParameter(11, Geodatabase + "\\SurveyQuestions")
+except:
+	arcpy.AddWarning("Unable to add output photopoints and survey questions table to map")
