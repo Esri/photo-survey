@@ -52,9 +52,8 @@ def checkValidProject(tr, prj):
     return True
 
 def getCurrentIteration(tr, prj):
-    return sorted(tr.get_iterations(prj.id), key=lambda itr: itr.trained_at, reverse=True)[0]
-
-    
+    iterationList = [iteration for iteration in tr.get_iterations(prj.id) if iteration.publish_name]
+    return sorted(iterationList, key=lambda itr: itr.trained_at, reverse=True)[0]
 
 
 fcURL = arcpy.GetParameterAsText(0)
