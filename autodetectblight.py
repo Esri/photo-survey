@@ -57,7 +57,7 @@ def getCurrentIteration(tr, prj):
     if iterationList:
         return sorted(iterationList, key=lambda itr: itr.trained_at, reverse=True)[0]
     else:
-        arcpy.AddError("None of the iterations in Custom Vision project have been published. The iteration must be published before it can be used to predict image categories")
+        arcpy.AddError("None of the iterations in the Custom Vision project have been published. The iteration must be published before it can be used to predict image categories")
         sys.exit(1)
 
 
