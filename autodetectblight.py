@@ -29,6 +29,7 @@ def imageList(tagName):
             branch = "blight-images"
         comm_url = "{}/{}?ref={}".format(resolveUrl,tagName, branch)
         response = requests.get(comm_url)
+        #response = requests.get(comm_url, headers={"Authorization": "token putaccesstokenhere"})
         imgList = json.loads(response.text)
         if response.status_code == 200:
             return [img['download_url'] for img in imgList]
