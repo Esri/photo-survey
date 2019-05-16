@@ -54,7 +54,11 @@ def checkValidProject(tr, prj):
 
 def getCurrentIteration(tr, prj):
     iterationList = [iteration for iteration in tr.get_iterations(prj.id) if iteration.publish_name]
-    return sorted(iterationList, key=lambda itr: itr.trained_at, reverse=True)[0]
+    if iterationList:
+        return sorted(iterationList, key=lambda itr: itr.trained_at, reverse=True)[0]
+    else:
+        arcpy.AddError("None of the iterations in Custom Vision project have been published. The iteration must be published before it can be used to predict image categories")
+        sys.exit(1)
 
 
 fcURL = arcpy.GetParameterAsText(0)
