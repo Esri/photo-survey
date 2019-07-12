@@ -1,7 +1,7 @@
-from azure.cognitiveservices.vision.customvision.prediction import prediction_endpoint
-from azure.cognitiveservices.vision.customvision.prediction.prediction_endpoint import models
+from azure.cognitiveservices.vision.customvision.prediction import CustomVisionPredictionClient
+from azure.cognitiveservices.vision.customvision.prediction import models
 from azure.cognitiveservices.vision.customvision.training.models import ImageUrlCreateEntry
-from azure.cognitiveservices.vision.customvision.training import training_api
+from azure.cognitiveservices.vision.customvision.training import CustomVisionTrainingClient
 from arcgis.gis import GIS
 from arcgis.features import FeatureLayer, Feature
 import sys
@@ -9,8 +9,11 @@ import arcpy
 import datetime as dt
 import requests
 import json
-
 # TRAIN MODELS IF NEEDED*****************************************************************************************************
+
+mode = arcpy.GetParameterInfo()[1].displayName
+mode = bool("dev" in mode)
+
 def imageListChunks(imgList,chunkSize):
     return [imgList[pos:pos + chunkSize] for pos in range(0, len(imgList), chunkSize)]
 
@@ -19,8 +22,14 @@ def imageList(tagName):
     try:
         resolveShortlink = requests.get("http://links.esri.com/localgovernment/photosurvey/images")
         resolveUrl = resolveShortlink.url
-        comm_url = "{}/{}?ref=blight-images".format(resolveUrl,tagName)
+        branch = "blight-images"
+        if mode:
+            branch = "blight-images-dev"
+        else:
+            branch = "blight-images"
+        comm_url = "{}/{}?ref={}".format(resolveUrl,tagName, branch)
         response = requests.get(comm_url)
+        #response = requests.get(comm_url, headers={"Authorization": "token putaccesstokenhere"})
         imgList = json.loads(response.text)
         if response.status_code == 200:
             return [img['download_url'] for img in imgList]
@@ -44,17 +53,24 @@ def checkValidProject(tr, prj):
     return True
 
 def getCurrentIteration(tr, prj):
-    return sorted(tr.get_iterations(prj.id), key=lambda itr: itr.trained_at, reverse=True)[0]
+    iterationList = [iteration for iteration in tr.get_iterations(prj.id) if iteration.publish_name]
+    if iterationList:
+        return sorted(iterationList, key=lambda itr: itr.trained_at, reverse=True)[0]
+    else:
+        arcpy.AddError("None of the iterations in the Custom Vision project have been published. The iteration must be published before it can be used to predict image categories")
+        sys.exit(1)
 
 
 fcURL = arcpy.GetParameterAsText(0)
 categories = arcpy.GetParameterAsText(1)
 trainingkey = arcpy.GetParameterAsText(2)
 predictionkey = arcpy.GetParameterAsText(3)
+resource_id = arcpy.GetParameterAsText(4)
+baseURL = arcpy.GetParameterAsText(5)
 
 whereClause = "1=1"
 
-trainer = training_api.TrainingApi(trainingkey)
+trainer = CustomVisionTrainingClient(trainingkey, endpoint=baseURL)
 
 categoryList = categories.split(";")
 
@@ -99,8 +115,10 @@ for name in categoryList:
             iteration = trainer.get_iteration(project.id, iteration.id)
             time.sleep(3)
 
+        iteration_name = name + "classifyModel"
         # The iteration is now trained. Make it the default project endpoint
-        trainer.update_iteration(project.id, iteration.id, is_default=True)
+        #trainer.update_iteration(project.id, iteration.id, is_default=True)
+        trainer.publish_iteration(project.id,iteration.id,iteration_name, resource_id)
         
         arcpy.AddMessage("Done!")
     else:
@@ -170,11 +188,11 @@ if fieldAdd:
         arcpy.AddError(customMessage)
         sys.exit(1)
 
-predictor = prediction_endpoint.PredictionEndpoint(predictionkey)
+predictor = CustomVisionPredictionClient(predictionkey, endpoint=baseURL)
 
 projectList = trainer.get_projects()
 
-predictProjects = [{"projectID":project.id, "currentIteration":getCurrentIteration(trainer,project).id, "name":project.name} for project in projectList if project.name in categoryList]
+predictProjects = [{"projectID":project.id, "currentIteration":getCurrentIteration(trainer,project), "name":project.name} for project in projectList if project.name in categoryList]
 
 arcpy.SetProgressorLabel("Gathering Attachment URLs from Service")
 
@@ -204,7 +222,7 @@ for key, value in sorted(attachmentids.items()):
     count += 1
     for project in predictProjects:
         arcpy.SetProgressorLabel("Detecting Category '{}' in Feature {} of {}".format(project["name"],count,len(attachmentids)))
-        results = predictor.predict_image_url_with_no_store(project["projectID"], project["currentIteration"], url=value + tokenStr)
+        results = predictor.classify_image_url_with_no_store(project["projectID"], project["currentIteration"].publish_name, url=value + tokenStr)
         for prediction in results.predictions:
             if prediction.tag_name in categoryList:
                 feature.set_value(prediction.tag_name.lower() + "_prb", prediction.probability * 100)
